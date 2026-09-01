@@ -1,6 +1,7 @@
 -- ============================================================
 -- PigTrack Business Logic Functions
 -- Migration 003: Create all calculation functions
+-- Includes explicit search_path setting to address security linter
 -- ============================================================
 
 -- ============================================================
@@ -12,7 +13,10 @@ CREATE OR REPLACE FUNCTION calculate_roi(
   p_start_date DATE,
   p_end_date DATE
 )
-RETURNS NUMERIC AS $$
+RETURNS NUMERIC
+LANGUAGE plpgsql STABLE
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_revenue NUMERIC;
   v_expenses NUMERIC;
@@ -35,7 +39,7 @@ BEGIN
 
   RETURN ROUND(v_roi, 2);
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
 -- ============================================================
 -- FUNCTION 2: calculate_scaling_readiness
@@ -48,7 +52,10 @@ RETURNS TABLE(
   is_ready BOOLEAN,
   recommendation TEXT,
   projected_scale_date DATE
-) AS $$
+)
+LANGUAGE plpgsql STABLE
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_current_capital NUMERIC;
   v_target_pigs INTEGER;
@@ -105,7 +112,7 @@ BEGIN
 
   RETURN NEXT;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
 -- ============================================================
 -- FUNCTION 3: get_expense_breakdown
@@ -120,7 +127,10 @@ RETURNS TABLE(
   total_amount NUMERIC,
   transaction_count INTEGER,
   percentage_of_total NUMERIC
-) AS $$
+)
+LANGUAGE SQL STABLE
+SET search_path = public, pg_temp
+AS $$
   WITH expense_totals AS (
     SELECT
       t.category,
@@ -143,7 +153,7 @@ RETURNS TABLE(
     ROUND((e.total_amount / gt.total * 100)::NUMERIC, 2) as percentage_of_total
   FROM expense_totals e, grand_total gt
   ORDER BY e.total_amount DESC;
-$$ LANGUAGE SQL STABLE;
+$$;
 
 -- ============================================================
 -- FUNCTION 4: calculate_profit_per_pig
@@ -152,7 +162,10 @@ $$ LANGUAGE SQL STABLE;
 CREATE OR REPLACE FUNCTION calculate_profit_per_pig(
   p_analytics_month DATE
 )
-RETURNS NUMERIC AS $$
+RETURNS NUMERIC
+LANGUAGE plpgsql STABLE
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_net_profit NUMERIC;
   v_avg_pig_count INTEGER;
@@ -173,7 +186,7 @@ BEGIN
 
   RETURN v_profit_per_pig;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
 -- ============================================================
 -- FUNCTION 5: calculate_investor_profit
@@ -183,7 +196,10 @@ CREATE OR REPLACE FUNCTION calculate_investor_profit(
   p_investor_id UUID,
   p_net_profit NUMERIC
 )
-RETURNS NUMERIC AS $$
+RETURNS NUMERIC
+LANGUAGE plpgsql STABLE
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_profit_share_percentage NUMERIC;
   v_investor_profit NUMERIC;
@@ -201,7 +217,7 @@ BEGIN
 
   RETURN v_investor_profit;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
 
 -- ============================================================
 -- FUNCTION 6: get_dashboard_kpis
@@ -221,7 +237,10 @@ RETURNS TABLE(
   mortality_rate NUMERIC,
   pending_transactions BIGINT,
   total_capital NUMERIC
-) AS $$
+)
+LANGUAGE plpgsql STABLE
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   -- Financial metrics from approved transactions
   SELECT
@@ -269,4 +288,4 @@ BEGIN
 
   RETURN NEXT;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
