@@ -1,6 +1,8 @@
 -- ============================================================
 -- PigTrack Database Triggers
 -- Migration 004: Create all automation triggers
+-- Idempotent script: Uses DROP TRIGGER IF EXISTS to allow safe re-execution
+-- Includes explicit search_path setting to address security linter
 -- ============================================================
 
 -- ============================================================
@@ -9,7 +11,10 @@
 -- is approved (INSERT or UPDATE with status = 'approved')
 -- ============================================================
 CREATE OR REPLACE FUNCTION update_monthly_analytics()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_month_date DATE;
   v_total_capital NUMERIC;
@@ -92,8 +97,9 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
+DROP TRIGGER IF EXISTS trigger_update_analytics ON transactions;
 CREATE TRIGGER trigger_update_analytics
 AFTER INSERT OR UPDATE ON transactions
 FOR EACH ROW
@@ -105,7 +111,10 @@ EXECUTE FUNCTION update_monthly_analytics();
 -- Log an audit trail entry when a transaction is approved
 -- ============================================================
 CREATE OR REPLACE FUNCTION log_transaction_approval()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   IF NEW.status = 'approved' AND OLD.status != 'approved' THEN
     INSERT INTO activity_logs (user_id, action, table_name, record_id, old_values, new_values)
@@ -143,8 +152,9 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
+DROP TRIGGER IF EXISTS trigger_log_approval ON transactions;
 CREATE TRIGGER trigger_log_approval
 AFTER UPDATE ON transactions
 FOR EACH ROW
@@ -156,7 +166,10 @@ EXECUTE FUNCTION log_transaction_approval();
 -- whenever animals table changes
 -- ============================================================
 CREATE OR REPLACE FUNCTION update_animal_count()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
 DECLARE
   v_active_count INTEGER;
   v_dead_count INTEGER;
@@ -204,8 +217,9 @@ BEGIN
 
   RETURN COALESCE(NEW, OLD);
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
+DROP TRIGGER IF EXISTS trigger_update_animal_count ON animals;
 CREATE TRIGGER trigger_update_animal_count
 AFTER INSERT OR UPDATE OR DELETE ON animals
 FOR EACH ROW
@@ -216,38 +230,48 @@ EXECUTE FUNCTION update_animal_count();
 -- Automatically set updated_at timestamp on row modification
 -- ============================================================
 CREATE OR REPLACE FUNCTION auto_update_updated_at()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- Apply updated_at trigger to all tables that have the column
+DROP TRIGGER IF EXISTS trigger_users_updated_at ON users;
 CREATE TRIGGER trigger_users_updated_at
   BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION auto_update_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_business_profile_updated_at ON business_profile;
 CREATE TRIGGER trigger_business_profile_updated_at
   BEFORE UPDATE ON business_profile
   FOR EACH ROW EXECUTE FUNCTION auto_update_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_investors_updated_at ON investors;
 CREATE TRIGGER trigger_investors_updated_at
   BEFORE UPDATE ON investors
   FOR EACH ROW EXECUTE FUNCTION auto_update_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_pens_updated_at ON pens;
 CREATE TRIGGER trigger_pens_updated_at
   BEFORE UPDATE ON pens
   FOR EACH ROW EXECUTE FUNCTION auto_update_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_animals_updated_at ON animals;
 CREATE TRIGGER trigger_animals_updated_at
   BEFORE UPDATE ON animals
   FOR EACH ROW EXECUTE FUNCTION auto_update_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_transactions_updated_at ON transactions;
 CREATE TRIGGER trigger_transactions_updated_at
   BEFORE UPDATE ON transactions
   FOR EACH ROW EXECUTE FUNCTION auto_update_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_pen_daily_logs_updated_at ON pen_daily_logs;
 CREATE TRIGGER trigger_pen_daily_logs_updated_at
   BEFORE UPDATE ON pen_daily_logs
   FOR EACH ROW EXECUTE FUNCTION auto_update_updated_at();
