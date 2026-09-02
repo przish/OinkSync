@@ -65,15 +65,19 @@ export function KPICard({
       {trend !== undefined && trend !== null && !isLoading && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           {trendPositive ? (
-            <TrendingUp size={14} color="#2D7C2D" />
+            <TrendingUp size={14} color={variant === 'green' ? '#bbf7d0' : '#2D7C2D'} />
           ) : trendNegative ? (
-            <TrendingDown size={14} color="#C85C5C" />
+            <TrendingDown size={14} color={variant === 'green' ? '#fecaca' : '#C85C5C'} />
           ) : (
-            <Minus size={14} color="#9CA3AF" />
+            <Minus size={14} color={variant === 'green' ? 'rgba(255,255,255,0.7)' : '#9CA3AF'} />
           )}
           <span style={{
             fontSize: 12, fontWeight: 600,
-            color: trendPositive ? '#2D7C2D' : trendNegative ? '#C85C5C' : '#9CA3AF',
+            color: trendPositive
+              ? (variant === 'green' ? '#bbf7d0' : '#2D7C2D')
+              : trendNegative
+                ? (variant === 'green' ? '#fecaca' : '#C85C5C')
+                : (variant === 'green' ? 'rgba(255,255,255,0.7)' : '#9CA3AF'),
           }}>
             {formatTrendPercentage(trend)} vs last month
           </span>
