@@ -94,7 +94,10 @@ export function TransactionPreview({
                             variant="ghost"
                             size="sm"
                             leftIcon={<CheckCircle size={13} />}
-                            onClick={() => onApprove?.(tx.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onApprove?.(tx.id);
+                            }}
                             style={{ color: 'var(--success)', borderColor: 'var(--success)' }}
                           >
                             Approve
@@ -103,7 +106,10 @@ export function TransactionPreview({
                             variant="ghost"
                             size="sm"
                             leftIcon={<XCircle size={13} />}
-                            onClick={() => onReject?.(tx.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onReject?.(tx.id);
+                            }}
                             style={{ color: 'var(--error)', borderColor: 'var(--error)' }}
                           >
                             Reject

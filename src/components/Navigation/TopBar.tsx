@@ -4,6 +4,7 @@ import React from 'react';
 import { Menu, Bell } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { ROLE_LABELS } from '@/lib/constants';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/UI/Badge';
 
 interface TopBarProps {
@@ -14,6 +15,7 @@ interface TopBarProps {
 
 export function TopBar({ title, onMenuToggle, actions }: TopBarProps) {
   const { user } = useAuth();
+  const router = useRouter();
 
   return (
     <header className="topbar">
@@ -42,6 +44,7 @@ export function TopBar({ title, onMenuToggle, actions }: TopBarProps) {
           className="btn btn-ghost btn-icon"
           aria-label="Notifications"
           style={{ position: 'relative' }}
+          onClick={() => alert('Notifications coming soon!')}
         >
           <Bell size={18} />
         </button>
@@ -55,7 +58,9 @@ export function TopBar({ title, onMenuToggle, actions }: TopBarProps) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontWeight: 700, fontSize: 13,
                 flexShrink: 0,
+                cursor: 'pointer'
               }}
+              onClick={() => router.push('/settings')}
             >
               {user.full_name.charAt(0).toUpperCase()}
             </div>

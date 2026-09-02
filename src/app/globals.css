@@ -172,8 +172,7 @@ p {
 }
 
 .text-muted {
-  color: #4B5563;
-  /* Improved contrast for light backgrounds */
+  color: #374151;
 }
 
 .text-muted-dark {
@@ -304,12 +303,19 @@ p {
 .card-beige {
   background: var(--primary-beige);
   border-color: rgba(196, 165, 123, 0.3);
+  color: var(--neutral-dark);
+}
+.card-beige p, .card-beige span, .card-beige div {
+  color: var(--neutral-dark);
 }
 
 .card-green {
   background: linear-gradient(135deg, var(--secondary-green), #3d6b1f);
   color: white;
   border: none;
+}
+.card-green p, .card-green span, .card-green div, .card-green h1, .card-green h2, .card-green h3 {
+  color: white;
 }
 
 .card-gold {

@@ -9,6 +9,8 @@ import { getAuthUser } from '@/lib/auth';
 import { successResponse, handleError } from '@/lib/errors';
 import type { Pen, Animal } from '@/types/database';
 
+export const dynamic = 'force-dynamic';
+
 interface PenWithAnimalsResponse extends Pen {
   animals: Animal[];
   current_count: number;

@@ -54,8 +54,12 @@ ALTER TABLE public.pen_daily_logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Authenticated users can read pens" ON public.pens;
 DROP POLICY IF EXISTS "Authenticated users can read animals" ON public.animals;
 DROP POLICY IF EXISTS "Users can read all users" ON public.users;
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
 DROP POLICY IF EXISTS "Authenticated users can read transactions" ON public.transactions;
+DROP POLICY IF EXISTS "Authenticated users can insert transactions" ON public.transactions;
 DROP POLICY IF EXISTS "Authenticated users can read pen_daily_logs" ON public.pen_daily_logs;
+DROP POLICY IF EXISTS "Authenticated users can insert pen_daily_logs" ON public.pen_daily_logs;
 
 -- Pens: all authenticated users can read
 CREATE POLICY "Authenticated users can read pens"
