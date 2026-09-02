@@ -9,6 +9,7 @@ import { Button } from '@/components/UI/Button';
 import { SkeletonCard } from '@/components/UI/Spinner';
 import { formatCurrency } from '@/lib/utils/formatting';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
+import { createClient } from '@/lib/supabase/client';
 
 interface BusinessProfile {
   target_pig_count: number;
@@ -25,11 +26,13 @@ export default function ScalingPlanPage() {
   const fetchProfile = useCallback(async () => {
     try {
       setProfileLoading(true);
-      const res = await fetch('/api/settings');
-      if (res.ok) {
-        const json = await res.json();
-        setProfile(json.data);
+      const supabase = createClient();
+      const { data } = await supabase.from('business_profile').select('*').single();
+      if (data) {
+        setProfile(data as unknown as BusinessProfile);
       }
+    } catch (e) {
+      console.error(e);
     } finally {
       setProfileLoading(false);
     }
