@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User, UserRole } from '@/types/database';
 
@@ -17,13 +17,7 @@ export function useAuth() {
     error: null,
   });
 
-  // KEY FIX: Use useRef so the Supabase client is created ONCE per mount.
-  // Previously `createClient()` was called at the top of the function body,
-  // which created a brand-new object every render. This meant the dependency
-  // arrays in useCallback/useEffect always saw a "new" supabase reference,
-  // causing an infinite re-render loop that silently swallowed the login call.
-  const supabaseRef = useRef(createClient());
-  const supabase = supabaseRef.current;
+  const supabase = useMemo(() => createClient(), []);
 
   const fetchProfile = useCallback(async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
