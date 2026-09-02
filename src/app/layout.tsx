@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'PiggyTrack — Pig Farm Financial OS',
+  title: 'OinkSync — Pig Farm Financial OS',
   description: 'Track investments, inventory, expenses, and analytics for modern pig farming operations.',
   keywords: 'pig farm, livestock management, farm finance, PiggyTrack',
 };
