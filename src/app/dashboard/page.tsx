@@ -73,23 +73,23 @@ export default function DashboardPage() {
         }}>
           <div style={{ position: 'absolute', right: -20, top: -20, fontSize: 120, opacity: 0.08, userSelect: 'none' }}>🐷</div>
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
               {greeting}, {user?.full_name?.split(' ')[0]} 👋
             </p>
             <h2 style={{ fontSize: 22, fontWeight: 800, marginTop: 4, color: 'white' }}>
               Farm Overview
             </h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>
               {formatDate(today.toISOString())}
             </p>
           </div>
           {kpi && (
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
-              <p style={{ fontSize: 28, fontWeight: 800, color: kpi.net_profit >= 0 ? '#86efac' : '#fca5a5' }}>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: kpi.net_profit >= 0 ? '#bbf7d0' : '#fecaca' }}>
                 {formatCurrency(kpi.net_profit)}
               </p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
                 ROI: {formatPercentage(kpi.roi_percentage)}
               </p>
             </div>
