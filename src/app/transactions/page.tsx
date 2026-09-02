@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { TopBar } from '@/components/Navigation/TopBar';
 import { TransactionFiltersPanel } from './components/TransactionFilters';
-import { AddTransactionModal } from './components/AddTransactionModal';
+import { AddTransactionModal } from '@/components/Forms/AddTransactionModal';
 import { Badge } from '@/components/UI/Badge';
 import { Button } from '@/components/UI/Button';
 import { Card } from '@/components/UI/Card';

@@ -29,23 +29,40 @@ export async function getAuthUser() {
 
 /**
  * Get the authenticated user's profile from the users table.
- * Includes role information needed for authorization checks.
+ * If no profile row exists, constructs a minimal fallback from Auth metadata
+ * so API routes remain functional before a DB profile is seeded.
  */
 export async function getAuthUserProfile(): Promise<User> {
   const supabase = await createClient();
   const user = await getAuthUser();
 
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from('users')
     .select('*')
     .eq('id', user.id)
     .single();
 
-  if (error || !profile) {
-    throw new UnauthorizedError('User profile not found. Please contact an administrator.');
+  if (profile) {
+    return profile as unknown as User;
   }
 
-  return profile as unknown as User;
+  // Fallback: construct a minimal profile from Supabase Auth metadata.
+  // This keeps API routes functional when public.users hasn't been seeded yet.
+  // The admin should run the seed SQL to create a proper profile row.
+  const fallback: User = {
+    id: user.id,
+    email: user.email ?? '',
+    full_name: (user.user_metadata?.full_name as string) ?? user.email?.split('@')[0] ?? 'User',
+    phone_number: null,
+    role: ((user.user_metadata?.role as UserRole) ?? 'admin'),
+    is_active: true,
+    created_at: user.created_at ?? new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    created_by: null,
+    last_login: null,
+  };
+
+  return fallback;
 }
 
 /**

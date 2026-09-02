@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 import { Badge } from '@/components/UI/Badge';
 import { Button } from '@/components/UI/Button';
@@ -24,6 +25,8 @@ export function TransactionPreview({
   onApprove,
   onReject,
 }: TransactionPreviewProps) {
+  const router = useRouter();
+
   return (
     <div>
       <div className="table-wrapper">
@@ -54,7 +57,11 @@ export function TransactionPreview({
               </tr>
             ) : (
               transactions.map((tx) => (
-                <tr key={tx.id}>
+                <tr
+                  key={tx.id}
+                  onClick={() => router.push('/transactions')}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td className="text-small" style={{ color: '#4B5563', whiteSpace: 'nowrap' }}>
                     {formatDate(tx.transaction_date)}
                   </td>

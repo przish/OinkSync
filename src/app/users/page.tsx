@@ -11,11 +11,13 @@ import { ProtectedRoute } from '@/components/Auth/ProtectedRoute';
 import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS } from '@/lib/constants';
 import { formatDate } from '@/lib/utils/formatting';
+import { InviteMemberModal } from '@/components/Forms/InviteMemberModal';
 import type { User } from '@/types/database';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
@@ -32,7 +34,12 @@ export default function UsersPage() {
       <TopBar
         title="Team Members"
         actions={
-          <Button variant="primary" size="sm" leftIcon={<Plus size={15} />}>
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<Plus size={15} />}
+            onClick={() => setShowInviteModal(true)}
+          >
             Invite Member
           </Button>
         }
@@ -110,6 +117,16 @@ export default function UsersPage() {
           </div>
         </Card>
       </div>
+
+      {showInviteModal && (
+        <InviteMemberModal
+          onClose={() => setShowInviteModal(false)}
+          onSuccess={() => {
+            setShowInviteModal(false);
+            fetchUsers();
+          }}
+        />
+      )}
     </ProtectedRoute>
   );
 }

@@ -15,11 +15,12 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useTransactions } from '@/lib/hooks/useTransactions';
 import { useAnalytics } from '@/lib/hooks/useAnalytics';
 import { formatCurrency, formatDate, formatPercentage } from '@/lib/utils/formatting';
+import { AddTransactionModal } from '@/components/Forms/AddTransactionModal';
 import type { KpiData } from '@/types/api';
 
 export default function DashboardPage() {
   const { user, isAdmin, canApprove } = useAuth();
-  const { transactions, isLoading: txLoading, fetchTransactions, updateTransactionStatus } = useTransactions();
+  const { transactions, isLoading: txLoading, fetchTransactions, updateTransactionStatus, addTransaction } = useTransactions();
   const { kpi, isLoading: kpiLoading, fetchKpi } = useAnalytics();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -44,6 +45,13 @@ export default function DashboardPage() {
 
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 17 ? 'Good afternoon' : 'Good evening';
+
+  // Safely extract first name: full_name may be an email (fallback case)
+  const displayName = (() => {
+    const name = user?.full_name ?? '';
+    if (name.includes('@')) return name.split('@')[0]; // email fallback → use prefix
+    return name.split(' ')[0] || 'there';
+  })();
 
   return (
     <>
@@ -74,7 +82,7 @@ export default function DashboardPage() {
           <div style={{ position: 'absolute', right: -20, top: -20, fontSize: 120, opacity: 0.08, userSelect: 'none' }}>🐷</div>
           <div>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
-              {greeting}, {user?.full_name?.split(' ')[0]} 👋
+              {greeting}, {displayName} 👋
             </p>
             <h2 style={{ fontSize: 22, fontWeight: 800, marginTop: 4, color: 'white' }}>
               Farm Overview
@@ -195,6 +203,20 @@ export default function DashboardPage() {
           />
         </Card>
       </div>
+
+      {/* Add Transaction Modal */}
+      <AddTransactionModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={async (data, receipt) => {
+          const res = await addTransaction(data, receipt);
+          if (!res.error) {
+            fetchTransactions({ limit: 10 });
+            setShowAddModal(false);
+          }
+          return res;
+        }}
+      />
     </>
   );
 }
