@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUserProfile } from '@/lib/auth';
 import { successResponse, handleError, ValidationError } from '@/lib/errors';
@@ -119,7 +120,12 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23503') {
+        throw new ValidationError('User profile not found. Please run the fix-rls.sql script in your Supabase SQL editor.');
+      }
+      throw error;
+    }
 
     const transaction = data as unknown as Transaction;
 
