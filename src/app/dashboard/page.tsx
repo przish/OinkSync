@@ -49,8 +49,13 @@ export default function DashboardPage() {
   // Safely extract first name: full_name may be an email (fallback case)
   const displayName = (() => {
     const name = user?.full_name ?? '';
-    if (name.includes('@')) return name.split('@')[0]; // email fallback → use prefix
-    return name.split(' ')[0] || 'there';
+    let extracted = 'there';
+    if (name.includes('@')) {
+      extracted = name.split('@')[0];
+    } else if (name) {
+      extracted = name.split(' ')[0];
+    }
+    return extracted.charAt(0).toUpperCase() + extracted.slice(1);
   })();
 
   return (
