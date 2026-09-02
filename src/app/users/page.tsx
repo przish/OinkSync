@@ -43,7 +43,7 @@ export default function UsersPage() {
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)' }}>
             <h3 style={{ fontWeight: 700, fontSize: 15 }}>
               All Team Members
-              <span style={{ fontWeight: 400, color: '#6B7280', fontSize: 13, marginLeft: 8 }}>({users.length})</span>
+              <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>({users.length})</span>
             </h3>
           </div>
           <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
@@ -66,7 +66,7 @@ export default function UsersPage() {
                   <tr>
                     <td colSpan={7}>
                       <div className="empty-state">
-                        <div className="empty-state-icon"><Users size={28} color="#9CA3AF" /></div>
+                        <div className="empty-state-icon"><Users size={28} color="#4B5563" /></div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No team members</p>
                       </div>
                     </td>
@@ -87,18 +87,18 @@ export default function UsersPage() {
                           <span style={{ fontWeight: 600 }}>{user.full_name}</span>
                         </div>
                       </td>
-                      <td style={{ color: '#6B7280', fontSize: 13 }}>{user.email}</td>
+                      <td style={{ color: '#4B5563', fontSize: 13 }}>{user.email}</td>
                       <td><Badge variant={user.role}>{ROLE_LABELS[user.role]}</Badge></td>
-                      <td style={{ color: '#6B7280', fontSize: 13 }}>{user.phone_number ?? '—'}</td>
+                      <td style={{ color: '#4B5563', fontSize: 13 }}>{user.phone_number ?? '—'}</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span className={`status-dot${user.is_active ? ' green' : ' gray'}`} />
-                          <span style={{ fontSize: 12, color: user.is_active ? 'var(--success)' : '#9CA3AF' }}>
+                          <span style={{ fontSize: 12, color: user.is_active ? 'var(--success)' : '#4B5563' }}>
                             {user.is_active ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                       </td>
-                      <td style={{ color: '#6B7280', fontSize: 13 }}>{formatDate(user.created_at)}</td>
+                      <td style={{ color: '#4B5563', fontSize: 13 }}>{formatDate(user.created_at)}</td>
                       <td>
                         <Button variant="ghost" size="sm">Edit</Button>
                       </td>
