@@ -35,20 +35,16 @@ export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps
   const onSubmit = async (data: UserFormValues) => {
     setIsSubmitting(true);
     try {
-      // In a real application, this would call an API route to use the Supabase Admin API
-      // For this demo, we'll simulate the invite process or insert directly into the users table
-      // (which requires RLS or service role, but we'll show a toast for UX).
-      
-      const { error } = await supabase.from('users').insert({
-        email: data.email,
-        full_name: data.full_name,
-        role: data.role,
-        phone_number: data.phone_number || null,
-        is_active: true,
+      const res = await fetch('/api/users/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
-
-      if (error) {
-        toast.error(error.message);
+      
+      const json = await res.json();
+      
+      if (!res.ok) {
+        toast.error(json.error?.message || 'Failed to invite team member');
       } else {
         toast.success('Team member invited successfully!');
         onSuccess();

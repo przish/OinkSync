@@ -41,7 +41,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         <div style={{ fontSize: 48 }}>🔒</div>
         <h2 style={{ color: 'var(--neutral-dark)' }}>Access Restricted</h2>
         <p style={{ color: '#6B7280', maxWidth: 400 }}>
-          You don't have permission to view this page. Contact your administrator if you believe this is an error.
+          You don&apos;t have permission to view this page. Contact your administrator if you believe this is an error.
         </p>
       </div>
     );

@@ -29,8 +29,8 @@ export function usePenLogs() {
         const res = await fetch(`/api/pen-logs${params.toString() ? `?${params}` : ''}`);
         if (!res.ok) throw new Error('Failed to fetch pen logs');
         const json = await res.json();
-        setLogs(json.data ?? []);
-        setPagination(json.pagination ?? null);
+        setLogs(json.data?.data ?? []);
+        setPagination(json.data?.pagination ?? null);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Unknown error');
       } finally {

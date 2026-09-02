@@ -41,7 +41,7 @@ export function useInventory() {
       const res = await fetch(`/api/inventory/animals${params.toString() ? `?${params}` : ''}`);
       if (!res.ok) throw new Error('Failed to fetch animals');
       const json = await res.json();
-      setAnimals(json.data ?? []);
+      setAnimals(json.data?.data ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {

@@ -31,8 +31,8 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
     label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''}`,
   }));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PenLogFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(penLogSchema) as any,
     defaultValues: {
       log_date: todayISO(),

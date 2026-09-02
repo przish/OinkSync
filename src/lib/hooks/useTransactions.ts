@@ -36,8 +36,8 @@ export function useTransactions() {
         const res = await fetch(`/api/transactions${query ? `?${query}` : ''}`);
         if (!res.ok) throw new Error('Failed to fetch transactions');
         const json = await res.json();
-        setTransactions(json.data ?? []);
-        setPagination(json.pagination ?? null);
+        setTransactions(json.data?.data ?? []);
+        setPagination(json.data?.pagination ?? null);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Unknown error');
       } finally {

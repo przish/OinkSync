@@ -50,16 +50,24 @@ ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pen_daily_logs ENABLE ROW LEVEL SECURITY;
 
--- Drop old restrictive policies if they exist
-DROP POLICY IF EXISTS "Authenticated users can read pens" ON public.pens;
-DROP POLICY IF EXISTS "Authenticated users can read animals" ON public.animals;
-DROP POLICY IF EXISTS "Users can read all users" ON public.users;
-DROP POLICY IF EXISTS "Users can insert own profile" ON public.users;
-DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
-DROP POLICY IF EXISTS "Authenticated users can read transactions" ON public.transactions;
-DROP POLICY IF EXISTS "Authenticated users can insert transactions" ON public.transactions;
-DROP POLICY IF EXISTS "Authenticated users can read pen_daily_logs" ON public.pen_daily_logs;
-DROP POLICY IF EXISTS "Authenticated users can insert pen_daily_logs" ON public.pen_daily_logs;
+-- Drop all old policies dynamically to prevent infinite recursion conflicts
+DO $$
+DECLARE
+    pol record;
+    tab text;
+BEGIN
+    FOR tab IN SELECT unnest(ARRAY['pens', 'animals', 'users', 'transactions', 'pen_daily_logs'])
+    LOOP
+        FOR pol IN
+            SELECT policyname
+            FROM pg_policies
+            WHERE schemaname = 'public' AND tablename = tab
+        LOOP
+            EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, tab);
+        END LOOP;
+    END LOOP;
+END
+$$;
 
 -- Pens: all authenticated users can read
 CREATE POLICY "Authenticated users can read pens"
