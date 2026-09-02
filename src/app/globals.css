@@ -116,12 +116,20 @@ h4 { font-size: var(--font-h4); font-weight: 600; line-height: 1.4; }
 p  { font-size: var(--font-body); line-height: 1.6; }
 .text-small  { font-size: var(--font-body-small); line-height: 1.5; }
 .text-large  { font-size: var(--font-body-large); line-height: 1.6; }
-.text-muted  { color: #6B7280; }
+.text-muted  { color: #4B5563; /* Improved contrast for light backgrounds */ }
+.text-muted-dark { color: #374151; }
+.text-muted-light { color: rgba(255, 255, 255, 0.85); }
 .text-success { color: var(--success); }
 .text-error  { color: var(--error); }
 .text-warning { color: var(--warning); }
 .text-green  { color: var(--secondary-green); }
 .text-gold   { color: var(--tertiary-gold); }
+
+/* ── Semantic Contrast Utilities ────────────────────────────── */
+.text-on-light { color: var(--neutral-dark); }
+.text-on-dark  { color: var(--neutral-light); }
+.bg-primary-safe { background-color: var(--primary-beige); color: var(--neutral-dark); }
+.bg-secondary-safe { background-color: var(--secondary-green); color: var(--neutral-light); }
 
 /* ── Layout ─────────────────────────────────────────────────── */
 
@@ -234,10 +242,11 @@ p  { font-size: var(--font-body); line-height: 1.6; }
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6B7280;
+  color: #4B5563; /* Fixed contrast */
 }
 
-.metric-label.white { color: rgba(255,255,255,0.75); }
+.metric-label.white { color: rgba(255,255,255,0.85); /* Fixed contrast */ }
+.metric-label.dark  { color: var(--neutral-dark); }
 
 .trend-up   { color: var(--success); }
 .trend-down { color: var(--error); }
@@ -387,7 +396,7 @@ p  { font-size: var(--font-body); line-height: 1.6; }
 .form-label {
   font-size: var(--font-body-small);
   font-weight: 600;
-  color: var(--neutral-dark);
+  color: var(--secondary-green); /* Improved from neutral-dark for brand alignment */
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -536,7 +545,7 @@ p  { font-size: var(--font-body); line-height: 1.6; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6B7280;
+  color: var(--secondary-green); /* Improved contrast from #6B7280 */
   background: var(--primary-beige);
   border-bottom: 1px solid var(--card-border);
   white-space: nowrap;
@@ -624,7 +633,7 @@ p  { font-size: var(--font-body); line-height: 1.6; }
   gap: var(--spacing-3);
   padding: 10px var(--spacing-4);
   border-radius: var(--radius-md);
-  color: rgba(255,255,255,0.65);
+  color: rgba(255,255,255,0.85); /* Improved contrast from 0.65 */
   font-size: var(--font-body);
   font-weight: 500;
   cursor: pointer;
