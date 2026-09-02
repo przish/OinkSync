@@ -4,14 +4,13 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, PiggyBank } from 'lucide-react';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { Eye, EyeOff } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import { loginSchema, type LoginFormValues } from '@/lib/utils/zod-schemas';
 import { FormField } from '@/components/Forms/FormField';
 import { Button } from '@/components/UI/Button';
 
 export default function LoginPage() {
-  const { login } = useAuth();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -24,13 +23,26 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  // Call Supabase directly — no hook dependency that could re-render-loop
   const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
-    const { error } = await login(data.email, data.password);
-    if (error) {
-      setServerError('Invalid email or password. Please try again.');
-    } else {
-      router.replace('/dashboard');
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      if (error) {
+        setServerError('Invalid email or password. Please try again.');
+      } else {
+        // MUST use full-page navigation, not router.replace().
+        // router.replace does a client-side RSC fetch that doesn't carry
+        // the freshly-set Supabase auth cookies to the server, so middleware
+        // sees unauthenticated and bounces back to /auth/login.
+        window.location.href = '/dashboard';
+      }
+    } catch {
+      setServerError('Something went wrong. Please try again.');
     }
   };
 
@@ -58,19 +70,18 @@ export default function LoginPage() {
         <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 12, textAlign: 'center' }}>
           PiggyTrack
         </h1>
-        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.65)', textAlign: 'center', maxWidth: 320, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', textAlign: 'center', maxWidth: 320, lineHeight: 1.7 }}>
           The complete financial operating system for modern pig farm operations.
         </p>
 
-        {/* Stats */}
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
           gap: 16, marginTop: 48, width: '100%', maxWidth: 400,
         }}>
           {[
-            { label: 'Track Capital', value: '₱', icon: '💰' },
-            { label: 'Manage Inventory', value: '🐷', icon: '📋' },
-            { label: 'View Analytics', value: '📊', icon: '📈' },
+            { label: 'Track Capital', icon: '💰' },
+            { label: 'Manage Inventory', icon: '📋' },
+            { label: 'View Analytics', icon: '📈' },
           ].map((stat) => (
             <div key={stat.label} style={{
               background: 'rgba(255,255,255,0.06)',
@@ -79,7 +90,7 @@ export default function LoginPage() {
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
               <div style={{ fontSize: 24, marginBottom: 8 }}>{stat.icon}</div>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>{stat.label}</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>{stat.label}</p>
             </div>
           ))}
         </div>
@@ -98,15 +109,27 @@ export default function LoginPage() {
             <h2 style={{ fontSize: 26, fontWeight: 800, color: 'var(--neutral-dark)', marginBottom: 8 }}>
               Welcome back 👋
             </h2>
-            <p style={{ color: '#6B7280', fontSize: 14 }}>
+            <p style={{ color: '#4B5563', fontSize: 14 }}>
               Sign in to access your farm dashboard
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }} noValidate>
-            <FormField label="Email Address" htmlFor="email" error={errors.email?.message} required>
+          {/*
+            SECURITY FIX: method="post" prevents credentials from appearing in the URL.
+            react-hook-form's handleSubmit intercepts the submit event and calls
+            onSubmit with the validated data — the form never actually POSTs to the
+            server so action="#" is just a safe fallback.
+          */}
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            method="post"
+            action="#"
+            style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+            noValidate
+          >
+            <FormField label="Email Address" htmlFor="login-email" error={errors.email?.message} required>
               <input
-                id="email"
+                id="login-email"
                 type="email"
                 className={`form-input${errors.email ? ' error' : ''}`}
                 placeholder="you@example.com"
@@ -115,10 +138,10 @@ export default function LoginPage() {
               />
             </FormField>
 
-            <FormField label="Password" htmlFor="password" error={errors.password?.message} required>
+            <FormField label="Password" htmlFor="login-password" error={errors.password?.message} required>
               <div style={{ position: 'relative' }}>
                 <input
-                  id="password"
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   className={`form-input${errors.password ? ' error' : ''}`}
                   placeholder="••••••••"
@@ -133,7 +156,7 @@ export default function LoginPage() {
                     position: 'absolute', right: 12, top: '50%',
                     transform: 'translateY(-50%)',
                     background: 'none', border: 'none',
-                    cursor: 'pointer', color: '#9CA3AF',
+                    cursor: 'pointer', color: '#4B5563',
                     display: 'flex', alignItems: 'center',
                   }}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -144,8 +167,13 @@ export default function LoginPage() {
             </FormField>
 
             {serverError && (
-              <div className="alert-banner" style={{ borderLeftColor: 'var(--error)', background: 'linear-gradient(135deg, #fde8e8, #f5c6c6)' }}>
-                <p style={{ fontSize: 14, fontWeight: 500 }}>{serverError}</p>
+              <div style={{
+                background: 'linear-gradient(135deg, #fde8e8, #f5c6c6)',
+                borderLeft: '4px solid #C85C5C',
+                borderRadius: 10,
+                padding: '12px 16px',
+              }}>
+                <p style={{ fontSize: 14, fontWeight: 500, color: '#991B1B' }}>{serverError}</p>
               </div>
             )}
 
@@ -156,11 +184,11 @@ export default function LoginPage() {
               isLoading={isSubmitting}
               style={{ width: '100%', marginTop: 4 }}
             >
-              Sign In to PiggyTrack
+              {isSubmitting ? 'Signing in...' : 'Sign In to PiggyTrack'}
             </Button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: 28, fontSize: 13, color: '#9CA3AF' }}>
+          <p style={{ textAlign: 'center', marginTop: 28, fontSize: 13, color: '#4B5563' }}>
             Contact your administrator to get access
           </p>
         </div>
