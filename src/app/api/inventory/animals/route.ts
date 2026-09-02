@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUserProfile, requireRole } from '@/lib/auth';
 import { successResponse, handleError, ValidationError } from '@/lib/errors';
