@@ -65,6 +65,7 @@ export interface BusinessProfile {
   logistics_capital_contribution: number;
   pen_manager_capital_contribution: number;
   investor_capital_total: number;
+  target_monthly_profit: number;
   target_pig_count: number;
   cost_per_pig_rearing: number;
   expected_sale_price_per_pig: number;

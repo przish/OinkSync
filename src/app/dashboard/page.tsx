@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Wallet, TrendingUp, PiggyBank, Receipt,
@@ -22,6 +24,7 @@ export default function DashboardPage() {
   const { user, isAdmin, canApprove } = useAuth();
   const { transactions, isLoading: txLoading, fetchTransactions, updateTransactionStatus, addTransaction } = useTransactions();
   const { kpi, isLoading: kpiLoading, fetchKpi } = useAnalytics();
+  const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -158,7 +161,7 @@ export default function DashboardPage() {
               </p>
               <p className="text-small">Review and approve or reject pending transactions below.</p>
             </div>
-            <Button variant="outline-green" size="sm">Review Now</Button>
+            <Button variant="outline-green" size="sm" onClick={() => router.push('/transactions')}>Review Now</Button>
           </div>
         )}
 
