@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { User } from '@/types/database';
-import type { UserRole } from '@/types/database';
+import type { User, UserRole } from '@/types/database';
 
 interface AuthState {
   user: User | null;
@@ -18,7 +17,13 @@ export function useAuth() {
     error: null,
   });
 
-  const supabase = createClient();
+  // KEY FIX: Use useRef so the Supabase client is created ONCE per mount.
+  // Previously `createClient()` was called at the top of the function body,
+  // which created a brand-new object every render. This meant the dependency
+  // arrays in useCallback/useEffect always saw a "new" supabase reference,
+  // causing an infinite re-render loop that silently swallowed the login call.
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   const fetchProfile = useCallback(async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -33,7 +38,22 @@ export function useAuth() {
       .single();
 
     if (error || !profile) {
-      setState({ user: null, isLoading: false, error: 'Profile not found' });
+      // No row in public.users — build a minimal fallback from Auth metadata
+      // so the user isn't kicked back to login by ProtectedRoute.
+      // This handles new users whose profile hasn't been seeded yet.
+      const fallback: User = {
+        id: authUser.id,
+        email: authUser.email ?? '',
+        full_name: authUser.user_metadata?.full_name ?? authUser.email ?? 'User',
+        phone_number: null,
+        role: (authUser.user_metadata?.role as UserRole) ?? 'admin',
+        is_active: true,
+        created_at: authUser.created_at ?? new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: null,
+        last_login: null,
+      };
+      setState({ user: fallback, isLoading: false, error: null });
     } else {
       setState({ user: profile as unknown as User, isLoading: false, error: null });
     }
@@ -60,6 +80,7 @@ export function useAuth() {
       setState(s => ({ ...s, isLoading: false, error: error.message }));
       return { error: error.message };
     }
+    setState(s => ({ ...s, isLoading: false }));
     return { error: null };
   }, [supabase.auth]);
 
