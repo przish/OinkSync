@@ -95,7 +95,8 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const businessSettingsSchema = z.object({
   total_capital: z.number().positive('Total capital must be positive'),
-  target_pig_count: z.number().int().positive('Target pig count must be positive'),
+  target_monthly_profit: z.number().min(0, 'Target profit cannot be negative'),
+  target_pig_count: z.number().int().min(0).optional(),
   cost_per_pig_rearing: z.number().positive('Cost per pig must be positive'),
   expected_sale_price_per_pig: z.number().positive('Expected sale price must be positive'),
   expected_roi_percentage: z.number().positive('Expected ROI must be positive'),
