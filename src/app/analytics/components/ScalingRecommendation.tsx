@@ -53,22 +53,22 @@ export function ScalingRecommendation({ data }: ScalingRecommendationProps) {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, marginTop: 16 }}>
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6B7280' }}>Target Pigs</p>
+                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4B5563' }}>Target Pigs</p>
                 <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--secondary-green)' }}>{data.target_pig_count}</p>
               </div>
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6B7280' }}>Required Capital</p>
+                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4B5563' }}>Required Capital</p>
                 <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>{formatCurrency(data.required_capital)}</p>
               </div>
               {!isReady && (
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6B7280' }}>Gap Amount</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4B5563' }}>Gap Amount</p>
                   <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--error)' }}>{formatCurrency(data.gap_amount)}</p>
                 </div>
               )}
               {data.projected_scale_date && (
                 <div>
-                  <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6B7280' }}>Est. Scale Date</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4B5563' }}>Est. Scale Date</p>
                   <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--secondary-green)' }}>
                     {new Date(data.projected_scale_date).toLocaleDateString('en-PH', { month: 'short', year: 'numeric' })}
                   </p>
