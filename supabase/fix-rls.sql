@@ -81,6 +81,18 @@ CREATE POLICY "Authenticated users can read animals"
   TO authenticated
   USING (true);
 
+-- Animals: authenticated users can insert
+CREATE POLICY "Authenticated users can insert animals"
+  ON public.animals FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
+
+-- Animals: authenticated users can update
+CREATE POLICY "Authenticated users can update animals"
+  ON public.animals FOR UPDATE
+  TO authenticated
+  USING (true);
+
 -- Users: all authenticated users can read all user profiles
 CREATE POLICY "Users can read all users"
   ON public.users FOR SELECT

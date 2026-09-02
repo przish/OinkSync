@@ -117,8 +117,12 @@ export function handleError(error: unknown) {
   // Log unexpected errors
   console.error('Unexpected error:', error);
 
-  const message =
-    error instanceof Error ? error.message : 'An unexpected error occurred';
+  let message = 'An unexpected error occurred';
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
+    message = (error as any).message;
+  }
 
   return NextResponse.json(
     {
