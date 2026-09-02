@@ -38,11 +38,11 @@ export default function ReportsPage() {
           if (json.data && json.data.analytics) {
             return {
               month: json.data.month,
-              total_revenue: json.data.analytics.total_revenue,
-              total_expenses: json.data.analytics.total_expenses,
-              net_profit: json.data.analytics.net_profit,
-              roi_percentage: json.data.analytics.roi_percentage,
-              animals_sold: json.data.analytics.animals_sold,
+              total_revenue: json.data.analytics?.total_revenue ?? 0,
+              total_expenses: json.data.analytics?.total_expenses ?? 0,
+              net_profit: json.data.analytics?.net_profit ?? 0,
+              roi_percentage: json.data.analytics?.roi_percentage ?? 0,
+              animals_sold: json.data.analytics?.animals_sold ?? 0,
             };
           }
         }
