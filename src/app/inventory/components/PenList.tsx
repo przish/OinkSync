@@ -15,7 +15,7 @@ export function PenList({ pens }: PenListProps) {
   if (pens.length === 0) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon"><PiggyBank size={28} color="#9CA3AF" /></div>
+        <div className="empty-state-icon"><PiggyBank size={28} color="#4B5563" /></div>
         <p style={{ fontWeight: 600, marginTop: 8 }}>No pens found</p>
         <p className="text-small text-muted">Add pens to get started</p>
       </div>
@@ -36,7 +36,7 @@ export function PenList({ pens }: PenListProps) {
                   Pen {pen.pen_number}
                 </p>
                 {pen.pen_name && (
-                  <p style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{pen.pen_name}</p>
+                  <p style={{ fontSize: 12, color: '#4B5563', marginTop: 2 }}>{pen.pen_name}</p>
                 )}
               </div>
               <Badge variant={pen.status} />
@@ -47,7 +47,7 @@ export function PenList({ pens }: PenListProps) {
                 <p className="metric-label" style={{ marginBottom: 3 }}>Animals</p>
                 <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--secondary-green)' }}>
                   {pen.current_count}
-                  <span style={{ fontSize: 12, fontWeight: 400, color: '#9CA3AF' }}> / {pen.capacity}</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, color: '#4B5563' }}> / {pen.capacity}</span>
                 </p>
               </div>
               {pen.location && (
@@ -61,7 +61,7 @@ export function PenList({ pens }: PenListProps) {
             {/* Occupancy bar */}
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 11, color: '#6B7280', fontWeight: 600 }}>Occupancy</span>
+                <span style={{ fontSize: 11, color: '#4B5563', fontWeight: 600 }}>Occupancy</span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: pct >= 90 ? 'var(--error)' : 'var(--secondary-green)' }}>
                   {Math.round(pct)}%
                 </span>
@@ -75,7 +75,7 @@ export function PenList({ pens }: PenListProps) {
             </div>
 
             {pen.last_cleaned_date && (
-              <p style={{ fontSize: 11, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <p style={{ fontSize: 11, color: '#4B5563', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <Activity size={11} />
                 Last cleaned: {formatDate(pen.last_cleaned_date)}
               </p>
