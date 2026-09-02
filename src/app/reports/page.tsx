@@ -44,7 +44,7 @@ export default function ReportsPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ fontWeight: 700 }}>Monthly Reports</h2>
-            <p style={{ color: '#6B7280', fontSize: 14, marginTop: 4 }}>Last 12 months financial summary</p>
+            <p style={{ color: '#4B5563', fontSize: 14, marginTop: 4 }}>Last 12 months financial summary</p>
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export default function ReportsPage() {
             Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
           ) : reports.length === 0 ? (
             <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-              <div className="empty-state-icon"><FileText size={28} color="#9CA3AF" /></div>
+              <div className="empty-state-icon"><FileText size={28} color="#4B5563" /></div>
               <p style={{ fontWeight: 600, marginTop: 8 }}>No reports yet</p>
               <p className="text-small text-muted">Monthly analytics will appear here as data accumulates</p>
             </div>
@@ -67,7 +67,7 @@ export default function ReportsPage() {
                       <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--neutral-dark)' }}>
                         {formatMonthYear(report.month)}
                       </p>
-                      <p style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
+                      <p style={{ fontSize: 12, color: '#4B5563', marginTop: 2 }}>
                         {report.animals_sold ?? 0} animals sold
                       </p>
                     </div>
@@ -101,7 +101,7 @@ export default function ReportsPage() {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {isProfit ? <TrendingUp size={14} color="var(--success)" /> : <TrendingDown size={14} color="var(--error)" />}
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280' }}>Net Profit</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#4B5563' }}>Net Profit</span>
                     </div>
                     <span style={{ fontWeight: 800, fontSize: 16, color: isProfit ? 'var(--success)' : 'var(--error)' }}>
                       {isProfit ? '+' : ''}{formatCurrency(report.net_profit)}
