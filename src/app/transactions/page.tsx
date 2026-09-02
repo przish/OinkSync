@@ -70,9 +70,9 @@ export default function TransactionsPage() {
 
   const filtered = search
     ? transactions.filter((tx) =>
-        tx.description.toLowerCase().includes(search.toLowerCase()) ||
-        tx.category.toLowerCase().includes(search.toLowerCase())
-      )
+      tx.description.toLowerCase().includes(search.toLowerCase()) ||
+      tx.category.toLowerCase().includes(search.toLowerCase())
+    )
     : transactions;
 
   return (
