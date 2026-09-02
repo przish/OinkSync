@@ -99,7 +99,7 @@ export default function TransactionsPage() {
         {/* Search */}
         <Card style={{ padding: '12px 16px' }}>
           <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+            <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#4B5563' }} />
             <input
               type="text"
               className="form-input"
@@ -116,7 +116,7 @@ export default function TransactionsPage() {
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ fontWeight: 700, fontSize: 15 }}>
               All Transactions
-              {pagination && <span style={{ fontWeight: 400, color: '#6B7280', fontSize: 13, marginLeft: 8 }}>({pagination.total} total)</span>}
+              {pagination && <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>({pagination.total} total)</span>}
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export default function TransactionsPage() {
                 ) : (
                   filtered.map((tx) => (
                     <tr key={tx.id}>
-                      <td className="text-small" style={{ whiteSpace: 'nowrap', color: '#6B7280' }}>
+                      <td className="text-small" style={{ whiteSpace: 'nowrap', color: '#4B5563' }}>
                         {formatDate(tx.transaction_date)}
                       </td>
                       <td style={{ maxWidth: 200 }}>
@@ -168,7 +168,7 @@ export default function TransactionsPage() {
                           {tx.transaction_type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                         </span>
                       </td>
-                      <td className="text-small" style={{ color: '#6B7280' }}>
+                      <td className="text-small" style={{ color: '#4B5563' }}>
                         {tx.user?.full_name ?? '—'}
                       </td>
                       <td><Badge variant={tx.status} /></td>
