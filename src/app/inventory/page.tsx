@@ -112,7 +112,7 @@ export default function InventoryPage() {
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)' }}>
             <h3 style={{ fontWeight: 700, fontSize: 15 }}>
               All Animals
-              <span style={{ fontWeight: 400, color: '#6B7280', fontSize: 13, marginLeft: 8 }}>
+              <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>
                 ({animals.length} total)
               </span>
             </h3>
@@ -144,9 +144,9 @@ export default function InventoryPage() {
                     <tr key={animal.id}>
                       <td style={{ fontWeight: 600 }}>{animal.animal_code ?? `#${animal.id.slice(0, 6)}`}</td>
                       <td>{animal.animal_type.replace('_', ' ')}</td>
-                      <td style={{ color: '#6B7280' }}>{animal.pen_id.slice(0, 8)}...</td>
+                      <td style={{ color: '#4B5563' }}>{animal.pen_id.slice(0, 8)}...</td>
                       <td><Badge variant={animal.health_status} /></td>
-                      <td style={{ color: '#6B7280' }}>{animal.current_weight ? `${animal.current_weight} kg` : '—'}</td>
+                      <td style={{ color: '#4B5563' }}>{animal.current_weight ? `${animal.current_weight} kg` : '—'}</td>
                       <td><Badge variant={animal.status} /></td>
                     </tr>
                   ))
