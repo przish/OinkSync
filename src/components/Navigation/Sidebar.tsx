@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import {
   LayoutDashboard, ArrowLeftRight, BarChart3,
   PiggyBank, ClipboardList, FileText,
-  Users, Settings, LogOut, ChevronRight,
+  Users, Settings, LogOut, ChevronRight, TrendingUp
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -22,6 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
   { href: '/transactions', label: 'Transactions', icon: <ArrowLeftRight size={18} />, roles: ['admin', 'logistics'] },
   { href: '/analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
+  { href: '/scaling-plan', label: 'Scaling Plan', icon: <TrendingUp size={18} />, roles: ['admin', 'investor'] },
   { href: '/inventory', label: 'Inventory', icon: <PiggyBank size={18} /> },
   { href: '/pen-logs', label: 'Pen Logs', icon: <ClipboardList size={18} />, roles: ['admin', 'pen_manager'] },
   { href: '/reports', label: 'Reports', icon: <FileText size={18} /> },
