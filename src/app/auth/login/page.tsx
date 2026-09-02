@@ -39,7 +39,7 @@ export default function LoginPage() {
         // router.replace does a client-side RSC fetch that doesn't carry
         // the freshly-set Supabase auth cookies to the server, so middleware
         // sees unauthenticated and bounces back to /auth/login.
-        window.location.href = '/dashboard';
+        window.location.assign('/dashboard');
       }
     } catch {
       setServerError('Something went wrong. Please try again.');
