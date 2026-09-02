@@ -31,7 +31,7 @@ export function FormField({
       </label>
       {children}
       {hint && !error && (
-        <p style={{ fontSize: 'var(--font-body-small)', color: '#9CA3AF' }}>{hint}</p>
+        <p className="text-muted" style={{ fontSize: 'var(--font-body-small)' }}>{hint}</p>
       )}
       {error && (
         <p className="form-error">
