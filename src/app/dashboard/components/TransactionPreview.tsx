@@ -55,7 +55,7 @@ export function TransactionPreview({
             ) : (
               transactions.map((tx) => (
                 <tr key={tx.id}>
-                  <td className="text-small" style={{ color: '#6B7280', whiteSpace: 'nowrap' }}>
+                  <td className="text-small" style={{ color: '#4B5563', whiteSpace: 'nowrap' }}>
                     {formatDate(tx.transaction_date)}
                   </td>
                   <td>
