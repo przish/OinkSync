@@ -34,8 +34,8 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
     label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''}`,
   }));
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AnimalFormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(animalSchema) as any,
     defaultValues: {
       birth_date: todayISO(),
