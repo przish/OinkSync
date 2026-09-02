@@ -24,11 +24,34 @@ export default function ReportsPage() {
   const fetchReports = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/reports/monthly-summary?months=12');
-      if (res.ok) {
-        const json = await res.json();
-        setReports(json.data ?? []);
-      }
+      // The API only accepts a single month, so we fetch the last 12 months individually
+      const reportsList: MonthlyReport[] = [];
+      const now = new Date();
+      
+      const promises = Array.from({ length: 12 }).map(async (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+        const res = await fetch(`/api/reports/monthly-summary?month=${monthStr}`);
+        if (res.ok) {
+          const json = await res.json();
+          // The API returns the report wrapped in a MonthlySummaryReport object
+          if (json.data && json.data.analytics) {
+            return {
+              month: json.data.month,
+              total_revenue: json.data.analytics.total_revenue,
+              total_expenses: json.data.analytics.total_expenses,
+              net_profit: json.data.analytics.net_profit,
+              roi_percentage: json.data.analytics.roi_percentage,
+              animals_sold: json.data.analytics.animals_sold,
+            };
+          }
+        }
+        return null;
+      });
+
+      const results = await Promise.all(promises);
+      const validReports = results.filter((r): r is MonthlyReport => r !== null && (r.total_revenue > 0 || r.total_expenses > 0));
+      setReports(validReports);
     } finally {
       setIsLoading(false);
     }
