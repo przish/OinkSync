@@ -176,7 +176,7 @@ export default function AnalyticsPage() {
                       <td style={{ fontWeight: 700, color: 'var(--error)' }}>
                         {formatCurrency(item.total_amount)}
                       </td>
-                      <td style={{ color: '#6B7280' }}>{item.transaction_count}</td>
+                      <td style={{ color: '#4B5563' }}>{item.transaction_count}</td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{
@@ -190,7 +190,7 @@ export default function AnalyticsPage() {
                               borderRadius: 'var(--radius-full)',
                             }} />
                           </div>
-                          <span style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: '#4B5563', whiteSpace: 'nowrap' }}>
                             {formatPercentage(item.percentage_of_total)}
                           </span>
                         </div>
