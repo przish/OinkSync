@@ -68,7 +68,7 @@ export default function LoginPage() {
           🐷
         </div>
         <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 12, textAlign: 'center' }}>
-          PiggyTrack
+          OinkSync
         </h1>
         <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', textAlign: 'center', maxWidth: 320, lineHeight: 1.7 }}>
           The complete financial operating system for modern pig farm operations.
@@ -184,7 +184,7 @@ export default function LoginPage() {
               isLoading={isSubmitting}
               style={{ width: '100%', marginTop: 4 }}
             >
-              {isSubmitting ? 'Signing in...' : 'Sign In to PiggyTrack'}
+              {isSubmitting ? 'Signing in...' : 'Sign In to OinkSync'}
             </Button>
           </form>
 
