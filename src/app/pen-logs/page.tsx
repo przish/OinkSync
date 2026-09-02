@@ -66,7 +66,7 @@ export default function PenLogsPage() {
             <div>
               <h3 style={{ fontWeight: 700, fontSize: 15 }}>Daily Pen Logs</h3>
               {pagination && (
-                <p style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{pagination.total} total logs</p>
+                <p style={{ fontSize: 12, color: '#4B5563', marginTop: 2 }}>{pagination.total} total logs</p>
               )}
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function PenLogsPage() {
                   <tr>
                     <td colSpan={8}>
                       <div className="empty-state">
-                        <div className="empty-state-icon"><ClipboardList size={28} color="#9CA3AF" /></div>
+                        <div className="empty-state-icon"><ClipboardList size={28} color="#4B5563" /></div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No logs yet</p>
                         <p className="text-small text-muted">Add daily pen logs to track farm activity</p>
                       </div>
@@ -103,20 +103,20 @@ export default function PenLogsPage() {
                     <tr key={log.id}>
                       <td>
                         <p style={{ fontWeight: 600, fontSize: 13 }}>{formatDate(log.log_date)}</p>
-                        <p style={{ fontSize: 11, color: '#9CA3AF' }}>{formatRelativeTime(log.created_at)}</p>
+                        <p style={{ fontSize: 11, color: '#4B5563' }}>{formatRelativeTime(log.created_at)}</p>
                       </td>
                       <td style={{ fontWeight: 600 }}>Pen {log.pen?.pen_number ?? '—'}</td>
-                      <td style={{ color: '#6B7280' }}>{log.feed_amount_kg} kg</td>
+                      <td style={{ color: '#4B5563' }}>{log.feed_amount_kg} kg</td>
                       <td>
                         {log.animals_died > 0
                           ? <span style={{ fontWeight: 700, color: 'var(--error)' }}>{log.animals_died}</span>
-                          : <span style={{ color: '#9CA3AF' }}>0</span>
+                          : <span style={{ color: '#4B5563' }}>0</span>
                         }
                       </td>
                       <td>
                         {log.animals_sick > 0
                           ? <span style={{ fontWeight: 700, color: 'var(--warning)' }}>{log.animals_sick}</span>
-                          : <span style={{ color: '#9CA3AF' }}>0</span>
+                          : <span style={{ color: '#4B5563' }}>0</span>
                         }
                       </td>
                       <td>
@@ -124,7 +124,7 @@ export default function PenLogsPage() {
                           ? <Badge variant={log.cleaning_status === 'cleaned' ? 'approved' : log.cleaning_status === 'not_cleaned' ? 'rejected' : 'pending'}>
                               {log.cleaning_status.replace('_', ' ')}
                             </Badge>
-                          : <span style={{ color: '#9CA3AF' }}>—</span>
+                          : <span style={{ color: '#4B5563' }}>—</span>
                         }
                       </td>
                       <td>
@@ -132,10 +132,10 @@ export default function PenLogsPage() {
                           ? <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--error)', fontSize: 12, fontWeight: 600 }}>
                               <AlertTriangle size={12} /> Yes
                             </span>
-                          : <span style={{ color: '#9CA3AF', fontSize: 12 }}>No</span>
+                          : <span style={{ color: '#4B5563', fontSize: 12 }}>No</span>
                         }
                       </td>
-                      <td style={{ fontSize: 12, color: '#6B7280' }}>{log.logged_by?.full_name ?? '—'}</td>
+                      <td style={{ fontSize: 12, color: '#4B5563' }}>{log.logged_by?.full_name ?? '—'}</td>
                     </tr>
                   ))
                 )}
@@ -146,7 +146,7 @@ export default function PenLogsPage() {
           {pagination && pagination.total_pages > 1 && (
             <div className="pagination">
               <button className="page-btn" disabled={!pagination.has_prev} onClick={() => setPage(p => p - 1)}>‹</button>
-              <span style={{ fontSize: 13, color: '#6B7280', padding: '0 12px' }}>Page {page} of {pagination.total_pages}</span>
+              <span style={{ fontSize: 13, color: '#4B5563', padding: '0 12px' }}>Page {page} of {pagination.total_pages}</span>
               <button className="page-btn" disabled={!pagination.has_next} onClick={() => setPage(p => p + 1)}>›</button>
             </div>
           )}
