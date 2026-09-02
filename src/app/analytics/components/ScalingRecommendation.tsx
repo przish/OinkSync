@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { TrendingUp, Target, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/UI/Button';
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
@@ -12,6 +13,7 @@ interface ScalingRecommendationProps {
 
 export function ScalingRecommendation({ data }: ScalingRecommendationProps) {
   const isReady = data.is_ready;
+  const router = useRouter();
 
   return (
     <div style={{
@@ -77,7 +79,11 @@ export function ScalingRecommendation({ data }: ScalingRecommendationProps) {
             </div>
           </div>
         </div>
-        <Button variant={isReady ? 'primary' : 'secondary'} leftIcon={<TrendingUp size={15} />}>
+        <Button
+          variant={isReady ? 'primary' : 'secondary'}
+          leftIcon={<TrendingUp size={15} />}
+          onClick={() => router.push('/scaling-plan')}
+        >
           {isReady ? 'Start Scaling' : 'View Plan'}
         </Button>
       </div>
