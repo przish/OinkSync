@@ -50,7 +50,8 @@ export function CardHeader({ title, subtitle, action, icon }: CardHeaderProps) {
           <div style={{
             width: 40, height: 40,
             borderRadius: 'var(--radius-md)',
-            background: 'rgba(45,80,22,0.1)',
+            background: 'var(--palette-blush)',
+            border: '1px solid var(--palette-rose)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             flexShrink: 0,
           }}>
@@ -62,7 +63,7 @@ export function CardHeader({ title, subtitle, action, icon }: CardHeaderProps) {
             {title}
           </h3>
           {subtitle && (
-            <p style={{ fontSize: 'var(--font-body-small)', color: '#6B7280', marginTop: 2 }}>
+            <p style={{ fontSize: 'var(--font-body-small)', color: 'var(--palette-sage)', marginTop: 2 }}>
               {subtitle}
             </p>
           )}
