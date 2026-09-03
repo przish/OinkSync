@@ -82,7 +82,7 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
 
         <div className="form-grid form-grid-2">
           <FormField label="Feed Type" htmlFor="log-feed-type">
-            <input id="log-feed-type" type="text" className="form-input" placeholder="e.g. Starter, Grower" {...register('feed_type')} />
+            <input id="log-feed-type" type="text" className="form-input" placeholder="Enter feed type" {...register('feed_type')} />
           </FormField>
           <FormField label="Feed Amount (kg)" htmlFor="log-feed-kg" error={errors.feed_amount_kg?.message} required>
             <input id="log-feed-kg" type="number" step="0.1" min="0" className={`form-input${errors.feed_amount_kg ? ' error' : ''}`} {...register('feed_amount_kg', { valueAsNumber: true })} />
