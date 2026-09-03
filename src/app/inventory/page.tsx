@@ -9,6 +9,7 @@ import { Badge } from '@/components/UI/Badge';
 import { SkeletonCard } from '@/components/UI/Spinner';
 import { PenList } from './components/PenList';
 import { AnimalForm } from './components/AnimalForm';
+import { AddPenModal } from '@/components/Forms/AddPenModal';
 import { useInventory } from '@/lib/hooks/useInventory';
 import { useToast, ToastContainer } from '@/components/UI/Toast';
 import type { CreateAnimalRequest } from '@/types/api';
@@ -16,6 +17,7 @@ import type { CreateAnimalRequest } from '@/types/api';
 export default function InventoryPage() {
   const { summary, pens, animals, isLoading, fetchAll, addAnimal } = useInventory();
   const [showAddAnimal, setShowAddAnimal] = useState(false);
+  const [showAddPen, setShowAddPen] = useState(false);
   const { toasts, toast, remove } = useToast();
 
   const load = useCallback(() => fetchAll(), [fetchAll]);
@@ -84,7 +86,21 @@ export default function InventoryPage() {
 
         {/* Pen List */}
         <Card>
-          <CardHeader title="Pen Overview" subtitle={`${pens.length} pens total`} icon={<PiggyBank size={18} color="var(--secondary-green)" />} />
+          <CardHeader
+            title="Pen Overview"
+            subtitle={`${pens.length} pens total`}
+            icon={<PiggyBank size={18} color="var(--secondary-green)" />}
+            action={
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus size={14} />}
+                onClick={() => setShowAddPen(true)}
+              >
+                Add Pen
+              </Button>
+            }
+          />
           {isLoading ? (
             <div className="grid-cards">
               {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -155,6 +171,13 @@ export default function InventoryPage() {
         onClose={() => setShowAddAnimal(false)}
         pens={pens}
         onSubmit={handleAddAnimal}
+      />
+
+      <AddPenModal
+        isOpen={showAddPen}
+        onClose={() => setShowAddPen(false)}
+        onPenCreated={load}
+        existingCount={pens.length}
       />
 
       <ToastContainer toasts={toasts} onRemove={remove} />
