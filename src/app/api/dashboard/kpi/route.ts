@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const { start_date, end_date } = parseDateRange(searchParams);
 
     const now = new Date();
-    let computedStart: string;
+    let computedStart: string | null = null;
     let computedEnd: string = end_date || now.toISOString().split('T')[0];
 
     if (start_date) {
@@ -38,9 +38,6 @@ export async function GET(request: NextRequest) {
       computedEnd = lmEnd.toISOString().split('T')[0];
     } else if (period === 'ytd') {
       computedStart = `${now.getFullYear()}-01-01`;
-    } else {
-      // 'all' time
-      computedStart = '2020-01-01';
     }
 
     let currentKpi: DashboardKpiResult | null = null;
@@ -49,7 +46,7 @@ export async function GET(request: NextRequest) {
     // 1. Attempt RPC call
     try {
       const { data: kpiData, error: kpiError } = await supabase.rpc('get_dashboard_kpis', {
-        p_start_date: computedStart,
+        p_start_date: computedStart || '1970-01-01',
         p_end_date: computedEnd,
       });
 
@@ -68,10 +65,11 @@ export async function GET(request: NextRequest) {
         .select('transaction_type, amount, status, transaction_date')
         .eq('status', 'approved');
 
-      if (period !== 'all') {
-        txQuery = txQuery
-          .gte('transaction_date', computedStart)
-          .lte('transaction_date', computedEnd);
+      if (computedStart) {
+        txQuery = txQuery.gte('transaction_date', computedStart);
+      }
+      if (end_date) {
+        txQuery = txQuery.lte('transaction_date', computedEnd);
       }
 
       const { data: approvedTx } = await txQuery;
