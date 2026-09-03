@@ -71,29 +71,29 @@ export default function DashboardPage() {
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Welcome header */}
         <div style={{
-          background: 'linear-gradient(135deg, #4E6E50, #86A788)',
+          background: 'var(--palette-sage)',
           borderRadius: 'var(--radius-xl)',
           padding: '28px 32px',
-          color: 'white',
+          color: 'var(--palette-cream)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           position: 'relative', overflow: 'hidden',
           boxShadow: 'var(--shadow-md)',
         }}>
           <div style={{ position: 'absolute', right: -20, top: -20, fontSize: 120, opacity: 0.1, userSelect: 'none' }}>🐷</div>
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>
+            <p style={{ fontSize: 13, color: 'var(--palette-cream)', fontWeight: 600 }}>
               {greeting}, {displayName} 👋
             </p>
-            <h2 style={{ fontSize: 24, fontWeight: 800, marginTop: 4, color: 'white' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 800, marginTop: 4, color: 'var(--palette-cream)' }}>
               Farm Overview
             </h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>
+            <p style={{ fontSize: 13, color: 'var(--palette-cream)', opacity: 0.9, marginTop: 4 }}>
               {formatDate(today.toISOString())}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ textAlign: 'right' }}>
-              <label htmlFor="period-select" style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, fontWeight: 600 }}>
+              <label htmlFor="period-select" style={{ display: 'block', fontSize: 11, color: 'var(--palette-cream)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, fontWeight: 700 }}>
                 Period View
               </label>
               <select
@@ -104,31 +104,31 @@ export default function DashboardPage() {
                   fetchKpi(e.target.value);
                 }}
                 style={{
-                  background: 'rgba(0, 0, 0, 0.25)',
-                  color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  background: 'var(--palette-cream)',
+                  color: 'var(--neutral-dark)',
+                  border: '1.5px solid var(--palette-blush)',
                   borderRadius: 'var(--radius-sm)',
                   padding: '6px 12px',
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: 'pointer',
                   outline: 'none',
                 }}
               >
-                <option value="all" style={{ background: '#223726', color: '#fff' }}>All Time</option>
-                <option value="this_month" style={{ background: '#223726', color: '#fff' }}>This Month</option>
-                <option value="last_month" style={{ background: '#223726', color: '#fff' }}>Last Month</option>
-                <option value="ytd" style={{ background: '#223726', color: '#fff' }}>Year to Date</option>
+                <option value="all">All Time</option>
+                <option value="this_month">This Month</option>
+                <option value="last_month">Last Month</option>
+                <option value="ytd">Year to Date</option>
               </select>
             </div>
 
             {kpi && (
-              <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 20 }}>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
-                <p style={{ fontSize: 28, fontWeight: 800, color: kpi.net_profit >= 0 ? '#bbf7d0' : '#fecaca' }}>
+              <div style={{ textAlign: 'right', borderLeft: '1.5px solid rgba(255, 253, 236, 0.4)', paddingLeft: 20 }}>
+                <p style={{ fontSize: 11, color: 'var(--palette-cream)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
+                <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--palette-cream)' }}>
                   {formatCurrency(kpi.net_profit)}
                 </p>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', marginTop: 2 }}>
+                <p style={{ fontSize: 12, color: 'var(--palette-cream)', opacity: 0.9, marginTop: 2 }}>
                   ROI: {formatPercentage(kpi.roi_percentage)}
                 </p>
               </div>
