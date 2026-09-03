@@ -1,7 +1,8 @@
 /**
  * GET /api/reports/monthly-summary
  *
- * Returns monthly financial summary report.
+ * Returns comprehensive monthly financial summary report,
+ * itemized transactions, and uploaded receipts for the requested month.
  */
 
 import { NextRequest } from 'next/server';
@@ -9,8 +10,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/auth';
 import { successResponse, handleError } from '@/lib/errors';
 import { requireDate } from '@/lib/validation';
-import type { MonthlySummaryReport } from '@/types/api';
-import type { MonthlyAnalytics, ExpenseBreakdownResult } from '@/types/database';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,66 +26,86 @@ export async function GET(request: NextRequest) {
       ? requireDate(monthParam, 'month')
       : `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
+    const monthEnd = new Date(month);
+    monthEnd.setMonth(monthEnd.getMonth() + 1);
+    monthEnd.setDate(0);
+    const monthEndStr = monthEnd.toISOString().split('T')[0];
+
+    // 1. Query monthly analytics if available
     const { data: analyticsData, error: analyticsError } = await supabase
       .from('monthly_analytics')
       .select('*')
       .eq('analytics_month', month)
-      .single();
+      .maybeSingle();
 
     if (analyticsError && analyticsError.code !== 'PGRST116') {
       throw analyticsError;
     }
 
-    const analytics = analyticsData as unknown as MonthlyAnalytics | null;
+    // 2. Fetch all approved & pending transactions for this month with receipts
+    const { data: monthTxData, error: txError } = await supabase
+      .from('transactions')
+      .select('*')
+      .gte('transaction_date', month)
+      .lte('transaction_date', monthEndStr)
+      .order('transaction_date', { ascending: false });
 
-    // Calculate profit per pig
-    let profitPerPig = 0;
-    if (analytics) {
-      const { data: profitData } = await supabase.rpc('calculate_profit_per_pig', {
-        p_analytics_month: month,
-      } as Record<string, unknown>);
-      profitPerPig = (profitData as unknown as number) ?? 0;
-    }
+    if (txError) throw txError;
+
+    const monthTransactions = monthTxData || [];
+
+    // Calculate dynamic totals from transactions
+    let dynamicRevenue = 0;
+    let dynamicExpenses = 0;
+    monthTransactions.forEach((tx) => {
+      if (tx.status === 'approved') {
+        const amt = Number(tx.amount) || 0;
+        if (tx.transaction_type === 'income') dynamicRevenue += amt;
+        else if (tx.transaction_type === 'expense') dynamicExpenses += amt;
+      }
+    });
+
+    const netProfit = dynamicRevenue - dynamicExpenses;
+    const roiPercentage = dynamicExpenses > 0
+      ? Number(((netProfit / dynamicExpenses) * 100).toFixed(1))
+      : 0;
+
+    // Filter receipts uploaded during this month
+    const receipts = monthTransactions
+      .filter((tx) => tx.receipt_url && tx.receipt_url.trim().length > 0)
+      .map((tx) => ({
+        id: tx.id,
+        url: tx.receipt_url,
+        description: tx.description,
+        amount: tx.amount,
+        date: tx.transaction_date,
+        category: tx.category,
+        status: tx.status,
+      }));
 
     // Get expense breakdown
-    const monthEnd = new Date(month);
-    monthEnd.setMonth(monthEnd.getMonth() + 1);
-    monthEnd.setDate(0);
+    let breakdown: any[] = [];
+    try {
+      const { data: breakdownData } = await supabase.rpc('get_expense_breakdown', {
+        p_start_date: month,
+        p_end_date: monthEndStr,
+      } as Record<string, unknown>);
+      if (breakdownData) breakdown = breakdownData;
+    } catch {
+      // breakdown RPC fallback
+    }
 
-    const { data: breakdownData } = await supabase.rpc('get_expense_breakdown', {
-      p_start_date: month,
-      p_end_date: monthEnd.toISOString().split('T')[0],
-    } as Record<string, unknown>);
-
-    const breakdown = (breakdownData as unknown as ExpenseBreakdownResult[]) ?? [];
-
-    const topCategory = breakdown.length > 0 ? breakdown[0].category : 'N/A';
-
-    const report: MonthlySummaryReport = {
+    const report = {
       month,
-      analytics: analytics ?? {
-        id: '',
-        analytics_month: month,
-        total_revenue: 0,
-        total_expenses: 0,
-        net_profit: 0,
-        feed_expenses: 0,
-        vitamin_expenses: 0,
-        infrastructure_expenses: 0,
-        veterinary_expenses: 0,
-        labor_expenses: 0,
-        transportation_expenses: 0,
-        average_pig_count: 0,
-        animals_sold: 0,
-        animals_died: 0,
-        mortality_rate: null,
-        total_capital: null,
-        roi_percentage: 0,
-        created_at: '',
-        updated_at: '',
+      analytics: {
+        total_revenue: analyticsData?.total_revenue || dynamicRevenue,
+        total_expenses: analyticsData?.total_expenses || dynamicExpenses,
+        net_profit: analyticsData?.net_profit !== undefined ? analyticsData.net_profit : netProfit,
+        roi_percentage: analyticsData?.roi_percentage || roiPercentage,
+        animals_sold: analyticsData?.animals_sold || 0,
       },
-      profit_per_pig: profitPerPig,
-      top_expense_category: topCategory,
+      transactions: monthTransactions,
+      receipts,
       expense_breakdown: breakdown,
     };
 
