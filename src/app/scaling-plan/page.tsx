@@ -184,12 +184,10 @@ export default function ScalingPlanPage() {
             {/* Status Header Banner */}
             <div
               style={{
-                background: isReady
-                  ? 'linear-gradient(135deg, #4E6E50, #86A788)'
-                  : 'linear-gradient(135deg, #86A788, #4E6E50)',
+                background: 'var(--palette-sage)',
                 borderRadius: 'var(--radius-xl)',
                 padding: '28px 32px',
-                color: 'white',
+                color: 'var(--palette-cream)',
                 position: 'relative',
                 overflow: 'hidden',
                 boxShadow: 'var(--shadow-md)',
@@ -205,24 +203,26 @@ export default function ScalingPlanPage() {
                     width: 52,
                     height: 52,
                     borderRadius: 'var(--radius-md)',
-                    background: isReady ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.2)',
+                    background: 'var(--palette-blush)',
+                    border: '1px solid var(--palette-rose)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                 >
-                  {isReady ? <CheckCircle size={28} color="white" /> : <Target size={28} color="white" />}
+                  {isReady ? <CheckCircle size={28} color="var(--neutral-dark)" /> : <Target size={28} color="var(--neutral-dark)" />}
                 </div>
 
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>
+                    <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0, color: 'var(--palette-cream)' }}>
                       {isReady ? 'Ready to Scale!' : 'Upscale Capital Planning'}
                     </h2>
                     <span
                       style={{
                         padding: '3px 10px',
-                        background: isReady ? 'rgba(255,255,255,0.3)' : 'rgba(255,200,200,0.35)',
+                        background: 'var(--palette-blush)',
+                        color: 'var(--neutral-dark)',
                         borderRadius: 'var(--radius-full)',
                         fontSize: 12,
                         fontWeight: 700,
@@ -231,7 +231,7 @@ export default function ScalingPlanPage() {
                       9 Months Per Cycle
                     </span>
                   </div>
-                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>
+                  <p style={{ fontSize: 14, color: 'var(--palette-cream)', opacity: 0.9, marginTop: 4 }}>
                     {isReady
                       ? `Farm capital of ${formatCurrency(currentCapital)} is ready to fund ${targetSows} sows and raise ${totalFatteners} piglets to fattener stage.`
                       : `Capital gap of ${formatCurrency(capitalGap)} required to procure ${targetSows} sows and fund their ${totalFatteners} piglets through 9 months.`}
