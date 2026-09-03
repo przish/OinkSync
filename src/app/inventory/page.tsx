@@ -36,14 +36,7 @@ export default function InventoryPage() {
 
   return (
     <>
-      <TopBar
-        title="Inventory"
-        actions={
-          <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddAnimal(true)}>
-            Add Animal
-          </Button>
-        }
-      />
+      <TopBar title="Inventory" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Summary cards */}
@@ -103,13 +96,16 @@ export default function InventoryPage() {
 
         {/* Animals table */}
         <Card style={{ padding: 0 }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)' }}>
-            <h3 style={{ fontWeight: 700, fontSize: 15 }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontWeight: 700, fontSize: 16 }}>
               All Animals
               <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>
                 ({animals.length} total)
               </span>
             </h3>
+            <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddAnimal(true)}>
+              Add Animal
+            </Button>
           </div>
           <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
             <table className="table">
