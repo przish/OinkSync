@@ -32,28 +32,24 @@ export default function UsersPage() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   return (
-    <ProtectedRoute allowedRoles={['admin']}>
-      <TopBar
-        title="Team Members"
-        actions={
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus size={15} />}
-            onClick={() => setShowInviteModal(true)}
-          >
-            Invite Member
-          </Button>
-        }
-      />
+    <ProtectedRoute allowedRoles={['admin', 'logistics', 'pen_manager', 'investor']}>
+      <TopBar title="Team Members" />
 
       <div className="page-body">
         <Card style={{ padding: 0 }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)' }}>
-            <h3 style={{ fontWeight: 700, fontSize: 15 }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontWeight: 700, fontSize: 16 }}>
               All Team Members
               <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>({users.length})</span>
             </h3>
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<Plus size={15} />}
+              onClick={() => setShowInviteModal(true)}
+            >
+              Invite Member
+            </Button>
           </div>
           <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
             <table className="table">
