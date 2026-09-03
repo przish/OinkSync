@@ -66,45 +66,34 @@ export default function DashboardPage() {
 
   return (
     <>
-      <TopBar
-        title="Dashboard"
-        actions={
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus size={15} />}
-            onClick={() => setShowAddModal(true)}
-          >
-            Add Transaction
-          </Button>
-        }
-      />
+      <TopBar title="Dashboard" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Welcome header */}
         <div style={{
-          background: 'linear-gradient(135deg, var(--secondary-green), #3d6b1f)',
+          background: 'linear-gradient(135deg, #4E6E50, #86A788)',
           borderRadius: 'var(--radius-xl)',
           padding: '28px 32px',
           color: 'white',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           position: 'relative', overflow: 'hidden',
+          boxShadow: 'var(--shadow-md)',
         }}>
-          <div style={{ position: 'absolute', right: -20, top: -20, fontSize: 120, opacity: 0.08, userSelect: 'none' }}>🐷</div>
+          <div style={{ position: 'absolute', right: -20, top: -20, fontSize: 120, opacity: 0.1, userSelect: 'none' }}>🐷</div>
           <div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 500 }}>
               {greeting}, {displayName} 👋
             </p>
-            <h2 style={{ fontSize: 22, fontWeight: 800, marginTop: 4, color: 'white' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 800, marginTop: 4, color: 'white' }}>
               Farm Overview
             </h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', marginTop: 4 }}>
               {formatDate(today.toISOString())}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ textAlign: 'right' }}>
-              <label htmlFor="period-select" style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, fontWeight: 600 }}>
+              <label htmlFor="period-select" style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, fontWeight: 600 }}>
                 Period View
               </label>
               <select
@@ -117,8 +106,8 @@ export default function DashboardPage() {
                 style={{
                   background: 'rgba(0, 0, 0, 0.25)',
                   color: 'white',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: 8,
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '6px 12px',
                   fontSize: 13,
                   fontWeight: 600,
@@ -126,20 +115,20 @@ export default function DashboardPage() {
                   outline: 'none',
                 }}
               >
-                <option value="all" style={{ background: '#1a2517', color: '#fff' }}>All Time</option>
-                <option value="this_month" style={{ background: '#1a2517', color: '#fff' }}>This Month</option>
-                <option value="last_month" style={{ background: '#1a2517', color: '#fff' }}>Last Month</option>
-                <option value="ytd" style={{ background: '#1a2517', color: '#fff' }}>Year to Date</option>
+                <option value="all" style={{ background: '#223726', color: '#fff' }}>All Time</option>
+                <option value="this_month" style={{ background: '#223726', color: '#fff' }}>This Month</option>
+                <option value="last_month" style={{ background: '#223726', color: '#fff' }}>Last Month</option>
+                <option value="ytd" style={{ background: '#223726', color: '#fff' }}>Year to Date</option>
               </select>
             </div>
 
             {kpi && (
               <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 20 }}>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
                 <p style={{ fontSize: 28, fontWeight: 800, color: kpi.net_profit >= 0 ? '#bbf7d0' : '#fecaca' }}>
                   {formatCurrency(kpi.net_profit)}
                 </p>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', marginTop: 2 }}>
                   ROI: {formatPercentage(kpi.roi_percentage)}
                 </p>
               </div>
@@ -156,9 +145,8 @@ export default function DashboardPage() {
               <KPICard
                 label="Total Capital"
                 value={kpi?.total_capital ?? 0}
-                icon={<Wallet size={18} />}
+                icon={<PiggyBank size={18} />}
                 variant="beige"
-                trend={null}
               />
               <KPICard
                 label="Total Revenue"
@@ -173,7 +161,7 @@ export default function DashboardPage() {
                 icon={<PiggyBank size={18} />}
                 variant="gold"
                 isCurrency={false}
-                trend={null}
+                suffix=" hd"
               />
               <KPICard
                 label="Total Expenses"
@@ -200,32 +188,58 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Investor Summary (admin only) */}
+        {/* Distribution Summary (admin only) */}
         {isAdmin && (
           <Card>
             <CardHeader
-              title="Capital Overview"
-              subtitle="Investment contributions by role"
+              title="Profit & Capital Distribution Policy"
+              subtitle="Capital is equally contributed; operations profit is distributed by role performance"
               icon={<Users size={18} color="var(--secondary-green)" />}
             />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
-              {[
-                { role: 'GM (Admin)', amount: kpi?.total_capital ? kpi.total_capital * 0.4 : null },
-                { role: 'Logistics', amount: kpi?.total_capital ? kpi.total_capital * 0.3 : null },
-                { role: 'Pen Manager', amount: kpi?.total_capital ? kpi.total_capital * 0.1 : null },
-                { role: 'Investors', amount: kpi?.total_capital ? kpi.total_capital * 0.2 : null },
-              ].map((item) => (
-                <div key={item.role} style={{
-                  padding: '14px 16px',
-                  background: 'var(--primary-beige)',
-                  borderRadius: 'var(--radius-md)',
-                }}>
-                  <p className="metric-label" style={{ marginBottom: 6 }}>{item.role}</p>
-                  <p style={{ fontWeight: 800, fontSize: 18, color: 'var(--secondary-green)' }}>
-                    {item.amount !== null ? formatCurrency(item.amount) : '—'}
-                  </p>
-                </div>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+              <div style={{
+                padding: '14px 16px',
+                background: 'var(--palette-rose)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid rgba(255, 207, 207, 0.8)',
+              }}>
+                <p className="metric-label" style={{ color: '#883333', marginBottom: 4 }}>Pen Manager Work</p>
+                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>50% Share</p>
+                <p style={{ fontSize: 11, color: '#6B4444', marginTop: 4 }}>From operational profit share</p>
+              </div>
+
+              <div style={{
+                padding: '14px 16px',
+                background: 'var(--palette-cream)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid rgba(134, 167, 136, 0.4)',
+              }}>
+                <p className="metric-label" style={{ marginBottom: 4 }}>General Manager</p>
+                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--secondary-green)' }}>25% Share</p>
+                <p style={{ fontSize: 11, color: '#4A584E', marginTop: 4 }}>From operational profit share</p>
+              </div>
+
+              <div style={{
+                padding: '14px 16px',
+                background: 'var(--palette-cream)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid rgba(134, 167, 136, 0.4)',
+              }}>
+                <p className="metric-label" style={{ marginBottom: 4 }}>Logistics Team</p>
+                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--secondary-green)' }}>25% Share</p>
+                <p style={{ fontSize: 11, color: '#4A584E', marginTop: 4 }}>From operational profit share</p>
+              </div>
+
+              <div style={{
+                padding: '14px 16px',
+                background: 'var(--palette-blush)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid rgba(235, 175, 175, 0.7)',
+              }}>
+                <p className="metric-label" style={{ color: '#883333', marginBottom: 4 }}>Investor Pool</p>
+                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>Equal Share</p>
+                <p style={{ fontSize: 11, color: '#6B4444', marginTop: 4 }}>Evenly across all members/investors</p>
+              </div>
             </div>
           </Card>
         )}
@@ -236,6 +250,16 @@ export default function DashboardPage() {
             title="Recent Transactions"
             subtitle="Last 10 transactions"
             icon={<Receipt size={18} color="var(--secondary-green)" />}
+            action={
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus size={15} />}
+                onClick={() => setShowAddModal(true)}
+              >
+                Add Transaction
+              </Button>
+            }
           />
           <TransactionPreview
             transactions={transactions}
