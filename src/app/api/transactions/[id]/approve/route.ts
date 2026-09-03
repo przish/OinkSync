@@ -5,7 +5,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/lib/auth';
 import { successResponse, handleError, NotFoundError, ValidationError } from '@/lib/errors';
 import { requireUUID, requireString } from '@/lib/validation';
@@ -17,7 +17,9 @@ export async function PATCH(
 ) {
   try {
     const admin = await requireAdmin();
-    const supabase = await createClient();
+    // Use admin client to bypass RLS (since we already verified the user is an admin)
+    // The transactions table does not have an UPDATE policy in RLS for normal clients.
+    const supabase = createAdminClient();
     const { id } = await params;
     const transactionId = requireUUID(id, 'transaction_id');
 
