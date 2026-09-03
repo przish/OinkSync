@@ -77,16 +77,7 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <TopBar
-        title="Transactions"
-        actions={
-          canAddTransactions ? (
-            <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddModal(true)}>
-              Add Transaction
-            </Button>
-          ) : undefined
-        }
-      />
+      <TopBar title="Transactions" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Filters */}
@@ -114,10 +105,15 @@ export default function TransactionsPage() {
         {/* Table */}
         <Card style={{ padding: 0 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ fontWeight: 700, fontSize: 15 }}>
+            <p style={{ fontWeight: 700, fontSize: 16 }}>
               All Transactions
               {pagination && <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>({pagination.total} total)</span>}
             </p>
+            {canAddTransactions && (
+              <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddModal(true)}>
+                Add Transaction
+              </Button>
+            )}
           </div>
 
           <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
