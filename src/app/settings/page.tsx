@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Save, Settings, Calculator, Wheat, Activity, TrendingUp } from 'lucide-react';
+import { Save, Settings, Calculator, Wheat, Activity, TrendingUp, DollarSign, Scale } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TopBar } from '@/components/Navigation/TopBar';
@@ -56,7 +56,6 @@ export default function SettingsPage() {
 
   const pricePerKg = useWatch({ control, name: 'expected_price_per_kg', defaultValue: 0 }) || 0;
   const marketWeight = useWatch({ control, name: 'expected_market_weight_kg', defaultValue: 0 }) || 0;
-  const totalCapital = useWatch({ control, name: 'total_capital', defaultValue: 0 }) || 0;
 
   // Real-time calculated figures
   const totalFeedCost = (preSacks * preCost) + (starterSacks * starterCost) + (growerSacks * growerCost) + (finisherSacks * finisherCost);
@@ -106,342 +105,354 @@ export default function SettingsPage() {
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (data: any) => {
-    const supabase = createClient();
+  const onSubmit = async (values: BusinessSettingsFormValues) => {
+    try {
+      const supabase = createClient();
 
-    const feedBreakdown = {
-      pre_starter_sacks: data.pre_starter_sacks,
-      pre_starter_cost: data.pre_starter_cost,
-      starter_sacks: data.starter_sacks,
-      starter_cost: data.starter_cost,
-      grower_sacks: data.grower_sacks,
-      grower_cost: data.grower_cost,
-      finisher_sacks: data.finisher_sacks,
-      finisher_cost: data.finisher_cost,
-      vitamins_cost: data.vitamins_cost,
-      expected_price_per_kg: data.expected_price_per_kg,
-      expected_market_weight_kg: data.expected_market_weight_kg,
-    };
+      // Recalculate based on current form inputs
+      const compFeedCost = (values.pre_starter_sacks * values.pre_starter_cost) +
+        (values.starter_sacks * values.starter_cost) +
+        (values.grower_sacks * values.grower_cost) +
+        (values.finisher_sacks * values.finisher_cost);
 
-    const { error } = await supabase
-      .from('business_profile')
-      .update({
-        total_capital: data.total_capital,
-        target_monthly_profit: data.target_monthly_profit,
-        target_pig_count: pigsNeededPerMonth,
-        cost_per_pig_rearing: totalRearingCostPerPig,
-        expected_sale_price_per_pig: expectedSalePricePerPig,
-        expected_roi_percentage: dynamicMarginPct,
-        monthly_payroll_budget: data.monthly_payroll_budget,
-        // Save feed breakdown if column exists
-        feed_breakdown: feedBreakdown,
-      })
-      .eq('id', profile?.id ?? '');
+      const compRearing = compFeedCost + values.vitamins_cost;
+      const compSalePrice = values.expected_price_per_kg * values.expected_market_weight_kg;
+      const compProfitPerPig = compSalePrice - compRearing;
+      const compRoi = compRearing > 0 && compProfitPerPig > 0
+        ? Number(((compProfitPerPig / compRearing) * 100).toFixed(1))
+        : 0;
 
-    if (error) {
-      toast.error('Failed to save settings: ' + error.message);
-    } else {
-      toast.success('Settings and calculations saved!');
-      fetchProfile();
+      const feedBreakdownPayload = {
+        pre_starter_sacks: values.pre_starter_sacks,
+        pre_starter_cost: values.pre_starter_cost,
+        starter_sacks: values.starter_sacks,
+        starter_cost: values.starter_cost,
+        grower_sacks: values.grower_sacks,
+        grower_cost: values.grower_cost,
+        finisher_sacks: values.finisher_sacks,
+        finisher_cost: values.finisher_cost,
+        vitamins_cost: values.vitamins_cost,
+        expected_price_per_kg: values.expected_price_per_kg,
+        expected_market_weight_kg: values.expected_market_weight_kg,
+      };
+
+      const payload = {
+        total_capital: values.total_capital,
+        target_monthly_profit: values.target_monthly_profit,
+        cost_per_pig_rearing: compRearing,
+        expected_sale_price_per_pig: compSalePrice,
+        expected_roi_percentage: compRoi,
+        monthly_payroll_budget: values.monthly_payroll_budget,
+        feed_breakdown: feedBreakdownPayload,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: updated, error } = await supabase
+        .from('business_profile')
+        .update(payload)
+        .eq('id', profile?.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setProfile(updated as unknown as BusinessProfile);
+      reset(values);
+      toast.success('Farm settings & cost breakdown saved!');
+    } catch {
+      toast.error('Failed to save settings');
     }
   };
 
   return (
     <ProtectedRoute allowedRoles={['admin']}>
-      <TopBar
-        title="Settings"
-        actions={
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<Save size={15} />}
-            onClick={handleSubmit(onSubmit)}
-            isLoading={isSubmitting}
-            disabled={!isDirty}
-          >
-            Save Changes
-          </Button>
-        }
-      />
+      <TopBar title="Settings" />
 
-      <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 900, margin: '0 auto', width: '100%' }}>
-        {/* Farm & Capital Overview */}
-        <Card style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-          <CardHeader
-            title="Business Profile"
-            subtitle={profile?.business_name ?? 'PiggyTrack Farm'}
-            icon={<Settings size={18} color="var(--secondary-green)" />}
-          />
-
-          {isLoadingProfile ? (
-            <div style={{ padding: 24 }}>
-              <SkeletonCard />
-            </div>
-          ) : (
-            <form style={{ display: 'flex', flexDirection: 'column', gap: 20 }} noValidate>
-            <div className="form-grid form-grid-2">
-              <FormField label="Total Capital (₱)" htmlFor="s-capital" error={errors.total_capital?.message} required>
-                <input
-                  id="s-capital"
-                  type="number"
-                  step="0.01"
-                  className={`form-input${errors.total_capital ? ' error' : ''}`}
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }}
-                  {...register('total_capital', { valueAsNumber: true })}
-                />
-              </FormField>
-
-              <FormField label="Monthly Payroll Budget (₱)" htmlFor="s-payroll" error={errors.monthly_payroll_budget?.message} required>
-                <input
-                  id="s-payroll"
-                  type="number"
-                  step="0.01"
-                  className={`form-input${errors.monthly_payroll_budget ? ' error' : ''}`}
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }}
-                  {...register('monthly_payroll_budget', { valueAsNumber: true })}
-                />
-              </FormField>
-            </div>
-
-            <div className="form-grid form-grid-1">
-              <FormField label="Target Monthly Profit (₱)" htmlFor="s-profit" error={errors.target_monthly_profit?.message} required>
-                <input
-                  id="s-profit"
-                  type="number"
-                  step="0.01"
-                  className={`form-input${errors.target_monthly_profit ? ' error' : ''}`}
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }}
-                  {...register('target_monthly_profit', { valueAsNumber: true })}
-                />
-              </FormField>
-            </div>
-
-            <div className="divider" />
-
-            {/* Rearing Cost Breakdown Section */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <h4 style={{ color: 'var(--secondary-green)', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Wheat size={18} />
-                  Feed & Rearing Cost Breakdown (Per Pig)
-                </h4>
-                <span style={{ fontSize: 13, color: '#9CA3AF' }}>
-                  Total: <strong style={{ color: '#fff' }}>{formatCurrency(totalRearingCostPerPig)}</strong> / pig
-                </span>
+      <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1040, margin: '0 auto', width: '100%' }}>
+        {isLoadingProfile ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {/* Top Toolbar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--palette-cream)', padding: '16px 20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--card-border)' }}>
+              <div>
+                <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: 'var(--neutral-dark)' }}>
+                  Farm Operating Configuration
+                </h3>
+                <p style={{ fontSize: 12, color: 'var(--muted-dark)', margin: '2px 0 0' }}>
+                  {profile?.business_name ?? 'PiggyTrack Farm'} • Categorized parameter settings
+                </p>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {/* Pre-starter */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <FormField label="Pre-Starter (Sacks)" htmlFor="s-pre-sacks">
+              <Button
+                variant="primary"
+                size="sm"
+                type="submit"
+                leftIcon={<Save size={15} />}
+                isLoading={isSubmitting}
+                disabled={!isDirty}
+              >
+                Save All Changes
+              </Button>
+            </div>
+
+            {/* 4 Categorized Cards Grid (2x2 on desktop) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: 24 }}>
+              {/* Category Card 1: Farm Profile & Financial Targets */}
+              <Card>
+                <CardHeader
+                  title="Capital & Financial Targets"
+                  subtitle="Working capital, payroll, and targets"
+                  icon={<DollarSign size={18} color="var(--secondary-green)" />}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <FormField label="Total Farm Capital (₱)" htmlFor="s-capital" error={errors.total_capital?.message} required>
                     <input
-                      id="s-pre-sacks"
+                      id="s-capital"
                       type="number"
-                      step="0.1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('pre_starter_sacks', { valueAsNumber: true })}
+                      step="100"
+                      className={`form-input${errors.total_capital ? ' error' : ''}`}
+                      {...register('total_capital', { valueAsNumber: true })}
                     />
                   </FormField>
-                  <FormField label="Cost per Sack (₱)" htmlFor="s-pre-cost">
+
+                  <FormField label="Monthly Payroll Budget (₱)" htmlFor="s-payroll" error={errors.monthly_payroll_budget?.message} required>
                     <input
-                      id="s-pre-cost"
+                      id="s-payroll"
                       type="number"
-                      step="1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('pre_starter_cost', { valueAsNumber: true })}
+                      step="100"
+                      className={`form-input${errors.monthly_payroll_budget ? ' error' : ''}`}
+                      {...register('monthly_payroll_budget', { valueAsNumber: true })}
+                    />
+                  </FormField>
+
+                  <FormField label="Target Monthly Profit (₱)" htmlFor="s-profit" error={errors.target_monthly_profit?.message} required>
+                    <input
+                      id="s-profit"
+                      type="number"
+                      step="100"
+                      className={`form-input${errors.target_monthly_profit ? ' error' : ''}`}
+                      {...register('target_monthly_profit', { valueAsNumber: true })}
                     />
                   </FormField>
                 </div>
+              </Card>
 
-                {/* Starter */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <FormField label="Starter (Sacks)" htmlFor="s-starter-sacks">
-                    <input
-                      id="s-starter-sacks"
-                      type="number"
-                      step="0.1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('starter_sacks', { valueAsNumber: true })}
-                    />
-                  </FormField>
-                  <FormField label="Cost per Sack (₱)" htmlFor="s-starter-cost">
-                    <input
-                      id="s-starter-cost"
-                      type="number"
-                      step="1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('starter_cost', { valueAsNumber: true })}
-                    />
-                  </FormField>
+              {/* Category Card 2: Feed Breakdown (Per Pig) */}
+              <Card>
+                <CardHeader
+                  title="Feed Breakdown (Per Pig)"
+                  subtitle={`Total Feed: ${formatCurrency(totalFeedCost)} / pig`}
+                  icon={<Wheat size={18} color="var(--secondary-green)" />}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {/* Pre-Starter */}
+                  <div className="form-grid form-grid-2">
+                    <FormField label="Pre-Starter (Sacks)" htmlFor="s-pre-sacks">
+                      <input
+                        id="s-pre-sacks"
+                        type="number"
+                        step="0.1"
+                        className="form-input"
+                        {...register('pre_starter_sacks', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                    <FormField label="Cost / Sack (₱)" htmlFor="s-pre-cost">
+                      <input
+                        id="s-pre-cost"
+                        type="number"
+                        step="10"
+                        className="form-input"
+                        {...register('pre_starter_cost', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Starter */}
+                  <div className="form-grid form-grid-2">
+                    <FormField label="Starter (Sacks)" htmlFor="s-starter-sacks">
+                      <input
+                        id="s-starter-sacks"
+                        type="number"
+                        step="0.1"
+                        className="form-input"
+                        {...register('starter_sacks', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                    <FormField label="Cost / Sack (₱)" htmlFor="s-starter-cost">
+                      <input
+                        id="s-starter-cost"
+                        type="number"
+                        step="10"
+                        className="form-input"
+                        {...register('starter_cost', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Grower */}
+                  <div className="form-grid form-grid-2">
+                    <FormField label="Grower (Sacks)" htmlFor="s-grower-sacks">
+                      <input
+                        id="s-grower-sacks"
+                        type="number"
+                        step="0.1"
+                        className="form-input"
+                        {...register('grower_sacks', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                    <FormField label="Cost / Sack (₱)" htmlFor="s-grower-cost">
+                      <input
+                        id="s-grower-cost"
+                        type="number"
+                        step="10"
+                        className="form-input"
+                        {...register('grower_cost', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                  </div>
+
+                  {/* Finisher */}
+                  <div className="form-grid form-grid-2">
+                    <FormField label="Finisher (Sacks)" htmlFor="s-finisher-sacks">
+                      <input
+                        id="s-finisher-sacks"
+                        type="number"
+                        step="0.1"
+                        className="form-input"
+                        {...register('finisher_sacks', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                    <FormField label="Cost / Sack (₱)" htmlFor="s-finisher-cost">
+                      <input
+                        id="s-finisher-cost"
+                        type="number"
+                        step="10"
+                        className="form-input"
+                        {...register('finisher_cost', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                  </div>
                 </div>
+              </Card>
 
-                {/* Grower */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <FormField label="Grower (Sacks)" htmlFor="s-grower-sacks">
-                    <input
-                      id="s-grower-sacks"
-                      type="number"
-                      step="0.1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('grower_sacks', { valueAsNumber: true })}
-                    />
-                  </FormField>
-                  <FormField label="Cost per Sack (₱)" htmlFor="s-grower-cost">
-                    <input
-                      id="s-grower-cost"
-                      type="number"
-                      step="1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('grower_cost', { valueAsNumber: true })}
-                    />
-                  </FormField>
-                </div>
-
-                {/* Finisher */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <FormField label="Finisher (Sacks)" htmlFor="s-finisher-sacks">
-                    <input
-                      id="s-finisher-sacks"
-                      type="number"
-                      step="0.1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('finisher_sacks', { valueAsNumber: true })}
-                    />
-                  </FormField>
-                  <FormField label="Cost per Sack (₱)" htmlFor="s-finisher-cost">
-                    <input
-                      id="s-finisher-cost"
-                      type="number"
-                      step="1"
-                      className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                      {...register('finisher_cost', { valueAsNumber: true })}
-                    />
-                  </FormField>
-                </div>
-
-                {/* Vitamins Overall Cost */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
-                  <FormField label="Vitamins & Healthcare Overall Expected Cost (₱ / Pig)" htmlFor="s-vitamins">
+              {/* Category Card 3: Healthcare & Market Pricing */}
+              <Card>
+                <CardHeader
+                  title="Healthcare & Market Pricing"
+                  subtitle="Vitamins, price per kg, and market weight"
+                  icon={<Scale size={18} color="var(--secondary-green)" />}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <FormField label="Vitamins & Medication Cost / Pig (₱)" htmlFor="s-vitamins">
                     <input
                       id="s-vitamins"
                       type="number"
-                      step="1"
+                      step="10"
                       className="form-input"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
                       {...register('vitamins_cost', { valueAsNumber: true })}
                     />
                   </FormField>
+
+                  <div className="form-grid form-grid-2">
+                    <FormField label="Expected Price / kg (₱)" htmlFor="s-price-kg">
+                      <input
+                        id="s-price-kg"
+                        type="number"
+                        step="1"
+                        className="form-input"
+                        {...register('expected_price_per_kg', { valueAsNumber: true })}
+                      />
+                    </FormField>
+
+                    <FormField label="Target Market Weight (kg)" htmlFor="s-weight">
+                      <input
+                        id="s-weight"
+                        type="number"
+                        step="1"
+                        className="form-input"
+                        {...register('expected_market_weight_kg', { valueAsNumber: true })}
+                      />
+                    </FormField>
+                  </div>
+
+                  <div style={{ padding: '12px 14px', background: 'var(--palette-cream)', borderRadius: 'var(--radius-md)', border: '1px solid var(--card-border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                      <span style={{ color: 'var(--muted-dark)' }}>Total Rearing Cost / Pig:</span>
+                      <strong>{formatCurrency(totalRearingCostPerPig)}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                      <span style={{ color: 'var(--muted-dark)' }}>Expected Sale Price / Pig:</span>
+                      <strong style={{ color: 'var(--success)' }}>{formatCurrency(expectedSalePricePerPig)}</strong>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </Card>
 
-            <div className="divider" />
+              {/* Category Card 4: Dynamic ROI & Live Calculator */}
+              <Card>
+                <CardHeader
+                  title="Scaling Calculator & Dynamic ROI"
+                  subtitle="Live analyzed projections based on your inputs"
+                  icon={<Calculator size={18} color="var(--secondary-green)" />}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div style={{ padding: 14, background: 'var(--palette-rose)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,207,207,0.8)' }}>
+                      <p className="metric-label" style={{ color: '#883333', marginBottom: 4 }}>Profit / Pig</p>
+                      <p style={{ fontSize: 20, fontWeight: 800, color: profitPerPig > 0 ? 'var(--neutral-dark)' : 'var(--error)' }}>
+                        {formatCurrency(profitPerPig)}
+                      </p>
+                      <span style={{ fontSize: 11, color: '#6B4444' }}>Margin: {dynamicMarginPct}%</span>
+                    </div>
 
-            {/* Expected Sale Price per Kg */}
-            <div>
-              <h4 style={{ color: 'var(--secondary-green)', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <Activity size={18} />
-                Market Sale Assumptions
-              </h4>
+                    <div style={{ padding: 14, background: 'var(--palette-blush)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(235,175,175,0.7)' }}>
+                      <p className="metric-label" style={{ color: '#883333', marginBottom: 4 }}>Calculated ROI</p>
+                      <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--neutral-dark)' }}>
+                        {dynamicMarginPct}%
+                      </p>
+                      <span style={{ fontSize: 11, color: '#6B4444' }}>Return on rearing cost</span>
+                    </div>
+                  </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <FormField label="Expected Price per Kilogram (₱ / kg)" htmlFor="s-price-kg">
-                  <input
-                    id="s-price-kg"
-                    type="number"
-                    step="1"
-                    className="form-input"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                    {...register('expected_price_per_kg', { valueAsNumber: true })}
-                  />
-                </FormField>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div style={{ padding: 14, background: 'var(--palette-cream)', borderRadius: 'var(--radius-md)', border: '1px solid var(--card-border)' }}>
+                      <p className="metric-label" style={{ marginBottom: 4 }}>Pigs Needed / Mo</p>
+                      <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--secondary-green)' }}>
+                        {pigsNeededPerMonth} <span style={{ fontSize: 13, fontWeight: 500 }}>hd</span>
+                      </p>
+                      <span style={{ fontSize: 11, color: 'var(--muted-dark)' }}>To hit monthly target</span>
+                    </div>
 
-                <FormField label="Average Market Weight (kg / Pig)" htmlFor="s-weight">
-                  <input
-                    id="s-weight"
-                    type="number"
-                    step="1"
-                    className="form-input"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: '#fff' }}
-                    {...register('expected_market_weight_kg', { valueAsNumber: true })}
-                  />
-                </FormField>
-              </div>
+                    <div style={{ padding: 14, background: 'var(--palette-cream)', borderRadius: 'var(--radius-md)', border: '1px solid var(--card-border)' }}>
+                      <p className="metric-label" style={{ marginBottom: 4 }}>Sows to Breed</p>
+                      <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--secondary-green)' }}>
+                        {sowsNeeded} <span style={{ fontSize: 13, fontWeight: 500 }}>hd</span>
+                      </p>
+                      <span style={{ fontSize: 11, color: 'var(--muted-dark)' }}>~2 pigs/mo/sow</span>
+                    </div>
+                  </div>
 
-              <p style={{ fontSize: 13, color: '#9CA3AF', marginTop: 8 }}>
-                Expected Revenue: <strong>{formatCurrency(expectedSalePricePerPig)}</strong> per pig ({marketWeight} kg @ ₱{pricePerKg}/kg)
-              </p>
-            </div>
-
-            {/* Calculated Results Box */}
-            <div style={{
-              marginTop: 12, padding: 22, borderRadius: 14,
-              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.12), rgba(76, 175, 80, 0.04))',
-              border: '1px solid rgba(76, 175, 80, 0.25)',
-              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16
-            }}>
-              <div>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Profit / Pig</p>
-                <p style={{ fontSize: 24, fontWeight: 800, color: profitPerPig > 0 ? '#bbf7d0' : '#fecaca', marginTop: 4 }}>
-                  {formatCurrency(profitPerPig)}
-                </p>
-                <span style={{ fontSize: 11, color: '#9CA3AF' }}>Margin: {dynamicMarginPct}%</span>
-              </div>
-              <div>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Pigs Needed / Mo</p>
-                <p style={{ fontSize: 24, fontWeight: 800, color: '#fff', marginTop: 4 }}>
-                  {pigsNeededPerMonth} <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>hd</span>
-                </p>
-                <span style={{ fontSize: 11, color: '#9CA3AF' }}>To reach monthly target</span>
-              </div>
-              <div>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Sows to Breed</p>
-                <p style={{ fontSize: 24, fontWeight: 800, color: 'var(--secondary-green)', marginTop: 4 }}>
-                  {sowsNeeded} <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>hd</span>
-                </p>
-                <span style={{ fontSize: 11, color: '#9CA3AF' }}>~2 pigs/mo/sow</span>
-              </div>
-              <div>
-                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Calculated ROI</p>
-                <p style={{ fontSize: 24, fontWeight: 800, color: '#6ee7b7', marginTop: 4 }}>
-                  {dynamicMarginPct}%
-                </p>
-                <span style={{ fontSize: 11, color: '#9CA3AF' }}>Auto-analyzed from parameters</span>
-              </div>
-              </div>
-            </form>
-          )}
-        </Card>
-
-        {/* Capital distribution breakdown */}
-        {profile && (
-          <Card variant="beige">
-            <CardHeader title="Capital Distribution" subtitle="Current investment breakdown" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
-              {[
-                { role: 'GM', amount: profile.gm_capital_contribution },
-                { role: 'Logistics', amount: profile.logistics_capital_contribution },
-                { role: 'Pen Manager', amount: profile.pen_manager_capital_contribution },
-                { role: 'Investors Total', amount: profile.investor_capital_total },
-              ].map((item) => (
-                <div key={item.role} style={{ padding: '12px 14px', background: 'white', borderRadius: 10 }}>
-                  <p className="metric-label" style={{ marginBottom: 4 }}>{item.role}</p>
-                  <p style={{ fontWeight: 800, fontSize: 16, color: 'var(--secondary-green)' }}>
-                    {formatCurrency(item.amount)}
-                  </p>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    type="submit"
+                    leftIcon={<Save size={15} />}
+                    isLoading={isSubmitting}
+                    disabled={!isDirty}
+                    style={{ marginTop: 4, width: '100%' }}
+                  >
+                    Save Changes
+                  </Button>
                 </div>
-              ))}
+              </Card>
             </div>
-          </Card>
+          </form>
         )}
       </div>
 
