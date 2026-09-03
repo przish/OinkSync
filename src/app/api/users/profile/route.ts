@@ -43,27 +43,58 @@ export async function GET() {
     });
     const totalFarmNetProfit = totalRevenue - totalExpense;
 
-    let totalInvestment = 0;
-    let totalProfit = 0;
+    // 4. Count active members (all members are investors)
+    const { count: memberCount } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true);
 
-    if (investorData) {
+    const activeMembers = memberCount && memberCount > 0 ? memberCount : 1;
+
+    // 5. Fetch user's approved investment transactions
+    const { data: userInvestTx } = await supabase
+      .from('transactions')
+      .select('amount')
+      .eq('created_by', profile.id)
+      .eq('category', 'investment')
+      .eq('status', 'approved');
+
+    const sumUserInvest = (userInvestTx || []).reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+
+    let totalInvestment = 0;
+    if (sumUserInvest > 0) {
+      totalInvestment = sumUserInvest;
+    } else if (investorData?.total_investment) {
       totalInvestment = Number(investorData.total_investment) || 0;
-      const sharePct = Number(investorData.profit_share_percentage) || 0;
-      const calculatedShare = totalFarmNetProfit > 0 ? (totalFarmNetProfit * sharePct) / 100 : 0;
-      totalProfit = Number(investorData.total_profit_paid) || calculatedShare;
-    } else if (bpData) {
-      // Determine contribution based on role
-      if (profile.role === 'admin') {
-        totalInvestment = Number(bpData.gm_capital_contribution) || 0;
+    } else if (bpData?.total_capital) {
+      // Capital is equally distributed among members
+      totalInvestment = Math.round(Number(bpData.total_capital) / activeMembers);
+    }
+
+    // 6. Compute Profit Distribution
+    // - Operational work percentage (default 50% operations, 50% investor pool)
+    // - From operations share: 50% Pen Manager, 25% GM (Admin), 25% Logistics
+    // - Remainder is distributed equally to ALL investors (since all members contributed capital)
+    let totalProfit = 0;
+    if (totalFarmNetProfit > 0) {
+      const operationsPercent = 50; // 50% work share, 50% investor capital share
+      const operationsPool = (totalFarmNetProfit * operationsPercent) / 100;
+      const investorPool = totalFarmNetProfit - operationsPool;
+
+      // Equal dividend from investor pool
+      const investorShare = investorPool / activeMembers;
+
+      // Work-based share from operations pool
+      let workShare = 0;
+      if (profile.role === 'pen_manager') {
+        workShare = operationsPool * 0.50; // 50%
+      } else if (profile.role === 'admin') {
+        workShare = operationsPool * 0.25; // 25%
       } else if (profile.role === 'logistics') {
-        totalInvestment = Number(bpData.logistics_capital_contribution) || 0;
-      } else if (profile.role === 'pen_manager') {
-        totalInvestment = Number(bpData.pen_manager_capital_contribution) || 0;
+        workShare = operationsPool * 0.25; // 25%
       }
 
-      const totalCap = Number(bpData.total_capital) || 1;
-      const ratio = totalInvestment > 0 && totalCap > 0 ? totalInvestment / totalCap : 0;
-      totalProfit = totalFarmNetProfit > 0 ? Math.round(totalFarmNetProfit * ratio) : 0;
+      totalProfit = Math.round(workShare + investorShare);
     }
 
     return successResponse({
