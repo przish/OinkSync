@@ -13,61 +13,64 @@ import { useToast, ToastContainer } from '@/components/UI/Toast';
 import { createClient } from '@/lib/supabase/client';
 import { businessSettingsSchema, type BusinessSettingsFormValues } from '@/lib/utils/zod-schemas';
 import { formatCurrency } from '@/lib/utils/formatting';
+import { SkeletonCard } from '@/components/UI/Spinner';
 import type { BusinessProfile } from '@/types/database';
 
 export default function SettingsPage() {
   const { toasts, toast, remove } = useToast();
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting, isDirty } } = useForm<BusinessSettingsFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(businessSettingsSchema) as any,
     defaultValues: {
-      total_capital: 500000,
-      target_monthly_profit: 60000,
-      pre_starter_sacks: 1,
-      pre_starter_cost: 1800,
-      starter_sacks: 2,
-      starter_cost: 1650,
-      grower_sacks: 3,
-      grower_cost: 1550,
-      finisher_sacks: 4,
-      finisher_cost: 1500,
-      vitamins_cost: 500,
-      expected_price_per_kg: 220,
-      expected_market_weight_kg: 90,
-      monthly_payroll_budget: 35000,
+      total_capital: 0,
+      target_monthly_profit: 0,
+      pre_starter_sacks: 0,
+      pre_starter_cost: 0,
+      starter_sacks: 0,
+      starter_cost: 0,
+      grower_sacks: 0,
+      grower_cost: 0,
+      finisher_sacks: 0,
+      finisher_cost: 0,
+      vitamins_cost: 0,
+      expected_price_per_kg: 0,
+      expected_market_weight_kg: 0,
+      monthly_payroll_budget: 0,
     },
   });
 
-  // Watch values for real-time calculation
-  const targetProfit = useWatch({ control, name: 'target_monthly_profit', defaultValue: 60000 });
-  const preSacks = useWatch({ control, name: 'pre_starter_sacks', defaultValue: 1 }) || 0;
-  const preCost = useWatch({ control, name: 'pre_starter_cost', defaultValue: 1800 }) || 0;
-  const starterSacks = useWatch({ control, name: 'starter_sacks', defaultValue: 2 }) || 0;
-  const starterCost = useWatch({ control, name: 'starter_cost', defaultValue: 1650 }) || 0;
-  const growerSacks = useWatch({ control, name: 'grower_sacks', defaultValue: 3 }) || 0;
-  const growerCost = useWatch({ control, name: 'grower_cost', defaultValue: 1550 }) || 0;
-  const finisherSacks = useWatch({ control, name: 'finisher_sacks', defaultValue: 4 }) || 0;
-  const finisherCost = useWatch({ control, name: 'finisher_cost', defaultValue: 1500 }) || 0;
-  const vitaminsCost = useWatch({ control, name: 'vitamins_cost', defaultValue: 500 }) || 0;
+  // Watch values for real-time calculation with 0 as initial fallback
+  const targetProfit = useWatch({ control, name: 'target_monthly_profit', defaultValue: 0 }) || 0;
+  const preSacks = useWatch({ control, name: 'pre_starter_sacks', defaultValue: 0 }) || 0;
+  const preCost = useWatch({ control, name: 'pre_starter_cost', defaultValue: 0 }) || 0;
+  const starterSacks = useWatch({ control, name: 'starter_sacks', defaultValue: 0 }) || 0;
+  const starterCost = useWatch({ control, name: 'starter_cost', defaultValue: 0 }) || 0;
+  const growerSacks = useWatch({ control, name: 'grower_sacks', defaultValue: 0 }) || 0;
+  const growerCost = useWatch({ control, name: 'grower_cost', defaultValue: 0 }) || 0;
+  const finisherSacks = useWatch({ control, name: 'finisher_sacks', defaultValue: 0 }) || 0;
+  const finisherCost = useWatch({ control, name: 'finisher_cost', defaultValue: 0 }) || 0;
+  const vitaminsCost = useWatch({ control, name: 'vitamins_cost', defaultValue: 0 }) || 0;
 
-  const pricePerKg = useWatch({ control, name: 'expected_price_per_kg', defaultValue: 220 }) || 0;
-  const marketWeight = useWatch({ control, name: 'expected_market_weight_kg', defaultValue: 90 }) || 0;
-  const totalCapital = useWatch({ control, name: 'total_capital', defaultValue: 500000 }) || 0;
+  const pricePerKg = useWatch({ control, name: 'expected_price_per_kg', defaultValue: 0 }) || 0;
+  const marketWeight = useWatch({ control, name: 'expected_market_weight_kg', defaultValue: 0 }) || 0;
+  const totalCapital = useWatch({ control, name: 'total_capital', defaultValue: 0 }) || 0;
 
   // Real-time calculated figures
   const totalFeedCost = (preSacks * preCost) + (starterSacks * starterCost) + (growerSacks * growerCost) + (finisherSacks * finisherCost);
   const totalRearingCostPerPig = totalFeedCost + vitaminsCost;
   const expectedSalePricePerPig = pricePerKg * marketWeight;
   const profitPerPig = expectedSalePricePerPig - totalRearingCostPerPig;
-  const pigsNeededPerMonth = profitPerPig > 0 ? Math.ceil((targetProfit || 0) / profitPerPig) : 0;
+  const pigsNeededPerMonth = profitPerPig > 0 ? Math.ceil(targetProfit / profitPerPig) : 0;
   const sowsNeeded = Math.ceil(pigsNeededPerMonth / 2); // 2 pigs per month per sow average
   const dynamicMarginPct = totalRearingCostPerPig > 0 && profitPerPig > 0
     ? Number(((profitPerPig / totalRearingCostPerPig) * 100).toFixed(1))
     : 0;
 
   const fetchProfile = useCallback(async () => {
+    setIsLoadingProfile(true);
     const supabase = createClient();
     const { data } = await supabase.from('business_profile').select('*').single();
     if (data) {
@@ -78,26 +81,27 @@ export default function SettingsPage() {
 
       const fb = p.feed_breakdown || {};
       reset({
-        total_capital: Number(p.total_capital) || 500000,
-        target_monthly_profit: Number(p.target_monthly_profit) || 60000,
-        target_pig_count: p.target_pig_count,
-        pre_starter_sacks: fb.pre_starter_sacks ?? 1,
-        pre_starter_cost: fb.pre_starter_cost ?? 1800,
-        starter_sacks: fb.starter_sacks ?? 2,
-        starter_cost: fb.starter_cost ?? 1650,
-        grower_sacks: fb.grower_sacks ?? 3,
-        grower_cost: fb.grower_cost ?? 1550,
-        finisher_sacks: fb.finisher_sacks ?? 4,
-        finisher_cost: fb.finisher_cost ?? 1500,
-        vitamins_cost: fb.vitamins_cost ?? 500,
-        expected_price_per_kg: fb.expected_price_per_kg ?? (p.expected_sale_price_per_pig ? Math.round(p.expected_sale_price_per_pig / 90) : 220),
-        expected_market_weight_kg: fb.expected_market_weight_kg ?? 90,
-        cost_per_pig_rearing: p.cost_per_pig_rearing,
-        expected_sale_price_per_pig: p.expected_sale_price_per_pig,
-        expected_roi_percentage: p.expected_roi_percentage,
-        monthly_payroll_budget: Number(p.monthly_payroll_budget) || 35000,
+        total_capital: Number(p.total_capital) || 0,
+        target_monthly_profit: Number(p.target_monthly_profit) || 0,
+        target_pig_count: p.target_pig_count ?? 0,
+        pre_starter_sacks: fb.pre_starter_sacks ?? 0,
+        pre_starter_cost: fb.pre_starter_cost ?? 0,
+        starter_sacks: fb.starter_sacks ?? 0,
+        starter_cost: fb.starter_cost ?? 0,
+        grower_sacks: fb.grower_sacks ?? 0,
+        grower_cost: fb.grower_cost ?? 0,
+        finisher_sacks: fb.finisher_sacks ?? 0,
+        finisher_cost: fb.finisher_cost ?? 0,
+        vitamins_cost: fb.vitamins_cost ?? 0,
+        expected_price_per_kg: fb.expected_price_per_kg ?? 0,
+        expected_market_weight_kg: fb.expected_market_weight_kg ?? 0,
+        cost_per_pig_rearing: Number(p.cost_per_pig_rearing) || 0,
+        expected_sale_price_per_pig: Number(p.expected_sale_price_per_pig) || 0,
+        expected_roi_percentage: Number(p.expected_roi_percentage) || 0,
+        monthly_payroll_budget: Number(p.monthly_payroll_budget) || 0,
       });
     }
+    setIsLoadingProfile(false);
   }, [reset]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
@@ -170,7 +174,12 @@ export default function SettingsPage() {
             icon={<Settings size={18} color="var(--secondary-green)" />}
           />
 
-          <form style={{ display: 'flex', flexDirection: 'column', gap: 20 }} noValidate>
+          {isLoadingProfile ? (
+            <div style={{ padding: 24 }}>
+              <SkeletonCard />
+            </div>
+          ) : (
+            <form style={{ display: 'flex', flexDirection: 'column', gap: 20 }} noValidate>
             <div className="form-grid form-grid-2">
               <FormField label="Total Capital (₱)" htmlFor="s-capital" error={errors.total_capital?.message} required>
                 <input
@@ -408,8 +417,9 @@ export default function SettingsPage() {
                 </p>
                 <span style={{ fontSize: 11, color: '#9CA3AF' }}>Auto-analyzed from parameters</span>
               </div>
-            </div>
-          </form>
+              </div>
+            </form>
+          )}
         </Card>
 
         {/* Capital distribution breakdown */}
