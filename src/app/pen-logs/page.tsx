@@ -49,25 +49,91 @@ export default function PenLogsPage() {
     return result;
   };
 
+  const handleDownloadPDF = () => {
+    if (logs.length === 0) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+    const rows = logs.map((l) => `
+      <tr>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${formatDate(l.log_date)}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">Pen ${l.pen?.pen_number ?? '—'}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.feed_type || '—'} (${l.feed_amount_kg} kg)</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd; color: ${l.animals_died > 0 ? '#b91c1c' : '#333'}">${l.animals_died}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd; color: ${l.animals_sick > 0 ? '#b45309' : '#333'}">${l.animals_sick}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.cleaning_status || '—'}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.issues_reported ? '⚠️ Issue' : 'Normal'}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.logged_by?.full_name || 'Staff'}</td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Daily Pen Logs — OinkSync Farm</title>
+          <style>
+            body { font-family: -apple-system, system-ui, sans-serif; padding: 24px; color: #182B1D; }
+            h1 { font-size: 20px; margin-bottom: 4px; color: #3D5C40; }
+            p { font-size: 12px; color: #666; margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th { background: #86A788; color: white; text-align: left; padding: 8px 12px; font-weight: 700; }
+          </style>
+        </head>
+        <body>
+          <h1>Daily Pen Logs — OinkSync Farm</h1>
+          <p>Generated on ${new Date().toLocaleDateString()} | Total Logs: ${logs.length}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Pen</th><th>Feed</th><th>Died</th><th>Sick</th><th>Cleaning</th><th>Issues</th><th>Logged By</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() { window.print(); };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <>
-      <TopBar
-        title="Pen Logs"
-        actions={
-          <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddLog(true)}>
-            Add Log
-          </Button>
-        }
-      />
+      <TopBar title="Pen Logs" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Card style={{ padding: 0 }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <h3 style={{ fontWeight: 700, fontSize: 15 }}>Daily Pen Logs</h3>
+              <h3 style={{ fontWeight: 700, fontSize: 16 }}>Daily Pen Logs</h3>
               {pagination && (
                 <p style={{ fontSize: 12, color: '#4B5563', marginTop: 2 }}>{pagination.total} total logs</p>
               )}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDownloadPDF}
+                disabled={logs.length === 0}
+              >
+                Download PDF
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus size={15} />}
+                onClick={() => setShowAddLog(true)}
+              >
+                Add Log
+              </Button>
             </div>
           </div>
 
