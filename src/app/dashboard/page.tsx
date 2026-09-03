@@ -201,44 +201,44 @@ export default function DashboardPage() {
                 padding: '14px 16px',
                 background: 'var(--palette-rose)',
                 borderRadius: 'var(--radius-md)',
-                border: '1px solid rgba(255, 207, 207, 0.8)',
+                border: '1.5px solid var(--palette-blush)',
               }}>
-                <p className="metric-label" style={{ color: '#883333', marginBottom: 4 }}>Pen Manager Work</p>
+                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>Pen Manager Work</p>
                 <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>50% Share</p>
-                <p style={{ fontSize: 11, color: '#6B4444', marginTop: 4 }}>From operational profit share</p>
+                <p style={{ fontSize: 11, color: 'var(--palette-sage)', marginTop: 4, fontWeight: 600 }}>From operational profit share</p>
               </div>
 
               <div style={{
                 padding: '14px 16px',
                 background: 'var(--palette-cream)',
                 borderRadius: 'var(--radius-md)',
-                border: '1px solid rgba(134, 167, 136, 0.4)',
+                border: '1.5px solid var(--palette-sage)',
               }}>
-                <p className="metric-label" style={{ marginBottom: 4 }}>General Manager</p>
-                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--secondary-green)' }}>25% Share</p>
-                <p style={{ fontSize: 11, color: '#4A584E', marginTop: 4 }}>From operational profit share</p>
+                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>General Manager</p>
+                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--palette-sage)' }}>25% Share</p>
+                <p style={{ fontSize: 11, color: 'var(--neutral-dark)', marginTop: 4, fontWeight: 600 }}>From operational profit share</p>
               </div>
 
               <div style={{
                 padding: '14px 16px',
                 background: 'var(--palette-cream)',
                 borderRadius: 'var(--radius-md)',
-                border: '1px solid rgba(134, 167, 136, 0.4)',
+                border: '1.5px solid var(--palette-sage)',
               }}>
-                <p className="metric-label" style={{ marginBottom: 4 }}>Logistics Team</p>
-                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--secondary-green)' }}>25% Share</p>
-                <p style={{ fontSize: 11, color: '#4A584E', marginTop: 4 }}>From operational profit share</p>
+                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>Logistics Team</p>
+                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--palette-sage)' }}>25% Share</p>
+                <p style={{ fontSize: 11, color: 'var(--neutral-dark)', marginTop: 4, fontWeight: 600 }}>From operational profit share</p>
               </div>
 
               <div style={{
                 padding: '14px 16px',
                 background: 'var(--palette-blush)',
                 borderRadius: 'var(--radius-md)',
-                border: '1px solid rgba(235, 175, 175, 0.7)',
+                border: '1.5px solid var(--palette-rose)',
               }}>
-                <p className="metric-label" style={{ color: '#883333', marginBottom: 4 }}>Investor Pool</p>
+                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>Investor Pool</p>
                 <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>Equal Share</p>
-                <p style={{ fontSize: 11, color: '#6B4444', marginTop: 4 }}>Evenly across all members/investors</p>
+                <p style={{ fontSize: 11, color: 'var(--palette-sage)', marginTop: 4, fontWeight: 600 }}>Evenly across all members/investors</p>
               </div>
             </div>
           </Card>
