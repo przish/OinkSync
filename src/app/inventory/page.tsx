@@ -11,7 +11,7 @@ import { PenList } from './components/PenList';
 import { AnimalForm } from './components/AnimalForm';
 import { useInventory } from '@/lib/hooks/useInventory';
 import { useToast, ToastContainer } from '@/components/UI/Toast';
-import type { AnimalFormValues } from '@/lib/utils/zod-schemas';
+import type { CreateAnimalRequest } from '@/types/api';
 
 export default function InventoryPage() {
   const { summary, pens, animals, isLoading, fetchAll, addAnimal } = useInventory();
@@ -21,20 +21,14 @@ export default function InventoryPage() {
   const load = useCallback(() => fetchAll(), [fetchAll]);
   useEffect(() => { load(); }, [load]);
 
-  const handleAddAnimal = async (data: AnimalFormValues) => {
-    const result = await addAnimal({
-      pen_id: data.pen_id,
-      animal_type: data.animal_type,
-      animal_code: data.animal_code,
-      birth_date: data.birth_date,
-      gender: data.gender ?? undefined,
-      health_status: data.health_status,
-      current_weight: data.current_weight ?? undefined,
-      is_breeding_sow: data.is_breeding_sow,
-      notes: data.notes,
-    });
-    if (!result.error) { toast.success('Animal added!'); load(); }
-    else toast.error(result.error);
+  const handleAddAnimal = async (data: CreateAnimalRequest) => {
+    const result = await addAnimal(data);
+    if (!result.error) {
+      toast.success(data.quantity && data.quantity > 1 ? `${data.quantity} piglets added!` : 'Animal added!');
+      load();
+    } else {
+      toast.error(result.error);
+    }
     return result;
   };
 

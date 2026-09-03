@@ -39,7 +39,7 @@ export function PenList({ pens }: PenListProps) {
                   <p style={{ fontSize: 12, color: '#4B5563', marginTop: 2 }}>{pen.pen_name}</p>
                 )}
               </div>
-              <Badge variant={pen.status} />
+              <Badge variant={(pen.current_count ?? 0) > 0 ? 'active' : 'inactive'} />
             </div>
 
             <div style={{ display: 'flex', gap: 20, marginBottom: 14 }}>

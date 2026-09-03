@@ -48,14 +48,7 @@ export default function ScalingPlanPage() {
 
   return (
     <>
-      <TopBar
-        title="Scaling Plan"
-        actions={
-          <Button variant="ghost" size="sm" leftIcon={<ArrowLeft size={15} />} onClick={() => router.back()}>
-            Back to Analytics
-          </Button>
-        }
-      />
+      <TopBar title="Scaling Plan" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         {loading ? (

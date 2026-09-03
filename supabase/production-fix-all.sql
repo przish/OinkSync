@@ -11,7 +11,16 @@
 -- STEP 1: Schema Updates & Missing Columns
 -- -----------------------------------------------------------------------------
 ALTER TABLE public.business_profile 
-ADD COLUMN IF NOT EXISTS target_monthly_profit NUMERIC DEFAULT 0 NOT NULL;
+ADD COLUMN IF NOT EXISTS target_monthly_profit NUMERIC DEFAULT 0 NOT NULL,
+ADD COLUMN IF NOT EXISTS feed_breakdown JSONB DEFAULT '{}'::jsonb;
+
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS avatar_url TEXT,
+ADD COLUMN IF NOT EXISTS avatar_updated_at TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE public.animals
+ADD COLUMN IF NOT EXISTS breeding_stage TEXT,
+ADD COLUMN IF NOT EXISTS mother_id UUID REFERENCES public.animals(id);
 
 -- -----------------------------------------------------------------------------
 -- STEP 2: Auto-Sync User Profiles (Fixes User Lockout & Missing Profiles)

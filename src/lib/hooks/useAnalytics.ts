@@ -24,9 +24,9 @@ export function useAnalytics() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchKpi = useCallback(async () => {
+  const fetchKpi = useCallback(async (period: string = 'all') => {
     try {
-      const res = await fetch('/api/dashboard/kpi');
+      const res = await fetch(`/api/dashboard/kpi?period=${period}`);
       if (!res.ok) throw new Error('Failed to fetch KPI');
       const json = await res.json();
       setKpi(json.data);

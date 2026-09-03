@@ -21,16 +21,18 @@ export async function POST(request: NextRequest) {
     
     const adminClient = createAdminClient();
     
+    const password = body.password?.trim() || 'PiggyTrack2026!';
+
     // 1. Create the user in auth.users
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
-      user_metadata: { full_name, role }
+      user_metadata: { full_name, role, must_change_password: true }
     });
     
     if (authError) {
-      // If user already exists in auth, Supabase returns an error, which is fine
-      // We will surface it to the frontend
+      // If user already exists in auth, Supabase returns an error
       throw authError;
     }
     
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
       throw userError;
     }
     
-    return successResponse(userData, 201);
+    return successResponse({ ...userData, initial_password: password }, 201);
   } catch (error) {
     return handleError(error);
   }

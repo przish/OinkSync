@@ -26,24 +26,27 @@ export default function DashboardPage() {
   const { kpi, isLoading: kpiLoading, fetchKpi } = useAnalytics();
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [period, setPeriod] = useState('all');
 
   const loadData = useCallback(async () => {
     await Promise.all([
-      fetchKpi(),
+      fetchKpi(period),
       fetchTransactions({ limit: 10 }),
     ]);
-  }, [fetchKpi, fetchTransactions]);
+  }, [fetchKpi, fetchTransactions, period]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleApprove = async (id: string) => {
     await updateTransactionStatus(id, { action: 'approve' });
     fetchTransactions({ limit: 10 });
+    fetchKpi(period);
   };
 
   const handleReject = async (id: string) => {
     await updateTransactionStatus(id, { action: 'reject', rejection_reason: 'Rejected by admin' });
     fetchTransactions({ limit: 10 });
+    fetchKpi(period);
   };
 
   const today = new Date();
@@ -99,17 +102,49 @@ export default function DashboardPage() {
               {formatDate(today.toISOString())}
             </p>
           </div>
-          {kpi && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
-              <p style={{ fontSize: 28, fontWeight: 800, color: kpi.net_profit >= 0 ? '#bbf7d0' : '#fecaca' }}>
-                {formatCurrency(kpi.net_profit)}
-              </p>
-              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
-                ROI: {formatPercentage(kpi.roi_percentage)}
-              </p>
+              <label htmlFor="period-select" style={{ display: 'block', fontSize: 11, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4, fontWeight: 600 }}>
+                Period View
+              </label>
+              <select
+                id="period-select"
+                value={period}
+                onChange={(e) => {
+                  setPeriod(e.target.value);
+                  fetchKpi(e.target.value);
+                }}
+                style={{
+                  background: 'rgba(0, 0, 0, 0.25)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  outline: 'none',
+                }}
+              >
+                <option value="all" style={{ background: '#1a2517', color: '#fff' }}>All Time</option>
+                <option value="this_month" style={{ background: '#1a2517', color: '#fff' }}>This Month</option>
+                <option value="last_month" style={{ background: '#1a2517', color: '#fff' }}>Last Month</option>
+                <option value="ytd" style={{ background: '#1a2517', color: '#fff' }}>Year to Date</option>
+              </select>
             </div>
-          )}
+
+            {kpi && (
+              <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.2)', paddingLeft: 20 }}>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Net Profit</p>
+                <p style={{ fontSize: 28, fontWeight: 800, color: kpi.net_profit >= 0 ? '#bbf7d0' : '#fecaca' }}>
+                  {formatCurrency(kpi.net_profit)}
+                </p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+                  ROI: {formatPercentage(kpi.roi_percentage)}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* KPI Cards */}

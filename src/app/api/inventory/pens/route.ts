@@ -43,9 +43,11 @@ export async function GET() {
     const pensWithAnimals: PenWithAnimalsResponse[] = pens.map((pen) => {
       const penAnimals = animals.filter(a => a.pen_id === pen.id);
       const currentCount = penAnimals.length;
+      const dynamicStatus = currentCount > 0 ? 'active' : 'inactive';
 
       return {
         ...pen,
+        status: dynamicStatus,
         animals: penAnimals,
         current_count: currentCount,
         occupancy_percentage: pen.capacity > 0

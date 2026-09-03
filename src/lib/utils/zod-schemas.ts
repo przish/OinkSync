@@ -94,13 +94,27 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 // ─── Business Settings ────────────────────────────────────────────────────────
 
 export const businessSettingsSchema = z.object({
-  total_capital: z.number().positive('Total capital must be positive'),
+  total_capital: z.number().min(0, 'Total capital cannot be negative'),
   target_monthly_profit: z.number().min(0, 'Target profit cannot be negative'),
   target_pig_count: z.number().int().min(0).optional(),
-  cost_per_pig_rearing: z.number().positive('Cost per pig must be positive'),
-  expected_sale_price_per_pig: z.number().positive('Expected sale price must be positive'),
-  expected_roi_percentage: z.number().positive('Expected ROI must be positive'),
-  monthly_payroll_budget: z.number().min(0),
+  // Sacks count and cost breakdown
+  pre_starter_sacks: z.number().min(0).default(1),
+  pre_starter_cost: z.number().min(0).default(1800),
+  starter_sacks: z.number().min(0).default(2),
+  starter_cost: z.number().min(0).default(1650),
+  grower_sacks: z.number().min(0).default(3),
+  grower_cost: z.number().min(0).default(1550),
+  finisher_sacks: z.number().min(0).default(4),
+  finisher_cost: z.number().min(0).default(1500),
+  vitamins_cost: z.number().min(0).default(500),
+  // Price per kg and weight
+  expected_price_per_kg: z.number().min(0).default(220),
+  expected_market_weight_kg: z.number().min(0).default(90),
+  // Derived / legacy compatibility
+  cost_per_pig_rearing: z.number().min(0).optional(),
+  expected_sale_price_per_pig: z.number().min(0).optional(),
+  expected_roi_percentage: z.number().min(0).optional(),
+  monthly_payroll_budget: z.number().min(0).default(0),
 });
 
 export type BusinessSettingsFormValues = z.infer<typeof businessSettingsSchema>;

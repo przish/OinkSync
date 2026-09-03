@@ -178,6 +178,11 @@ export interface CreateAnimalRequest {
   current_weight?: number;
   is_breeding_sow?: boolean;
   notes?: string;
+  breeding_stage?: 'ready' | 'breeding' | 'not_yet';
+  quantity?: number;
+  male_count?: number;
+  female_count?: number;
+  mother_id?: string;
 }
 
 export interface UpdateAnimalRequest {

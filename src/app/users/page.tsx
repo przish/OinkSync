@@ -12,12 +12,14 @@ import { createClient } from '@/lib/supabase/client';
 import { ROLE_LABELS } from '@/lib/constants';
 import { formatDate } from '@/lib/utils/formatting';
 import { InviteMemberModal } from '@/components/Forms/InviteMemberModal';
+import { EditMemberModal } from '@/components/Forms/EditMemberModal';
 import type { User } from '@/types/database';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
@@ -107,7 +109,13 @@ export default function UsersPage() {
                       </td>
                       <td style={{ color: '#4B5563', fontSize: 13 }}>{formatDate(user.created_at)}</td>
                       <td>
-                        <Button variant="ghost" size="sm">Edit</Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingUser(user)}
+                        >
+                          Edit
+                        </Button>
                       </td>
                     </tr>
                   ))
@@ -123,6 +131,17 @@ export default function UsersPage() {
           onClose={() => setShowInviteModal(false)}
           onSuccess={() => {
             setShowInviteModal(false);
+            fetchUsers();
+          }}
+        />
+      )}
+
+      {editingUser && (
+        <EditMemberModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSuccess={() => {
+            setEditingUser(null);
             fetchUsers();
           }}
         />

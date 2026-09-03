@@ -1,60 +1,133 @@
 'use client';
 
-import React from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/UI/Modal';
 import { Button } from '@/components/UI/Button';
 import { FormField } from '@/components/Forms/FormField';
 import { FormSelect } from '@/components/Forms/FormSelect';
-import { FormTextarea } from '@/components/Forms/FormTextarea';
-import { animalSchema, type AnimalFormValues } from '@/lib/utils/zod-schemas';
-import { ANIMAL_TYPE_LABELS, HEALTH_STATUSES } from '@/lib/constants';
+import { HEALTH_STATUSES } from '@/lib/constants';
 import { todayISO } from '@/lib/utils/formatting';
-import type { PenWithAnimals } from '@/types/api';
-
-const ANIMAL_TYPE_OPTIONS = Object.entries(ANIMAL_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }));
-const HEALTH_OPTIONS = HEALTH_STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }));
-const GENDER_OPTIONS = [
-  { value: '', label: 'Unknown' },
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-];
+import { createClient } from '@/lib/supabase/client';
+import type { PenWithAnimals, CreateAnimalRequest } from '@/types/api';
 
 interface AnimalFormProps {
   isOpen: boolean;
   onClose: () => void;
   pens: PenWithAnimals[];
-  onSubmit: (data: AnimalFormValues) => Promise<{ error: string | null }>;
+  onSubmit: (data: CreateAnimalRequest) => Promise<{ error: string | null }>;
 }
 
 export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps) {
+  // Tabs: 'breeding_sow' | 'piglet' (Market ready is removed as requested)
+  const [animalType, setAnimalType] = useState<'breeding_sow' | 'piglet'>('breeding_sow');
+
+  // Common fields
+  const [penId, setPenId] = useState('');
+  const [birthDate, setBirthDate] = useState(todayISO());
+  const [healthStatus, setHealthStatus] = useState<CreateAnimalRequest['health_status']>('healthy');
+  const [animalCode, setAnimalCode] = useState('');
+  const [weight, setWeight] = useState<number | undefined>(undefined);
+  const [notes, setNotes] = useState('');
+
+  // Breeding Sow fields
+  const [breedingStage, setBreedingStage] = useState<'ready' | 'breeding' | 'not_yet'>('ready');
+
+  // Piglet fields
+  const [motherId, setMotherId] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [maleCount, setMaleCount] = useState(0);
+  const [femaleCount, setFemaleCount] = useState(0);
+
+  // Existing Sows for Mother dropdown
+  const [sowOptions, setSowOptions] = useState<{ value: string; label: string }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Default to first pen
+      if (pens.length > 0 && !penId) {
+        setPenId(pens[0].id);
+      }
+      // Load active breeding sows
+      const supabase = createClient();
+      supabase
+        .from('animals')
+        .select('id, animal_code, birth_date')
+        .eq('animal_type', 'breeding_sow')
+        .eq('status', 'active')
+        .then(({ data }) => {
+          if (data) {
+            setSowOptions(
+              data.map((sow) => ({
+                value: sow.id,
+                label: sow.animal_code ? `${sow.animal_code} (Sow)` : `Sow (${sow.id.slice(0, 8)})`,
+              }))
+            );
+          }
+        });
+    }
+  }, [isOpen, pens, penId]);
+
+  const handleClose = () => {
+    setServerError(null);
+    setAnimalCode('');
+    setNotes('');
+    setQuantity(1);
+    setMaleCount(0);
+    setFemaleCount(0);
+    onClose();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!penId) {
+      setServerError('Please select a pen.');
+      return;
+    }
+
+    setServerError(null);
+    setIsSubmitting(true);
+
+    const payload: CreateAnimalRequest = {
+      pen_id: penId,
+      animal_type: animalType,
+      birth_date: birthDate,
+      health_status: healthStatus,
+      animal_code: animalCode.trim() || undefined,
+      notes: notes.trim() || undefined,
+      current_weight: weight ? Number(weight) : undefined,
+    };
+
+    if (animalType === 'breeding_sow') {
+      payload.is_breeding_sow = true;
+      payload.breeding_stage = breedingStage;
+      payload.gender = 'female';
+    } else {
+      payload.is_breeding_sow = false;
+      payload.mother_id = motherId || undefined;
+      payload.quantity = quantity;
+      payload.male_count = maleCount;
+      payload.female_count = femaleCount;
+      if (quantity === 1) {
+        payload.gender = maleCount > 0 ? 'male' : femaleCount > 0 ? 'female' : undefined;
+      }
+    }
+
+    const { error } = await onSubmit(payload);
+    setIsSubmitting(false);
+
+    if (error) {
+      setServerError(error);
+    } else {
+      handleClose();
+    }
+  };
+
   const penOptions = pens.map((p) => ({
     value: p.id,
-    label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''}`,
+    label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''} (${p.current_count}/${p.capacity})`,
   }));
-
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AnimalFormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(animalSchema) as any,
-    defaultValues: {
-      birth_date: todayISO(),
-      health_status: 'healthy',
-      animal_type: 'piglet',
-      is_breeding_sow: false,
-    },
-  });
-
-  const [serverError, setServerError] = React.useState<string | null>(null);
-
-  const handleClose = () => { reset(); setServerError(null); onClose(); };
-
-  const onFormSubmit = async (data: AnimalFormValues) => {
-    setServerError(null);
-    const { error } = await onSubmit(data);
-    if (error) setServerError(error);
-    else handleClose();
-  };
 
   return (
     <Modal
@@ -63,49 +136,279 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
       title="Add Animal"
       footer={
         <>
-          <Button variant="ghost" onClick={handleClose} disabled={isSubmitting}>Cancel</Button>
-          <Button variant="primary" onClick={() => handleSubmit(onFormSubmit)()} isLoading={isSubmitting}>
-            Add Animal
+          <Button variant="ghost" onClick={handleClose} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSubmit} isLoading={isSubmitting}>
+            {animalType === 'piglet' && quantity > 1
+              ? `Add Batch (${quantity} Piglets)`
+              : 'Add Animal'}
           </Button>
         </>
       }
     >
-      <form style={{ display: 'flex', flexDirection: 'column', gap: 18 }} noValidate>
-        <div className="form-grid form-grid-2">
-          <FormField label="Animal Type" htmlFor="a-type" error={errors.animal_type?.message} required>
-            <FormSelect id="a-type" options={ANIMAL_TYPE_OPTIONS} error={!!errors.animal_type} {...register('animal_type')} />
-          </FormField>
-          <FormField label="Pen" htmlFor="a-pen" error={errors.pen_id?.message} required>
-            <FormSelect id="a-pen" options={penOptions} placeholder="Select pen" error={!!errors.pen_id} {...register('pen_id')} />
-          </FormField>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        {/* Type Toggle Tabs */}
+        <div>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+            Select Animal Category:
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => setAnimalType('breeding_sow')}
+              style={{
+                padding: '12px 14px',
+                borderRadius: 10,
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: 'pointer',
+                border: animalType === 'breeding_sow' ? '2px solid var(--secondary-green)' : '1px solid var(--card-border)',
+                background: animalType === 'breeding_sow' ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255,255,255,0.03)',
+                color: animalType === 'breeding_sow' ? 'var(--secondary-green)' : '#9CA3AF',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              🐖 Breeding Sow
+            </button>
+            <button
+              type="button"
+              onClick={() => setAnimalType('piglet')}
+              style={{
+                padding: '12px 14px',
+                borderRadius: 10,
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: 'pointer',
+                border: animalType === 'piglet' ? '2px solid var(--secondary-green)' : '1px solid var(--card-border)',
+                background: animalType === 'piglet' ? 'rgba(76, 175, 80, 0.15)' : 'rgba(255,255,255,0.03)',
+                color: animalType === 'piglet' ? 'var(--secondary-green)' : '#9CA3AF',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              🐽 Piglet / Litter
+            </button>
+          </div>
+          <p style={{ fontSize: 11, color: '#6B7280', marginTop: 6 }}>
+            * Note: Market Ready pigs are separated/moved from piglets and not created here.
+          </p>
         </div>
-        <div className="form-grid form-grid-2">
-          <FormField label="Birth Date" htmlFor="a-birth" error={errors.birth_date?.message} required>
-            <input id="a-birth" type="date" className={`form-input${errors.birth_date ? ' error' : ''}`} {...register('birth_date')} />
-          </FormField>
-          <FormField label="Gender" htmlFor="a-gender">
-            <FormSelect id="a-gender" options={GENDER_OPTIONS} {...register('gender')} />
-          </FormField>
-        </div>
-        <div className="form-grid form-grid-2">
-          <FormField label="Health Status" htmlFor="a-health" error={errors.health_status?.message}>
-            <FormSelect id="a-health" options={HEALTH_OPTIONS} {...register('health_status')} />
-          </FormField>
-          <FormField label="Weight (kg)" htmlFor="a-weight">
-            <input id="a-weight" type="number" step="0.1" min="0" className="form-input" placeholder="Optional" {...register('current_weight', { valueAsNumber: true })} />
-          </FormField>
-        </div>
-        <FormField label="Animal Code" htmlFor="a-code" hint="Optional unique identifier">
-          <input id="a-code" type="text" className="form-input" placeholder="e.g. SOW-001" {...register('animal_code')} />
-        </FormField>
-        <FormField label="Notes" htmlFor="a-notes">
-          <FormTextarea id="a-notes" placeholder="Any observations or notes..." rows={3} {...register('notes')} />
-        </FormField>
+
+        {/* Server error alert */}
         {serverError && (
-          <div className="alert-banner" style={{ borderLeftColor: 'var(--error)', background: 'linear-gradient(135deg, #fde8e8, #f5c6c6)' }}>
-            <p style={{ fontSize: 14 }}>{serverError}</p>
+          <div style={{ padding: '10px 14px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 8, color: '#f87171', fontSize: 13 }}>
+            {serverError}
           </div>
         )}
+
+        {/* BREEDING SOW FORM */}
+        {animalType === 'breeding_sow' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="form-grid form-grid-2">
+              <FormField label="Breed Status" htmlFor="sow-stage" required>
+                <FormSelect
+                  id="sow-stage"
+                  value={breedingStage}
+                  onChange={(e) => setBreedingStage(e.target.value as 'ready' | 'breeding' | 'not_yet')}
+                  options={[
+                    { value: 'ready', label: 'Ready for Breeding' },
+                    { value: 'breeding', label: 'Currently Breeding' },
+                    { value: 'not_yet', label: 'Not Yet Ready' },
+                  ]}
+                />
+              </FormField>
+
+              <FormField label="Assigned Pen" htmlFor="sow-pen" required>
+                <FormSelect
+                  id="sow-pen"
+                  value={penId}
+                  onChange={(e) => setPenId(e.target.value)}
+                  options={penOptions}
+                  placeholder="Select a pen"
+                />
+              </FormField>
+            </div>
+
+            <div className="form-grid form-grid-2">
+              <FormField label="Animal Code (Optional)" htmlFor="sow-code" hint="Leave blank to auto-generate (e.g. SOW-001)">
+                <input
+                  id="sow-code"
+                  type="text"
+                  value={animalCode}
+                  onChange={(e) => setAnimalCode(e.target.value)}
+                  className="form-input"
+                  placeholder="e.g. SOW-001"
+                />
+              </FormField>
+
+              <FormField label="Birth Date" htmlFor="sow-birth" required>
+                <input
+                  id="sow-birth"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </FormField>
+            </div>
+
+            <div className="form-grid form-grid-2">
+              <FormField label="Health Status" htmlFor="sow-health">
+                <FormSelect
+                  id="sow-health"
+                  value={healthStatus}
+                  onChange={(e) => setHealthStatus(e.target.value as CreateAnimalRequest['health_status'])}
+                  options={HEALTH_STATUSES.map((h) => ({ value: h, label: h.charAt(0).toUpperCase() + h.slice(1) }))}
+                />
+              </FormField>
+
+              <FormField label="Weight (kg)" htmlFor="sow-weight">
+                <input
+                  id="sow-weight"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={weight ?? ''}
+                  onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : undefined)}
+                  className="form-input"
+                  placeholder="Optional"
+                />
+              </FormField>
+            </div>
+          </div>
+        )}
+
+        {/* PIGLET FORM */}
+        {animalType === 'piglet' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="form-grid form-grid-2">
+              <FormField label="From Which Sow?" htmlFor="piglet-mother" hint="Mother sow (Optional)">
+                <FormSelect
+                  id="piglet-mother"
+                  value={motherId}
+                  onChange={(e) => setMotherId(e.target.value)}
+                  options={[{ value: '', label: 'Select mother sow (optional)' }, ...sowOptions]}
+                />
+              </FormField>
+
+              <FormField label="Assigned Pen" htmlFor="piglet-pen" required>
+                <FormSelect
+                  id="piglet-pen"
+                  value={penId}
+                  onChange={(e) => setPenId(e.target.value)}
+                  options={penOptions}
+                  placeholder="Select a pen"
+                />
+              </FormField>
+            </div>
+
+            <div className="form-grid form-grid-3">
+              <FormField label="How many piglets?" htmlFor="piglet-qty" required>
+                <input
+                  id="piglet-qty"
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={quantity}
+                  onChange={(e) => {
+                    const q = Math.max(1, Number(e.target.value) || 1);
+                    setQuantity(q);
+                    // auto split
+                    setMaleCount(Math.floor(q / 2));
+                    setFemaleCount(q - Math.floor(q / 2));
+                  }}
+                  className="form-input"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Male Count" htmlFor="piglet-male">
+                <input
+                  id="piglet-male"
+                  type="number"
+                  min="0"
+                  max={quantity}
+                  value={maleCount}
+                  onChange={(e) => setMaleCount(Number(e.target.value) || 0)}
+                  className="form-input"
+                />
+              </FormField>
+
+              <FormField label="Female Count" htmlFor="piglet-female">
+                <input
+                  id="piglet-female"
+                  type="number"
+                  min="0"
+                  max={quantity}
+                  value={femaleCount}
+                  onChange={(e) => setFemaleCount(Number(e.target.value) || 0)}
+                  className="form-input"
+                />
+              </FormField>
+            </div>
+
+            <div className="form-grid form-grid-2">
+              <FormField label="Birth Date" htmlFor="piglet-birth" required>
+                <input
+                  id="piglet-birth"
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </FormField>
+
+              <FormField label="Code Prefix / Name" htmlFor="piglet-code" hint="Auto-named as PIG-001, etc. if empty">
+                <input
+                  id="piglet-code"
+                  type="text"
+                  value={animalCode}
+                  onChange={(e) => setAnimalCode(e.target.value)}
+                  className="form-input"
+                  placeholder="Leave empty for auto PIG-XXX"
+                />
+              </FormField>
+            </div>
+
+            <div className="form-grid form-grid-2">
+              <FormField label="Health Status" htmlFor="piglet-health">
+                <FormSelect
+                  id="piglet-health"
+                  value={healthStatus}
+                  onChange={(e) => setHealthStatus(e.target.value as CreateAnimalRequest['health_status'])}
+                  options={HEALTH_STATUSES.map((h) => ({ value: h, label: h.charAt(0).toUpperCase() + h.slice(1) }))}
+                />
+              </FormField>
+
+              <FormField label="Starting Weight (kg)" htmlFor="piglet-weight">
+                <input
+                  id="piglet-weight"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={weight ?? ''}
+                  onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : undefined)}
+                  className="form-input"
+                  placeholder="e.g. 1.5"
+                />
+              </FormField>
+            </div>
+          </div>
+        )}
+
+        {/* Notes */}
+        <FormField label="Additional Notes" htmlFor="animal-notes">
+          <input
+            id="animal-notes"
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="form-input"
+            placeholder="Observations, medical history, etc."
+          />
+        </FormField>
       </form>
     </Modal>
   );
