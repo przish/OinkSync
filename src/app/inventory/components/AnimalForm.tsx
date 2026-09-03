@@ -18,7 +18,7 @@ interface AnimalFormProps {
 }
 
 export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps) {
-  // Tabs: 'breeding_sow' | 'piglet' (Market ready is removed as requested)
+  // Tabs: 'breeding_sow' | 'piglet'
   const [animalType, setAnimalType] = useState<'breeding_sow' | 'piglet'>('breeding_sow');
 
   // Common fields
@@ -34,22 +34,26 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
 
   // Piglet fields
   const [motherId, setMotherId] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [maleCount, setMaleCount] = useState(0);
-  const [femaleCount, setFemaleCount] = useState(0);
+  const [quantity, setQuantity] = useState<number | ''>('');
+  const [maleCount, setMaleCount] = useState<number | ''>('');
+  const [femaleCount, setFemaleCount] = useState<number | ''>('');
 
   // Existing Sows for Mother dropdown
   const [sowOptions, setSowOptions] = useState<{ value: string; label: string }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Derive available capacity dynamically from selected pen
+  const selectedPen = pens.find((p) => p.id === penId);
+  const availableCapacity = selectedPen ? Math.max(0, selectedPen.capacity - selectedPen.current_count) : undefined;
+
   useEffect(() => {
     if (isOpen) {
-      // Default to first pen
+      // Default to first pen if not set
       if (pens.length > 0 && !penId) {
         setPenId(pens[0].id);
       }
-      // Load active breeding sows
+      // Load active breeding sows from DB
       const supabase = createClient();
       supabase
         .from('animals')
@@ -73,9 +77,10 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
     setServerError(null);
     setAnimalCode('');
     setNotes('');
-    setQuantity(1);
-    setMaleCount(0);
-    setFemaleCount(0);
+    setQuantity('');
+    setMaleCount('');
+    setFemaleCount('');
+    setWeight(undefined);
     onClose();
   };
 
@@ -89,6 +94,10 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
     setServerError(null);
     setIsSubmitting(true);
 
+    const qtyNumber = animalType === 'piglet' ? (Number(quantity) || 1) : 1;
+    const numMales = Number(maleCount) || 0;
+    const numFemales = Number(femaleCount) || 0;
+
     const payload: CreateAnimalRequest = {
       pen_id: penId,
       animal_type: animalType,
@@ -96,7 +105,7 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
       health_status: healthStatus,
       animal_code: animalCode.trim() || undefined,
       notes: notes.trim() || undefined,
-      current_weight: weight ? Number(weight) : undefined,
+      current_weight: weight !== undefined && !isNaN(Number(weight)) ? Number(weight) : undefined,
     };
 
     if (animalType === 'breeding_sow') {
@@ -106,11 +115,11 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
     } else {
       payload.is_breeding_sow = false;
       payload.mother_id = motherId || undefined;
-      payload.quantity = quantity;
-      payload.male_count = maleCount;
-      payload.female_count = femaleCount;
-      if (quantity === 1) {
-        payload.gender = maleCount > 0 ? 'male' : femaleCount > 0 ? 'female' : undefined;
+      payload.quantity = qtyNumber;
+      payload.male_count = numMales;
+      payload.female_count = numFemales;
+      if (qtyNumber === 1) {
+        payload.gender = numMales > 0 ? 'male' : numFemales > 0 ? 'female' : undefined;
       }
     }
 
@@ -129,6 +138,8 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
     label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''} (${p.current_count}/${p.capacity})`,
   }));
 
+  const parsedQty = Number(quantity) || 0;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -140,8 +151,8 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
             Cancel
           </Button>
           <Button variant="primary" onClick={handleSubmit} isLoading={isSubmitting}>
-            {animalType === 'piglet' && quantity > 1
-              ? `Add Batch (${quantity} Piglets)`
+            {animalType === 'piglet' && parsedQty > 1
+              ? `Add Batch (${parsedQty} Piglets)`
               : 'Add Animal'}
           </Button>
         </>
@@ -230,14 +241,14 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
             </div>
 
             <div className="form-grid form-grid-2">
-              <FormField label="Animal Code (Optional)" htmlFor="sow-code" hint="Leave blank to auto-generate (e.g. SOW-001)">
+              <FormField label="Animal Code (Optional)" htmlFor="sow-code" hint="Leave blank to auto-generate based on animal count">
                 <input
                   id="sow-code"
                   type="text"
                   value={animalCode}
                   onChange={(e) => setAnimalCode(e.target.value)}
                   className="form-input"
-                  placeholder="e.g. SOW-001"
+                  placeholder="Auto-generated if blank"
                 />
               </FormField>
 
@@ -272,7 +283,7 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
                   value={weight ?? ''}
                   onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : undefined)}
                   className="form-input"
-                  placeholder="Optional"
+                  placeholder="Enter weight in kg"
                 />
               </FormField>
             </div>
@@ -304,21 +315,21 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
             </div>
 
             <div className="form-grid form-grid-3">
-              <FormField label="How many piglets?" htmlFor="piglet-qty" required>
+              <FormField
+                label="How many piglets?"
+                htmlFor="piglet-qty"
+                hint={availableCapacity !== undefined ? `Available pen capacity: ${availableCapacity}` : undefined}
+                required
+              >
                 <input
                   id="piglet-qty"
                   type="number"
                   min="1"
-                  max="30"
+                  max={availableCapacity}
                   value={quantity}
-                  onChange={(e) => {
-                    const q = Math.max(1, Number(e.target.value) || 1);
-                    setQuantity(q);
-                    // auto split
-                    setMaleCount(Math.floor(q / 2));
-                    setFemaleCount(q - Math.floor(q / 2));
-                  }}
+                  onChange={(e) => setQuantity(e.target.value ? Number(e.target.value) : '')}
                   className="form-input"
+                  placeholder="Enter quantity"
                   required
                 />
               </FormField>
@@ -328,10 +339,11 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
                   id="piglet-male"
                   type="number"
                   min="0"
-                  max={quantity}
+                  max={typeof quantity === 'number' ? quantity : undefined}
                   value={maleCount}
-                  onChange={(e) => setMaleCount(Number(e.target.value) || 0)}
+                  onChange={(e) => setMaleCount(e.target.value ? Number(e.target.value) : '')}
                   className="form-input"
+                  placeholder="Count"
                 />
               </FormField>
 
@@ -340,10 +352,11 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
                   id="piglet-female"
                   type="number"
                   min="0"
-                  max={quantity}
+                  max={typeof quantity === 'number' ? quantity : undefined}
                   value={femaleCount}
-                  onChange={(e) => setFemaleCount(Number(e.target.value) || 0)}
+                  onChange={(e) => setFemaleCount(e.target.value ? Number(e.target.value) : '')}
                   className="form-input"
+                  placeholder="Count"
                 />
               </FormField>
             </div>
@@ -360,14 +373,14 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
                 />
               </FormField>
 
-              <FormField label="Code Prefix / Name" htmlFor="piglet-code" hint="Auto-named as PIG-001, etc. if empty">
+              <FormField label="Code Prefix / Name" htmlFor="piglet-code" hint="Leave blank to auto-generate based on animal count">
                 <input
                   id="piglet-code"
                   type="text"
                   value={animalCode}
                   onChange={(e) => setAnimalCode(e.target.value)}
                   className="form-input"
-                  placeholder="Leave empty for auto PIG-XXX"
+                  placeholder="Auto-generated if blank"
                 />
               </FormField>
             </div>
@@ -391,7 +404,7 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
                   value={weight ?? ''}
                   onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : undefined)}
                   className="form-input"
-                  placeholder="e.g. 1.5"
+                  placeholder="Enter weight in kg"
                 />
               </FormField>
             </div>
