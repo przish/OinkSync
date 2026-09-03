@@ -50,7 +50,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div
           onClick={onClose}
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            position: 'fixed', inset: 0, background: 'rgba(24, 43, 29, 0.45)',
             zIndex: 49, display: 'none',
           }}
           className="sidebar-backdrop"
@@ -59,26 +59,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       <aside className={clsx('sidebar', { open: isOpen })}>
         {/* Logo */}
-        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255, 253, 236, 0.25)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: 'linear-gradient(135deg, var(--tertiary-gold), #d4b890)',
+              width: 36, height: 36, borderRadius: 'var(--radius-md)',
+              background: 'var(--palette-blush)',
+              border: '1px solid var(--palette-rose)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 18,
             }}>
               🐷
             </div>
             <div>
-              <p style={{ color: 'white', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>PiggyTrack</p>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Farm OS</p>
+              <p style={{ color: 'var(--palette-cream)', fontWeight: 800, fontSize: 16, lineHeight: 1.2 }}>PiggyTrack</p>
+              <p style={{ color: 'var(--palette-cream)', opacity: 0.8, fontSize: 11, fontWeight: 600 }}>Farm OS</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '12px 12px', overflowY: 'auto' }}>
-          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)', padding: '8px 8px 4px', textTransform: 'uppercase' }}>
+        <nav style={{ flex: 1, padding: '14px 12px', overflowY: 'auto' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--palette-cream)', opacity: 0.85, padding: '8px 8px 6px', textTransform: 'uppercase' }}>
             Menu
           </p>
           {visibleItems.map((item) => {
@@ -99,18 +100,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* User footer */}
-        <div style={{ padding: '12px 12px 20px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ padding: '14px 12px 20px', borderTop: '1px solid rgba(255, 253, 236, 0.25)' }}>
           {user && (
             <div style={{ padding: '8px 12px', marginBottom: 8 }}>
-              <p style={{ color: 'white', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{ color: 'var(--palette-cream)', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user.full_name}
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{ color: 'var(--palette-cream)', opacity: 0.8, fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {user.email}
               </p>
             </div>
           )}
-          <button onClick={logout} className="nav-link" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          <button onClick={logout} className="nav-link signout-btn">
             <LogOut size={16} />
             <span>Sign Out</span>
           </button>
