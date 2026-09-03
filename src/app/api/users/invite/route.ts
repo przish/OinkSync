@@ -65,23 +65,24 @@ export async function POST(request: NextRequest) {
     
     const userId = authData.user.id;
     
-    // 2. Insert into public.users bypassing RLS
+    // 2. Upsert into public.users (safely handles cases where auth.users trigger auto-created the row)
     const { data: userData, error: userError } = await adminClient
       .from('users')
-      .insert({
+      .upsert({
         id: userId,
         email,
         full_name,
         role,
         phone_number: phone_number || null,
         is_active: true,
-      })
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' })
       .select()
       .single();
       
     if (userError) {
       // Cleanup auth user if public table insert fails
-      await adminClient.auth.admin.deleteUser(userId);
+      await adminClient.auth.admin.deleteUser(userId).catch(() => {});
       throw userError;
     }
     
