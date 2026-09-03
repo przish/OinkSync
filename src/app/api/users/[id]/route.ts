@@ -1,7 +1,6 @@
 /**
- * PATCH /api/users/[id]
- *
- * Update a team member's details (admin only).
+ * PATCH /api/users/[id] - Update user details (admin only)
+ * DELETE /api/users/[id] - Delete a team member (admin only)
  */
 
 import { NextRequest } from 'next/server';
@@ -58,18 +57,46 @@ export async function PATCH(
     }
 
     // 2. Also sync role and name to auth.users user_metadata
-    try {
-      await adminClient.auth.admin.updateUserById(targetUserId, {
-        user_metadata: {
-          ...(body.full_name ? { full_name: body.full_name } : {}),
-          ...(body.role ? { role: body.role } : {}),
-        },
-      });
-    } catch {
-      // Ignore if auth user doesn't exist or fails metadata sync
-    }
+    await adminClient.auth.admin.updateUserById(targetUserId, {
+      user_metadata: {
+        full_name: data.full_name,
+        role: data.role,
+      },
+    }).catch(() => {});
 
     return successResponse(data);
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const admin = await requireAdmin();
+    const adminClient = createAdminClient();
+    const { id } = await params;
+    const targetUserId = requireUUID(id, 'user_id');
+
+    if (targetUserId === admin.id) {
+      throw new ValidationError('Administrators cannot delete their own account.');
+    }
+
+    // 1. Delete transactions created by or referring to this user to maintain FK integrity if needed
+    // or delete directly from public.users
+    const { error: dbError } = await adminClient
+      .from('users')
+      .delete()
+      .eq('id', targetUserId);
+
+    if (dbError) throw dbError;
+
+    // 2. Delete user from auth.users
+    await adminClient.auth.admin.deleteUser(targetUserId).catch(() => {});
+
+    return successResponse({ id: targetUserId, message: 'User deleted successfully' });
   } catch (error) {
     return handleError(error);
   }
