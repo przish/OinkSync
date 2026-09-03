@@ -7,31 +7,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Core Color Palette */
-  --primary-beige: #f5e6d3;
-  --secondary-green: #2D5016;
+  /* User-Requested Color Palette */
+  --palette-sage: #86A788;
+  --palette-cream: #FFFDEC;
+  --palette-rose: #FFE2E2;
+  --palette-blush: #FFCFCF;
+
+  /* Core Color Palette & Semantic Tokens */
+  --primary-beige: #FFFDEC;
+  --secondary-green: #3D5C40; /* High contrast deep sage (WCAG AA >= 4.5:1 on cream) */
+  --secondary-green-light: #86A788;
   --tertiary-gold: #C4A57B;
 
-  /* Neutral Colors */
-  --neutral-dark: #1A1A1A;
-  --neutral-light: #FAFAF7;
-  --muted-dark: #4b5563;
+  /* Neutral Colors (WCAG AA Compliant >= 4.5:1 on light backgrounds) */
+  --neutral-dark: #182B1D; /* ~14.5:1 contrast on #FFFDEC */
+  --neutral-light: #FFFDEC;
+  --muted-dark: #3F5243; /* ~7.2:1 contrast on #FFFDEC */
 
   /* Semantic Colors */
-  --success: #2D7C2D;
-  --error: #C85C5C;
-  --warning: #C4A57B;
+  --success: #2A6830;
+  --error: #BA3C3C;
+  --warning: #A86518;
 
   /* Baseline assignments */
-  --background: var(--neutral-light);
-  --foreground: var(--neutral-dark);
+  --background: #FFFDEC;
+  --foreground: #182B1D;
 
   /* Surface and Elements */
   --card-bg: #FFFFFF;
-  --card-border: #E8E0D5;
-  --input-bg: #FDFAF6;
-  --input-border: #D9CFC3;
-  --sidebar-bg: #1A2E0A;
+  --card-border: rgba(134, 167, 136, 0.28);
+  --input-bg: #FFFFFF;
+  --input-border: #D5DDD6;
+  --sidebar-bg: #223726; /* Deep elegant sage slate */
   --sidebar-width: 256px;
   --topbar-height: 64px;
 
@@ -55,18 +62,18 @@
   --spacing-10: 40px;
   --spacing-12: 48px;
 
-  /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Apple-inspired Squircle Radiuses */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 9999px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(45, 80, 22, 0.05);
-  --shadow-md: 0 4px 12px -2px rgba(45, 80, 22, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 30px -5px rgba(45, 80, 22, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glow: 0 0 20px rgba(196, 165, 123, 0.2);
+  /* Apple-style Soft Diffused Shadows */
+  --shadow-sm: 0 2px 6px rgba(24, 43, 29, 0.04);
+  --shadow-md: 0 6px 20px rgba(24, 43, 29, 0.07), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 14px 34px rgba(24, 43, 29, 0.1), 0 3px 8px rgba(0, 0, 0, 0.03);
+  --shadow-glow: 0 0 24px rgba(134, 167, 136, 0.35);
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -321,6 +328,24 @@ p {
 .card-gold {
   background: linear-gradient(135deg, #C4A57B, #d4b890);
   color: var(--neutral-dark);
+  border: none;
+}
+
+.card-rose {
+  background: var(--palette-rose);
+  border-color: rgba(255, 207, 207, 0.8);
+  color: var(--neutral-dark);
+}
+
+.card-blush {
+  background: var(--palette-blush);
+  border-color: rgba(235, 175, 175, 0.6);
+  color: var(--neutral-dark);
+}
+
+.card-sage {
+  background: var(--palette-sage);
+  color: white;
   border: none;
 }
 
@@ -612,7 +637,7 @@ p {
   border-radius: var(--radius-md);
   padding: 10px var(--spacing-3);
   font-size: var(--font-body);
-  color: wheat;
+  color: var(--neutral-dark);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   appearance: none;
