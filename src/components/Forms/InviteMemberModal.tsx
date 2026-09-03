@@ -18,7 +18,7 @@ interface InviteMemberModalProps {
 
 export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customPassword, setCustomPassword] = useState('PiggyTrack2026!');
+  const [customPassword, setCustomPassword] = useState('');
   const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string } | null>(null);
 
   const {
@@ -33,12 +33,17 @@ export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps
   });
 
   const onSubmit = async (data: UserFormValues) => {
+    if (!customPassword.trim()) {
+      toast.error('Please provide an initial password for this member.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/users/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, password: customPassword }),
+        body: JSON.stringify({ ...data, password: customPassword.trim() }),
       });
 
       const json = await res.json();
@@ -172,7 +177,8 @@ export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps
                     value={customPassword}
                     onChange={(e) => setCustomPassword(e.target.value)}
                     className="form-input"
-                    placeholder="PiggyTrack2026!"
+                    placeholder="Enter initial password"
+                    required
                   />
                   <div
                     style={{

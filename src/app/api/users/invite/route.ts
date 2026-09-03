@@ -21,7 +21,10 @@ export async function POST(request: NextRequest) {
     
     const adminClient = createAdminClient();
     
-    const password = body.password?.trim() || 'PiggyTrack2026!';
+    const password = body.password?.trim();
+    if (!password) {
+      throw new ValidationError('A password is required for member account creation.');
+    }
 
     // 1. Create the user in auth.users
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
