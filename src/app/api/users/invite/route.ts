@@ -1,7 +1,31 @@
 import { NextRequest } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/server';
-import { getAuthUserProfile } from '@/lib/auth';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { getAuthUser, getAuthUserProfile } from '@/lib/auth';
 import { successResponse, handleError, ValidationError } from '@/lib/errors';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  try {
+    await getAuthUser();
+    let supabase;
+    try {
+      supabase = createAdminClient();
+    } catch {
+      supabase = await createClient();
+    }
+
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return successResponse(users ?? []);
+  } catch (error) {
+    return handleError(error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

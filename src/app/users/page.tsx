@@ -30,11 +30,16 @@ export default function UsersPage() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/users/invite');
+      let res = await fetch('/api/users');
+      if (!res.ok) {
+        res = await fetch('/api/users/invite');
+      }
       if (res.ok) {
         const json = await res.json();
         setUsers(json.data ?? []);
       }
+    } catch (err) {
+      console.error('Failed to fetch team members:', err);
     } finally {
       setIsLoading(false);
     }

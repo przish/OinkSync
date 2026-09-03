@@ -52,24 +52,49 @@ export function TopBar({ title, onMenuToggle, actions }: TopBarProps) {
 
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div
-                style={{
-                  width: 34, height: 34, borderRadius: '50%',
-                  background: user.avatar_url
-                    ? `url(${user.avatar_url}) center/cover no-repeat`
-                    : 'linear-gradient(135deg, var(--secondary-green), #3d6b1f)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', fontWeight: 700, fontSize: 13,
-                  flexShrink: 0,
-                  cursor: 'pointer',
-                  border: '2px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-                }}
+              <button
+                type="button"
                 onClick={() => setIsProfileOpen(true)}
                 title="View Profile & Dashboard"
+                id="topbar-profile-btn"
+                style={{
+                  width: 38,
+                  height: 38,
+                  minWidth: 38,
+                  minHeight: 38,
+                  aspectRatio: '1 / 1',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  padding: 0,
+                  border: '2px solid var(--palette-sage)',
+                  boxShadow: 'var(--shadow-sm)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--palette-blush)',
+                  flexShrink: 0,
+                  outline: 'none',
+                }}
               >
-                {!user.avatar_url && user.full_name.charAt(0).toUpperCase()}
-              </div>
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.full_name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                ) : (
+                  <span style={{ color: 'var(--neutral-dark)', fontWeight: 800, fontSize: 14 }}>
+                    {user.full_name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </button>
               <div style={{ display: 'none' }} className="topbar-user-info">
                 <p style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>{user.full_name}</p>
                 <Badge variant={user.role}>{ROLE_LABELS[user.role]}</Badge>
