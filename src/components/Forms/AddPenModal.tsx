@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Plus, PiggyBank } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, PiggyBank, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/UI/Button';
 import { FormField } from '@/components/Forms/FormField';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '@/lib/utils/toast';
+import type { PenWithAnimals } from '@/types/api';
 
 interface AddPenModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPenCreated: () => void;
   existingCount: number;
+  pens?: PenWithAnimals[];
 }
 
 export function AddPenModal({
@@ -19,24 +21,50 @@ export function AddPenModal({
   onClose,
   onPenCreated,
   existingCount,
+  pens = [],
 }: AddPenModalProps) {
-  const [penNumber, setPenNumber] = useState(`PEN-${String(existingCount + 1).padStart(3, '0')}`);
+  const [penNumber, setPenNumber] = useState('');
   const [penName, setPenName] = useState('');
   const [capacity, setCapacity] = useState('15');
   const [location, setLocation] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setErrorMessage(null);
+      let nextNum = existingCount + 1;
+      if (pens && pens.length > 0) {
+        const highest = pens.reduce((max, p) => {
+          const match = p.pen_number.match(/\d+/);
+          if (match) {
+            const val = parseInt(match[0], 10);
+            return val > max ? val : max;
+          }
+          return max;
+        }, 0);
+        nextNum = Math.max(existingCount + 1, highest + 1);
+      }
+      setPenNumber(`PEN-${String(nextNum).padStart(3, '0')}`);
+      setPenName('');
+      setCapacity('15');
+      setLocation('');
+    }
+  }, [isOpen, existingCount, pens]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+
     if (!penNumber.trim()) {
-      toast.error('Pen number is required');
+      setErrorMessage('Pen number / ID is required.');
       return;
     }
     const capNum = parseInt(capacity, 10);
     if (!capNum || capNum <= 0) {
-      toast.error('Valid pen capacity is required');
+      setErrorMessage('Valid pen capacity must be greater than 0.');
       return;
     }
 
@@ -57,14 +85,18 @@ export function AddPenModal({
 
       const json = await res.json();
       if (!res.ok) {
-        toast.error(getErrorMessage(json.error, 'Failed to add pen'), { id: toastId });
+        const msg = getErrorMessage(json.error, 'Failed to add pen');
+        setErrorMessage(msg);
+        toast.error(msg, { id: toastId });
       } else {
         toast.success('Pen added successfully!', { id: toastId });
         onPenCreated();
         onClose();
       }
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Error adding pen'), { id: toastId });
+      const msg = getErrorMessage(err, 'Error adding pen');
+      setErrorMessage(msg);
+      toast.error(msg, { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -185,6 +217,26 @@ export function AddPenModal({
               </FormField>
             </div>
           </div>
+
+          {errorMessage && (
+            <div
+              style={{
+                padding: '10px 14px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--error)',
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <Button variant="ghost" size="sm" type="button" onClick={onClose} style={{ flex: 1 }}>
