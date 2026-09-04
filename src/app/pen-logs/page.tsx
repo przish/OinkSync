@@ -60,10 +60,11 @@ export default function PenLogsPage() {
       <tr>
         <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${formatDate(l.log_date)}</td>
         <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">Pen ${l.pen?.pen_number ?? '—'}</td>
-        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.feed_type || '—'} (${l.feed_amount_kg} kg)</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.feed_type || '—'}</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.feed_amount_kg} kg</td>
+        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.cleaning_status || '—'}</td>
         <td style="padding: 8px 12px; border-bottom: 1px solid #ddd; color: ${l.animals_died > 0 ? '#b91c1c' : '#333'}">${l.animals_died}</td>
         <td style="padding: 8px 12px; border-bottom: 1px solid #ddd; color: ${l.animals_sick > 0 ? '#b45309' : '#333'}">${l.animals_sick}</td>
-        <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.cleaning_status || '—'}</td>
         <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.issues_reported ? '⚠️ Issue' : 'Normal'}</td>
         <td style="padding: 8px 12px; border-bottom: 1px solid #ddd;">${l.logged_by?.full_name || 'Staff'}</td>
       </tr>
@@ -88,7 +89,7 @@ export default function PenLogsPage() {
           <table>
             <thead>
               <tr>
-                <th>Date</th><th>Pen</th><th>Feed</th><th>Died</th><th>Sick</th><th>Cleaning</th><th>Issues</th><th>Logged By</th>
+                <th>Date</th><th>Pen</th><th>Feed Type</th><th>Feed (kg)</th><th>Cleaning</th><th>Died</th><th>Sick</th><th>Issues</th><th>Logged By</th>
               </tr>
             </thead>
             <tbody>
@@ -109,7 +110,7 @@ export default function PenLogsPage() {
       <TopBar title="Pen Logs" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Card style={{ padding: 0, overflow: 'hidden' }}>
+        <Card style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-xl)' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h3 style={{ fontWeight: 700, fontSize: 16 }}>Daily Pen Logs</h3>
@@ -137,7 +138,7 @@ export default function PenLogsPage() {
             </div>
           </div>
 
-          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, overflow: 'hidden' }}>
+          <div className="table-wrapper" style={{ border: 'none', borderRadius: '0 0 var(--radius-xl) var(--radius-xl)', overflow: 'hidden' }}>
             <table className="table">
               <thead>
                 <tr>
@@ -145,6 +146,7 @@ export default function PenLogsPage() {
                   <th>Pen</th>
                   <th>Feed Type</th>
                   <th>Feed (kg)</th>
+                  <th>Cleaning</th>
                   <th>Died</th>
                   <th>Sick</th>
                   <th>Issues</th>
@@ -153,10 +155,10 @@ export default function PenLogsPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
+                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={9} />)
                 ) : logs.length === 0 ? (
                   <tr>
-                    <td colSpan={8}>
+                    <td colSpan={9}>
                       <div className="empty-state">
                         <div className="empty-state-icon"><ClipboardList size={28} color="#4B5563" /></div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No logs yet</p>
@@ -172,7 +174,16 @@ export default function PenLogsPage() {
                         <p style={{ fontSize: 11, color: '#4B5563' }}>{formatRelativeTime(log.created_at)}</p>
                       </td>
                       <td style={{ fontWeight: 600 }}>Pen {log.pen?.pen_number ?? '—'}</td>
+                      <td style={{ color: 'var(--neutral-dark)', fontWeight: 600 }}>{log.feed_type || '—'}</td>
                       <td style={{ color: '#4B5563' }}>{log.feed_amount_kg} kg</td>
+                      <td>
+                        {log.cleaning_status
+                          ? <Badge variant={log.cleaning_status === 'cleaned' ? 'approved' : log.cleaning_status === 'not_cleaned' ? 'rejected' : 'pending'}>
+                              {log.cleaning_status.replace('_', ' ')}
+                            </Badge>
+                          : <span style={{ color: '#4B5563' }}>—</span>
+                        }
+                      </td>
                       <td>
                         {log.animals_died > 0
                           ? <span style={{ fontWeight: 700, color: 'var(--error)' }}>{log.animals_died}</span>
@@ -183,14 +194,6 @@ export default function PenLogsPage() {
                         {log.animals_sick > 0
                           ? <span style={{ fontWeight: 700, color: 'var(--warning)' }}>{log.animals_sick}</span>
                           : <span style={{ color: '#4B5563' }}>0</span>
-                        }
-                      </td>
-                      <td>
-                        {log.cleaning_status
-                          ? <Badge variant={log.cleaning_status === 'cleaned' ? 'approved' : log.cleaning_status === 'not_cleaned' ? 'rejected' : 'pending'}>
-                              {log.cleaning_status.replace('_', ' ')}
-                            </Badge>
-                          : <span style={{ color: '#4B5563' }}>—</span>
                         }
                       </td>
                       <td>
