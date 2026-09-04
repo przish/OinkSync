@@ -53,6 +53,10 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit }: AddTransactio
 
   const onFormSubmit = async (data: TransactionFormValues) => {
     setServerError(null);
+    if (!receipt) {
+      setServerError('Receipt is required for all transactions. Please attach or upload a receipt.');
+      return;
+    }
     const { error } = await onSubmit(data, receipt);
     if (error) {
       setServerError(error);
@@ -135,8 +139,8 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit }: AddTransactio
           />
         </FormField>
 
-        <FormField label="Receipt (Optional)" htmlFor="tx-receipt">
-          <FormFileUpload value={receipt} onChange={setReceipt} />
+        <FormField label="Receipt" htmlFor="tx-receipt" required error={!receipt && serverError ? 'Receipt is required' : undefined}>
+          <FormFileUpload value={receipt} onChange={(f) => { setReceipt(f); setServerError(null); }} />
         </FormField>
 
         {serverError && (
