@@ -67,9 +67,11 @@ export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps
 
   const copyCredentials = () => {
     if (!createdCredentials) return;
-    const text = `OinkSync (PiggyTrack) Login Credentials:\nEmail: ${createdCredentials.email}\nPassword: ${createdCredentials.password}\nLogin URL: ${window.location.origin}/auth/login`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const loginUrl = `${origin}/auth/login`;
+    const text = `PiggyTrack (Farm OS) Invitation\n\nYou have been invited to join PiggyTrack. Access the system using the official website link:\n\nOfficial Website Link: ${loginUrl}\nEmail: ${createdCredentials.email}\nInitial Password: ${createdCredentials.password}\n\nPlease check your email inbox (including your Spam or Junk folder) so you can receive the official website link and updates.\n\nIf you did not request this account creation, please ignore it.`;
     navigator.clipboard.writeText(text);
-    toast.success('Credentials copied to clipboard!');
+    toast.success('Invitation credentials copied to clipboard!');
   };
 
   return (
@@ -116,27 +118,58 @@ export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps
             <div
               style={{
                 padding: '16px 20px',
-                background: 'rgba(52, 211, 153, 0.08)',
-                border: '1px solid rgba(52, 211, 153, 0.2)',
+                background: 'var(--palette-cream)',
+                border: '1.5px solid var(--palette-sage)',
                 borderRadius: 'var(--radius-md)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 10,
+                gap: 12,
               }}
             >
-              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--neutral-dark, #fff)' }}>
-                Account successfully created! They can now log in at{' '}
-                <span style={{ color: 'var(--secondary-green)' }}>/auth/login</span>:
+              <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--secondary-green)', margin: 0 }}>
+                Account created and invitation email triggered!
               </p>
-              <div style={{ fontSize: 13, background: 'rgba(0,0,0,0.2)', padding: '10px 14px', borderRadius: 8 }}>
+
+              <div style={{ fontSize: 13, background: '#fff', padding: '12px 14px', borderRadius: 8, border: '1px solid var(--card-border)', display: 'flex', flexDirection: 'column', gap: 6, color: 'var(--neutral-dark)' }}>
+                <div>
+                  <strong>Official Website Link:</strong>{' '}
+                  <a
+                    href={`${typeof window !== 'undefined' ? window.location.origin : ''}/auth/login`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--secondary-green)', fontWeight: 700, textDecoration: 'underline' }}
+                  >
+                    {typeof window !== 'undefined' ? window.location.origin : ''}/auth/login
+                  </a>
+                </div>
                 <div><strong>Email:</strong> {createdCredentials.email}</div>
-                <div style={{ marginTop: 4 }}><strong>Password:</strong> {createdCredentials.password}</div>
+                <div><strong>Initial Password:</strong> {createdCredentials.password}</div>
+              </div>
+
+              <div style={{
+                fontSize: 12,
+                color: 'var(--neutral-dark)',
+                lineHeight: 1.5,
+                background: 'var(--palette-rose)',
+                padding: '12px 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--palette-blush)',
+              }}>
+                <p style={{ margin: 0, fontWeight: 700 }}>
+                  ✉️ Note for Invited Member:
+                </p>
+                <p style={{ margin: '4px 0 0' }}>
+                  Please prompt the user to check their email (including <strong>Spam / Junk</strong> folder) so they can receive the official website link.
+                </p>
+                <p style={{ margin: '6px 0 0', fontStyle: 'italic', color: 'var(--muted-dark)' }}>
+                  If they did not request this account creation, please ask them to ignore it.
+                </p>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={copyCredentials} leftIcon={<Copy size={15} />}>
-                Copy Credentials
+                Copy Invitation
               </Button>
               <Button variant="primary" onClick={onClose}>
                 Done
@@ -214,6 +247,18 @@ export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps
                   {...register('role')}
                 />
               </FormField>
+
+              <div style={{
+                fontSize: 12,
+                color: 'var(--neutral-dark)',
+                lineHeight: 1.5,
+                background: 'var(--palette-cream)',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--card-border)',
+              }}>
+                <strong>Tip:</strong> An invitation email with the official website link will be sent. Please prompt the member to check their email (including <strong>Spam / Junk</strong> folder). <em>If they did not request this account creation, they can safely ignore it.</em>
+              </div>
             </div>
 
             <div className="modal-footer" style={{ justifyContent: 'flex-end', gap: 10 }}>
