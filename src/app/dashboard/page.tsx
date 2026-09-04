@@ -152,7 +152,7 @@ export default function DashboardPage() {
                 label="Total Revenue"
                 value={kpi?.total_revenue ?? 0}
                 icon={<TrendingUp size={18} />}
-                variant="green"
+                variant="income"
                 trend={kpi?.revenue_change_percent ?? null}
               />
               <KPICard
@@ -167,7 +167,7 @@ export default function DashboardPage() {
                 label="Total Expenses"
                 value={kpi?.total_expenses ?? 0}
                 icon={<Receipt size={18} />}
-                variant="default"
+                variant="expense"
                 trend={kpi?.expense_change_percent ?? null}
               />
             </>
