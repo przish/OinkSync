@@ -113,6 +113,17 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Handle Batch Piglet Creation
+    if (animalType === 'piglet') {
+      const maleCount = Number(body.male_count) || 0;
+      const femaleCount = Number(body.female_count) || 0;
+
+      if (maleCount + femaleCount > quantity) {
+        throw new ValidationError(
+          `Total male count (${maleCount}) and female count (${femaleCount}) cannot exceed total piglet quantity (${quantity}).`
+        );
+      }
+    }
+
     if (animalType === 'piglet' && quantity > 1) {
       const maleCount = Number(body.male_count) || 0;
       const femaleCount = Number(body.female_count) || 0;
