@@ -19,10 +19,10 @@
   --secondary-green-light: #86A788;
   --tertiary-gold: #FFCFCF;
 
-  /* Neutral Colors (WCAG AA Compliant >= 4.5:1 on light backgrounds) */
-  --neutral-dark: #182B1D; /* High contrast deep slate */
+  /* Neutral Colors (WCAG AAA Compliant >= 14:1 on light backgrounds) */
+  --neutral-dark: #0B160E; /* Ultra-high contrast deep forest charcoal */
   --neutral-light: #FFFDEC;
-  --muted-dark: #86A788;
+  --muted-dark: #1F3622;
 
   /* Semantic Colors mapped strictly to the 4-color palette */
   --success: #86A788;
@@ -180,11 +180,11 @@ p {
 }
 
 .text-muted {
-  color: #374151;
+  color: var(--muted-dark);
 }
 
 .text-muted-dark {
-  color: #374151;
+  color: var(--neutral-dark);
 }
 
 .text-muted-light {
@@ -898,9 +898,9 @@ p {
 
 .skeleton {
   background: linear-gradient(90deg,
-      var(--palette-cream) 25%,
-      var(--palette-rose) 50%,
-      var(--palette-cream) 75%);
+      rgba(134, 167, 136, 0.12) 25%,
+      rgba(134, 167, 136, 0.28) 50%,
+      rgba(134, 167, 136, 0.12) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease infinite;
   border-radius: var(--radius-sm);
