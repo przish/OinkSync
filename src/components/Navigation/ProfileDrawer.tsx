@@ -123,9 +123,11 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
   const cooldownDays = calculateCooldownDays();
 
   // Calculate 24-hour investment edit countdown
+  const activeSubmission = pendingInvest || (latestInvest && (nowTime - new Date(latestInvest.created_at).getTime() <= 24 * 60 * 60 * 1000) ? latestInvest : null);
+
   const getInvestmentTimeLeft = (): { canEdit: boolean; hours: number; mins: number; text: string } => {
-    if (!pendingInvest) return { canEdit: true, hours: 0, mins: 0, text: '' };
-    const createdAt = new Date(pendingInvest.created_at).getTime();
+    if (!activeSubmission) return { canEdit: false, hours: 0, mins: 0, text: '' };
+    const createdAt = new Date(activeSubmission.created_at).getTime();
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
     const msRemaining = (createdAt + ONE_DAY_MS) - nowTime;
 
@@ -233,7 +235,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
       return;
     }
 
-    if (!investReceipt && !pendingInvest?.receipt_url) {
+    if (!investReceipt && !activeSubmission?.receipt_url) {
       toast.error('Please upload your proof of payment / receipt');
       return;
     }
@@ -247,7 +249,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
     const toastId = toast.loading('Submitting investment...');
 
     try {
-      let receiptUrl = pendingInvest?.receipt_url || '';
+      let receiptUrl = (investReceipt ? '' : activeSubmission?.receipt_url) || '';
 
       // Upload receipt if new file selected
       if (investReceipt) {
@@ -280,7 +282,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
       if (!res.ok) {
         toast.error(getErrorMessage(json.error, 'Failed to submit investment'), { id: toastId });
       } else {
-        toast.success('Investment submitted for General Manager approval!', { id: toastId });
+        toast.success(activeSubmission ? 'Investment submission updated!' : 'Investment submitted for General Manager approval!', { id: toastId });
         setShowInvestModal(false);
         setInvestAmount('');
         setInvestReceipt(null);
@@ -547,22 +549,22 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
               <div
                 style={{
                   padding: '16px',
-                  background: 'var(--palette-blush)',
+                  background: 'var(--palette-cream)',
                   borderRadius: 'var(--radius-lg)',
-                  border: '1px solid rgba(235, 175, 175, 0.8)',
+                  border: '1px solid var(--palette-sage)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 6,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#883333', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--income-green)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
                   <TrendingUp size={14} />
                   Total Profit
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--neutral-dark)' }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--income-green)' }}>
                   {formatCurrency(metrics.total_profit)}
                 </div>
-                <div style={{ fontSize: 11, color: '#6B4444' }}>Work + investor dividend</div>
+                <div style={{ fontSize: 11, color: 'var(--secondary-green)' }}>Work + investor dividend</div>
               </div>
             </div>
           </div>
@@ -590,14 +592,14 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                 </p>
               </div>
 
-              {pendingInvest ? (
+              {activeSubmission ? (
                 investTime.canEdit ? (
                   <Button
                     variant="primary"
                     size="sm"
                     leftIcon={<Edit2 size={13} />}
                     onClick={() => {
-                      setInvestAmount(String(pendingInvest.amount));
+                      setInvestAmount(String(activeSubmission.amount));
                       setShowInvestModal(true);
                     }}
                   >
@@ -637,7 +639,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
             </div>
 
             {/* Pending Investment Status Banner (Within 24h) */}
-            {pendingInvest && investTime.canEdit ? (
+            {activeSubmission && investTime.canEdit ? (
               <div
                 style={{
                   padding: '14px',
@@ -654,7 +656,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                     <Clock size={13} /> Active Submission (24h Edit Window)
                   </span>
                   <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--income-green)' }}>
-                    {formatCurrency(pendingInvest.amount)}
+                    {formatCurrency(activeSubmission.amount)}
                   </span>
                 </div>
 
@@ -678,9 +680,9 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                   <strong>One submission at a time:</strong> You can still edit the files or information while the 24-hour countdown is running.
                 </p>
 
-                {pendingInvest.receipt_url && (
+                {activeSubmission.receipt_url && (
                   <a
-                    href={pendingInvest.receipt_url}
+                    href={activeSubmission.receipt_url}
                     target="_blank"
                     rel="noreferrer"
                     style={{ fontSize: 11, color: 'var(--secondary-green)', textDecoration: 'underline', marginTop: 2, display: 'inline-flex', alignItems: 'center', gap: 4 }}
@@ -835,7 +837,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: 'var(--neutral-dark)' }}>
-                  {pendingInvest ? 'Edit Investment Submission' : 'Submit Investment Contribution'}
+                  {activeSubmission ? 'Edit Investment Submission' : 'Submit Investment Contribution'}
                 </h3>
                 <button
                   onClick={() => setShowInvestModal(false)}
@@ -916,7 +918,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                   <Upload size={16} color="var(--secondary-green)" />
                   {investReceipt
                     ? investReceipt.name
-                    : pendingInvest?.receipt_url
+                    : activeSubmission?.receipt_url
                     ? 'Receipt already attached (Click to change)'
                     : 'Upload Payment Receipt'}
                 </button>
@@ -944,10 +946,10 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                   leftIcon={<CheckCircle2 size={14} />}
                   onClick={handleSubmitInvestment}
                   isLoading={isSubmittingInvest}
-                  disabled={!investConfirmed || (!investReceipt && !pendingInvest?.receipt_url)}
+                  disabled={!investConfirmed || (!investReceipt && !activeSubmission?.receipt_url)}
                   style={{ flex: 1 }}
                 >
-                  Submit for Approval
+                  {activeSubmission ? 'Save Changes' : 'Submit for Approval'}
                 </Button>
               </div>
             </div>
