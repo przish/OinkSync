@@ -403,12 +403,12 @@ export default function SettingsPage() {
                 />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div style={{ padding: 14, background: 'var(--palette-rose)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,207,207,0.8)' }}>
-                      <p className="metric-label" style={{ color: '#883333', marginBottom: 4 }}>Profit / Pig</p>
-                      <p style={{ fontSize: 20, fontWeight: 800, color: profitPerPig > 0 ? 'var(--neutral-dark)' : 'var(--error)' }}>
+                    <div style={{ padding: 14, background: 'var(--palette-cream)', borderRadius: 'var(--radius-md)', border: '1.5px solid var(--palette-sage)' }}>
+                      <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4, fontWeight: 700 }}>Profit / Pig</p>
+                      <p style={{ fontSize: 20, fontWeight: 800, color: profitPerPig > 0 ? 'var(--income-green)' : 'var(--expense-red)' }}>
                         {formatCurrency(profitPerPig)}
                       </p>
-                      <span style={{ fontSize: 11, color: '#6B4444' }}>Margin: {dynamicMarginPct}%</span>
+                      <span style={{ fontSize: 11, color: 'var(--muted-dark)' }}>Margin: {dynamicMarginPct}%</span>
                     </div>
 
                     <div style={{ padding: 14, background: 'var(--palette-blush)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(235,175,175,0.7)' }}>

@@ -55,51 +55,74 @@ export default function AnalyticsPage() {
               label: 'Profit Margin',
               value: kpi ? formatPercentage(kpi.roi_percentage) : '—',
               icon: <TrendingUp size={18} />,
-              color: 'var(--success)',
+              color: 'var(--income-green)',
             },
             {
               label: 'Total Revenue',
               value: kpi ? formatCurrency(kpi.total_revenue) : '—',
               icon: <DollarSign size={18} />,
-              color: 'var(--secondary-green)',
+              color: 'var(--income-green)',
             },
             {
               label: 'Total Expenses',
               value: kpi ? formatCurrency(kpi.total_expenses) : '—',
               icon: <BarChart3 size={18} />,
-              color: 'var(--error)',
+              color: 'var(--expense-red)',
             },
             {
               label: 'Herd Mortality Rate',
               value: kpi ? formatPercentage(kpi.mortality_rate) : '—',
               icon: <PiggyBank size={18} />,
-              color: kpi && kpi.mortality_rate > 5 ? 'var(--error)' : 'var(--success)',
+              color: kpi && kpi.mortality_rate > 5 ? 'var(--expense-red)' : 'var(--income-green)',
             },
             {
               label: 'Litter Mortality Rate',
               value: kpi ? formatPercentage(kpi.litter_mortality_rate ?? 0) : '—',
               icon: <Activity size={18} />,
-              color: kpi && (kpi.litter_mortality_rate ?? 0) > 8 ? 'var(--error)' : 'var(--secondary-green)',
+              color: kpi && (kpi.litter_mortality_rate ?? 0) > 8 ? 'var(--expense-red)' : 'var(--income-green)',
             },
-          ].map((metric) => (
-            <div key={metric.label} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <p className="metric-label">{metric.label}</p>
-                <div style={{
-                  width: 32, height: 32, borderRadius: 8,
-                  background: `${metric.color}18`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: metric.color,
-                }}>
-                  {metric.icon}
+          ].map((metric) => {
+            const isExpense = metric.label === 'Total Expenses';
+            const isRevenue = metric.label === 'Total Revenue';
+            const isProfit = metric.label === 'Profit Margin';
+            const cardBg = (isExpense || isRevenue || isProfit) ? 'var(--palette-cream)' : 'var(--card-bg)';
+            const cardBorder = isExpense
+              ? '1.5px solid var(--palette-blush)'
+              : (isRevenue || isProfit)
+                ? '1.5px solid var(--palette-sage)'
+                : '1.5px solid var(--card-border)';
+
+            return (
+              <div
+                key={metric.label}
+                className="card"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                  background: cardBg,
+                  border: cardBorder,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <p className="metric-label" style={{ color: 'var(--neutral-dark)', fontWeight: 700 }}>{metric.label}</p>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: 'var(--palette-cream)',
+                    border: cardBorder,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: metric.color,
+                  }}>
+                    {metric.icon}
+                  </div>
                 </div>
+                {isLoading
+                  ? <div className="skeleton" style={{ height: 28, width: '70%' }} />
+                  : <p style={{ fontSize: 24, fontWeight: 800, color: metric.color }}>{metric.value}</p>
+                }
               </div>
-              {isLoading
-                ? <div className="skeleton" style={{ height: 28, width: '70%' }} />
-                : <p style={{ fontSize: 24, fontWeight: 800, color: metric.color }}>{metric.value}</p>
-              }
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Revenue vs Expenses Chart */}
@@ -179,7 +202,7 @@ export default function AnalyticsPage() {
                   {expenseBreakdown.map((item) => (
                     <tr key={item.category}>
                       <td style={{ fontWeight: 600 }}>{item.category}</td>
-                      <td style={{ fontWeight: 700, color: 'var(--error)' }}>
+                      <td style={{ fontWeight: 700, color: 'var(--expense-red)' }}>
                         {formatCurrency(item.total_amount)}
                       </td>
                       <td style={{ color: '#4B5563' }}>{item.transaction_count}</td>

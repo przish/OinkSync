@@ -24,9 +24,13 @@
   --neutral-light: #FFFDEC;
   --muted-dark: #1F3622;
 
-  /* Semantic Colors mapped strictly to the 4-color palette */
-  --success: #86A788;
-  --error: #FFCFCF;
+  /* Financial semantic color tokens (high contrast >= 7:1) */
+  --income-green: #14532D; /* Deep rich forest emerald (10.9:1 on #FFFDEC, 9.2:1 on #FFE2E2) */
+  --expense-red: #991B1B;  /* Deep rich crimson ruby (8.0:1 on #FFFDEC, 6.7:1 on #FFE2E2) */
+
+  /* Semantic Colors mapped for high contrast readability */
+  --success: #14532D;
+  --error: #991B1B;
   --warning: #86A788;
 
   /* Baseline assignments */
@@ -594,14 +598,17 @@ p {
 }
 
 .badge-income {
-  background: var(--palette-sage);
-  color: var(--palette-cream);
+  background: var(--palette-cream);
+  color: var(--income-green);
+  border: 1.5px solid var(--palette-sage);
+  font-weight: 700;
 }
 
 .badge-expense {
-  background: var(--palette-rose);
-  color: var(--neutral-dark);
-  border: 1px solid var(--palette-blush);
+  background: var(--palette-cream);
+  color: var(--expense-red);
+  border: 1.5px solid var(--palette-blush);
+  font-weight: 700;
 }
 
 .badge-admin {

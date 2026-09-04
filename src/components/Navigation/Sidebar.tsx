@@ -71,7 +71,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               🐷
             </div>
             <div>
-              <p style={{ color: 'var(--palette-cream)', fontWeight: 800, fontSize: 16, lineHeight: 1.2 }}>PiggyTrack</p>
+              <p style={{ color: 'var(--palette-cream)', fontWeight: 800, fontSize: 16, lineHeight: 1.2 }}>OinkSync</p>
               <p style={{ color: 'var(--palette-cream)', opacity: 0.8, fontSize: 11, fontWeight: 600 }}>Farm OS</p>
             </div>
           </div>

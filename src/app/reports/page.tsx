@@ -434,26 +434,27 @@ export default function ReportsPage() {
                     <div
                       style={{
                         padding: '4px 10px',
-                        background: isProfit ? 'rgba(42, 104, 48, 0.1)' : 'rgba(186, 60, 60, 0.1)',
+                        background: 'var(--palette-cream)',
+                        border: `1px solid ${isProfit ? 'var(--palette-sage)' : 'var(--palette-blush)'}`,
                         borderRadius: 'var(--radius-full)',
                       }}
                     >
-                      <span style={{ fontSize: 12, fontWeight: 800, color: isProfit ? 'var(--success)' : 'var(--error)' }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: isProfit ? 'var(--income-green)' : 'var(--expense-red)' }}>
                         {formatPercentage(report.roi_percentage)} ROI
                       </span>
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                    <div style={{ padding: 12, background: 'rgba(42, 104, 48, 0.07)', borderRadius: 'var(--radius-md)' }}>
-                      <p className="metric-label" style={{ marginBottom: 4 }}>Revenue</p>
-                      <p style={{ fontWeight: 800, color: 'var(--success)', fontSize: 15 }}>
+                    <div style={{ padding: 12, background: 'var(--palette-cream)', border: '1.5px solid var(--palette-sage)', borderRadius: 'var(--radius-md)' }}>
+                      <p className="metric-label" style={{ marginBottom: 4, color: 'var(--income-green)', fontWeight: 700 }}>Revenue</p>
+                      <p style={{ fontWeight: 800, color: 'var(--income-green)', fontSize: 15 }}>
                         {formatCurrency(report.total_revenue)}
                       </p>
                     </div>
-                    <div style={{ padding: 12, background: 'rgba(186, 60, 60, 0.07)', borderRadius: 'var(--radius-md)' }}>
-                      <p className="metric-label" style={{ marginBottom: 4 }}>Expenses</p>
-                      <p style={{ fontWeight: 800, color: 'var(--error)', fontSize: 15 }}>
+                    <div style={{ padding: 12, background: 'var(--palette-cream)', border: '1.5px solid var(--palette-blush)', borderRadius: 'var(--radius-md)' }}>
+                      <p className="metric-label" style={{ marginBottom: 4, color: 'var(--expense-red)', fontWeight: 700 }}>Expenses</p>
+                      <p style={{ fontWeight: 800, color: 'var(--expense-red)', fontSize: 15 }}>
                         {formatCurrency(report.total_expenses)}
                       </p>
                     </div>
@@ -462,19 +463,19 @@ export default function ReportsPage() {
                   <div
                     style={{
                       padding: '12px 14px',
-                      background: isProfit ? 'var(--palette-cream)' : 'rgba(186, 60, 60, 0.08)',
+                      background: 'var(--palette-cream)',
                       borderRadius: 'var(--radius-md)',
-                      border: `1px solid ${isProfit ? 'rgba(134, 167, 136, 0.4)' : 'rgba(186, 60, 60, 0.2)'}`,
+                      border: `1.5px solid ${isProfit ? 'var(--palette-sage)' : 'var(--palette-blush)'}`,
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {isProfit ? <TrendingUp size={15} color="var(--success)" /> : <TrendingDown size={15} color="var(--error)" />}
+                      {isProfit ? <TrendingUp size={15} color="var(--income-green)" /> : <TrendingDown size={15} color="var(--expense-red)" />}
                       <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--neutral-dark)' }}>Net Profit</span>
                     </div>
-                    <span style={{ fontWeight: 800, fontSize: 16, color: isProfit ? 'var(--success)' : 'var(--error)' }}>
+                    <span style={{ fontWeight: 800, fontSize: 16, color: isProfit ? 'var(--income-green)' : 'var(--expense-red)' }}>
                       {isProfit ? '+' : ''}{formatCurrency(report.net_profit)}
                     </span>
                   </div>
