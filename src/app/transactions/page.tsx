@@ -19,8 +19,8 @@ import type { TransactionFormValues } from '@/lib/utils/zod-schemas';
 const EMPTY_FILTERS: TransactionFilters = {};
 
 export default function TransactionsPage() {
-  const { canApprove, canAddTransactions } = useAuth();
-  const { transactions, pagination, isLoading, fetchTransactions, addTransaction, updateTransactionStatus } = useTransactions();
+  const { isAdmin, canAddTransactions } = useAuth();
+  const { transactions, pagination, isLoading, fetchTransactions, addTransaction } = useTransactions();
   const { toasts, toast, remove } = useToast();
   const [filters, setFilters] = useState<TransactionFilters>(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
@@ -54,18 +54,6 @@ export default function TransactionsPage() {
       load();
     }
     return result;
-  };
-
-  const handleApprove = async (id: string) => {
-    const { error } = await updateTransactionStatus(id, { action: 'approve' });
-    if (!error) { toast.success('Transaction approved'); load(); }
-    else toast.error('Failed to approve transaction');
-  };
-
-  const handleReject = async (id: string) => {
-    const { error } = await updateTransactionStatus(id, { action: 'reject', rejection_reason: 'Rejected' });
-    if (!error) { toast.success('Transaction rejected'); load(); }
-    else toast.error('Failed to reject transaction');
   };
 
   const filtered = search
@@ -127,15 +115,14 @@ export default function TransactionsPage() {
                   <th>Amount</th>
                   <th>Submitted By</th>
                   <th>Status</th>
-                  {canApprove && <th style={{ textAlign: 'right' }}>Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={canApprove ? 8 : 7} />)
+                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={7} />)
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={canApprove ? 8 : 7}>
+                    <td colSpan={7}>
                       <div className="empty-state">
                         <div className="empty-state-icon">💸</div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No transactions found</p>
@@ -168,22 +155,6 @@ export default function TransactionsPage() {
                         {tx.user?.full_name ?? '—'}
                       </td>
                       <td><Badge variant={tx.status} /></td>
-                      {canApprove && (
-                        <td>
-                          {tx.status === 'pending' ? (
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <Button variant="ghost" size="sm" onClick={() => handleApprove(tx.id)}
-                                style={{ color: 'var(--income-green)', borderColor: 'var(--income-green)', padding: '4px 10px' }}>
-                                ✓
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleReject(tx.id)}
-                                style={{ color: 'var(--expense-red)', borderColor: 'var(--expense-red)', padding: '4px 10px' }}>
-                                ✗
-                              </Button>
-                            </div>
-                          ) : <span className="text-small text-muted">—</span>}
-                        </td>
-                      )}
                     </tr>
                   ))
                 )}

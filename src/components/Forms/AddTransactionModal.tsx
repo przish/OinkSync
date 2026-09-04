@@ -31,6 +31,7 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit }: AddTransactio
     handleSubmit,
     control,
     reset,
+    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormValues>({
@@ -40,6 +41,13 @@ export function AddTransactionModal({ isOpen, onClose, onSubmit }: AddTransactio
       transaction_type: 'expense',
     },
   });
+
+  // Dynamically update date state based on current date whenever modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setValue('transaction_date', todayISO(), { shouldDirty: false });
+    }
+  }, [isOpen, setValue]);
 
   const [receipt, setReceipt] = React.useState<File | null>(null);
   const [serverError, setServerError] = React.useState<string | null>(null);

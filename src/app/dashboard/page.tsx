@@ -21,8 +21,8 @@ import { AddTransactionModal } from '@/components/Forms/AddTransactionModal';
 import type { KpiData } from '@/types/api';
 
 export default function DashboardPage() {
-  const { user, isAdmin, canApprove } = useAuth();
-  const { transactions, isLoading: txLoading, fetchTransactions, updateTransactionStatus, addTransaction } = useTransactions();
+  const { user, isAdmin } = useAuth();
+  const { transactions, isLoading: txLoading, fetchTransactions, addTransaction } = useTransactions();
   const { kpi, isLoading: kpiLoading, fetchKpi } = useAnalytics();
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -36,18 +36,6 @@ export default function DashboardPage() {
   }, [fetchKpi, fetchTransactions, period]);
 
   useEffect(() => { loadData(); }, [loadData]);
-
-  const handleApprove = async (id: string) => {
-    await updateTransactionStatus(id, { action: 'approve' });
-    fetchTransactions({ limit: 10 });
-    fetchKpi(period);
-  };
-
-  const handleReject = async (id: string) => {
-    await updateTransactionStatus(id, { action: 'reject', rejection_reason: 'Rejected by admin' });
-    fetchTransactions({ limit: 10 });
-    fetchKpi(period);
-  };
 
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 17 ? 'Good afternoon' : 'Good evening';
@@ -182,9 +170,9 @@ export default function DashboardPage() {
               <p style={{ fontWeight: 700, marginBottom: 2 }}>
                 {kpi.pending_transactions} transaction{kpi.pending_transactions > 1 ? 's' : ''} awaiting approval
               </p>
-              <p className="text-small">Review and approve or reject pending transactions below.</p>
+              <p className="text-small">Review and approve or reject pending transactions in the Review tab.</p>
             </div>
-            <Button variant="outline-green" size="sm" onClick={() => router.push('/transactions')}>Review Now</Button>
+            <Button variant="outline-green" size="sm" onClick={() => router.push('/review')}>Review Now</Button>
           </div>
         )}
 
@@ -317,9 +305,6 @@ export default function DashboardPage() {
           <TransactionPreview
             transactions={transactions}
             isLoading={txLoading}
-            canApprove={canApprove}
-            onApprove={handleApprove}
-            onReject={handleReject}
           />
         </Card>
       </div>

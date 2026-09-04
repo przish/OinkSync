@@ -19,9 +19,11 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const { start_date, end_date } = parseDateRange(searchParams);
 
-    // Default to last 12 months
+    // Support months query parameter (e.g. months=1, months=6, months=12, months=24)
     const now = new Date();
-    const defaultStart = new Date(now.getFullYear() - 1, now.getMonth(), 1)
+    const monthsParam = searchParams.get('months');
+    const monthsCount = monthsParam ? Math.max(1, parseInt(monthsParam, 10)) : 12;
+    const defaultStart = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1)
       .toISOString().split('T')[0];
 
     let query = supabase

@@ -19,9 +19,12 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const { start_date, end_date } = parseDateRange(searchParams);
 
-    // Default to current month
+    // Support months query parameter (e.g. months=1, months=6, months=12, months=24)
     const now = new Date();
-    const defaultStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const monthsParam = searchParams.get('months');
+    const monthsCount = monthsParam ? Math.max(1, parseInt(monthsParam, 10)) : 1;
+    const defaultStart = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1)
+      .toISOString().split('T')[0];
     const defaultEnd = now.toISOString().split('T')[0];
 
     const { data, error } = await supabase.rpc('get_expense_breakdown', {

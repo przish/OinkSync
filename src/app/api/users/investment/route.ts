@@ -13,19 +13,30 @@ export async function GET() {
       throw new UnauthorizedError();
     }
 
-    // Fetch user's pending investment transaction
+    // Fetch user's pending investment transaction (support category 'investment' or description matching investment)
     const { data: pendingTx } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('category', 'investment')
+      .or('category.eq.investment,description.ilike.%investment%')
       .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // Fetch user's latest investment submission (for status card even after 24h or when approved/rejected)
+    const { data: latestTx } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .or('category.eq.investment,description.ilike.%investment%')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
     return successResponse({
       pending: pendingTx || null,
+      latest: latestTx || null,
     });
   } catch (err) {
     return handleError(err);
@@ -53,12 +64,12 @@ export async function POST(req: NextRequest) {
       throw new ValidationError('Receipt upload is required for investment approval');
     }
 
-    // Check if user already has a pending investment submission
+    // Check if user already has a pending investment submission (one submission at a time)
     const { data: existingPending } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('category', 'investment')
+      .or('category.eq.investment,description.ilike.%investment%')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(1)
@@ -73,7 +84,7 @@ export async function POST(req: NextRequest) {
 
       if (!isWithin24Hours) {
         throw new ValidationError(
-          'Edit window expired. Your submission is locked after 24 hours. Please wait 1-2 business days for General Manager review.'
+          'Your investment submission is locked after 24 hours and is awaiting General Manager review. Only one submission is permitted at a time.'
         );
       }
 

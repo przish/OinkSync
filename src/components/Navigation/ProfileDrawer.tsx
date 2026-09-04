@@ -3,12 +3,13 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   X, Camera, Check, Clock, TrendingUp, DollarSign, User as UserIcon,
-  Upload, AlertCircle, FileText, CheckCircle2, AlertTriangle, Edit2
+  Upload, AlertCircle, FileText, CheckCircle2, AlertTriangle, Edit2,
+  Lock, Eye, CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/UI/Button';
 import { Badge } from '@/components/UI/Badge';
 import { ImageCropModal } from '@/components/UI/ImageCropModal';
-import { formatCurrency } from '@/lib/utils/formatting';
+import { formatCurrency, formatDate } from '@/lib/utils/formatting';
 import { ROLE_LABELS } from '@/lib/constants';
 import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '@/lib/utils/toast';
@@ -28,6 +29,7 @@ interface PendingInvestment {
   created_at: string;
   status: string;
   description?: string;
+  rejection_reason?: string;
 }
 
 export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }: ProfileDrawerProps) {
@@ -48,12 +50,21 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
 
   // Investment Contribution State
   const [pendingInvest, setPendingInvest] = useState<PendingInvestment | null>(null);
+  const [latestInvest, setLatestInvest] = useState<PendingInvestment | null>(null);
   const [showInvestModal, setShowInvestModal] = useState(false);
   const [investAmount, setInvestAmount] = useState('');
   const [investReceipt, setInvestReceipt] = useState<File | null>(null);
   const [investConfirmed, setInvestConfirmed] = useState(false);
   const [isSubmittingInvest, setIsSubmittingInvest] = useState(false);
+  const [nowTime, setNowTime] = useState(Date.now());
   const receiptInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setNowTime(Date.now());
+    const timer = setInterval(() => setNowTime(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, [isOpen]);
 
   useEffect(() => {
     if (currentUser) {
@@ -78,14 +89,16 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
       .catch(() => {})
       .finally(() => setIsLoading(false));
 
-    // Fetch user's pending investment
+    // Fetch user's pending and latest investment submissions
     fetch('/api/users/investment')
       .then((res) => res.json())
       .then((json) => {
-        if (json.data && json.data.pending) {
-          setPendingInvest(json.data.pending);
+        if (json.data) {
+          setPendingInvest(json.data.pending || null);
+          setLatestInvest(json.data.latest || null);
         } else {
           setPendingInvest(null);
+          setLatestInvest(null);
         }
       })
       .catch(() => {});
@@ -110,19 +123,19 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
   const cooldownDays = calculateCooldownDays();
 
   // Calculate 24-hour investment edit countdown
-  const getInvestmentTimeLeft = (): { canEdit: boolean; text: string } => {
-    if (!pendingInvest) return { canEdit: true, text: '' };
+  const getInvestmentTimeLeft = (): { canEdit: boolean; hours: number; mins: number; text: string } => {
+    if (!pendingInvest) return { canEdit: true, hours: 0, mins: 0, text: '' };
     const createdAt = new Date(pendingInvest.created_at).getTime();
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-    const msRemaining = (createdAt + ONE_DAY_MS) - Date.now();
+    const msRemaining = (createdAt + ONE_DAY_MS) - nowTime;
 
     if (msRemaining <= 0) {
-      return { canEdit: false, text: 'Locked for GM review (1-2 business days)' };
+      return { canEdit: false, hours: 0, mins: 0, text: 'Locked after 24 hours — Under General Manager review' };
     }
 
     const hours = Math.floor(msRemaining / (1000 * 60 * 60));
     const mins = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
-    return { canEdit: true, text: `${hours}h ${mins}m left to edit` };
+    return { canEdit: true, hours, mins, text: `${hours}h ${mins}m left to edit files or information` };
   };
 
   const investTime = getInvestmentTimeLeft();
@@ -577,44 +590,92 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                 </p>
               </div>
 
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<Edit2 size={13} />}
-                onClick={() => {
-                  setInvestAmount(pendingInvest ? String(pendingInvest.amount) : '');
-                  setShowInvestModal(true);
-                }}
-                disabled={Boolean(pendingInvest && !investTime.canEdit)}
-              >
-                {pendingInvest ? 'Edit Submission' : '+ Add Investment'}
-              </Button>
+              {pendingInvest ? (
+                investTime.canEdit ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<Edit2 size={13} />}
+                    onClick={() => {
+                      setInvestAmount(String(pendingInvest.amount));
+                      setShowInvestModal(true);
+                    }}
+                  >
+                    Edit Submission
+                  </Button>
+                ) : (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: '6px 12px',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--palette-blush)',
+                      color: '#6B4444',
+                      border: '1px solid var(--palette-rose)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    <Lock size={12} /> Submission Locked
+                  </span>
+                )
+              ) : (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    setInvestAmount('');
+                    setInvestReceipt(null);
+                    setShowInvestModal(true);
+                  }}
+                >
+                  + Add Investment
+                </Button>
+              )}
             </div>
 
-            {/* Pending Investment Status Banner */}
-            {pendingInvest ? (
+            {/* Pending Investment Status Banner (Within 24h) */}
+            {pendingInvest && investTime.canEdit ? (
               <div
                 style={{
                   padding: '14px',
-                  background: 'rgba(234, 179, 8, 0.1)',
+                  background: 'var(--palette-cream)',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid rgba(234, 179, 8, 0.3)',
+                  border: '1.5px solid var(--palette-sage)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 6,
+                  gap: 8,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#854D0E', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Clock size={13} /> Pending General Admin Approval
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--income-green)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Clock size={13} /> Active Submission (24h Edit Window)
                   </span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#854D0E' }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--income-green)' }}>
                     {formatCurrency(pendingInvest.amount)}
                   </span>
                 </div>
 
-                <p style={{ fontSize: 11, color: '#854D0E' }}>
-                  {investTime.text}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 8px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--palette-rose)',
+                    color: 'var(--neutral-dark)',
+                    fontSize: 11,
+                    fontWeight: 700,
+                  }}
+                >
+                  ⏳ {investTime.text}
+                </div>
+
+                <p style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.4, margin: 0 }}>
+                  <strong>One submission at a time:</strong> You can still edit the files or information while the 24-hour countdown is running.
                 </p>
 
                 {pendingInvest.receipt_url && (
@@ -627,6 +688,114 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                     <FileText size={12} /> View Uploaded Receipt
                   </a>
                 )}
+              </div>
+            ) : pendingInvest && !investTime.canEdit ? (
+              /* Pending Investment Status Card (Beyond 24h — Adding blocked, Status: Sent -> Viewed by Admin -> Decision) */
+              <div
+                style={{
+                  padding: '16px',
+                  background: 'var(--palette-cream)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid var(--palette-blush)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--neutral-dark)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Lock size={13} color="var(--expense-red)" /> Pending GM Approval
+                  </span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--neutral-dark)' }}>
+                    {formatCurrency(pendingInvest.amount)}
+                  </span>
+                </div>
+
+                <p style={{ fontSize: 11, color: '#6B4444', lineHeight: 1.4, margin: 0 }}>
+                  The 24-hour edit window has closed. Adding a new investment is blocked while your contribution is being reviewed by the General Manager (1–2 business days).
+                </p>
+
+                {/* Status Stepper: Sent -> Viewed by Admin -> Decision */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--card-border)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <CheckCircle size={15} color="var(--income-green)" />
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 700, margin: 0, color: 'var(--income-green)' }}>Sent</p>
+                      <p style={{ fontSize: 9, color: 'var(--muted-dark)', margin: 0 }}>
+                        {pendingInvest.created_at ? formatDate(pendingInvest.created_at) : 'Submitted'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 1, height: 2, background: 'var(--palette-sage)', margin: '0 8px' }} />
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Eye size={15} color="var(--secondary-green)" />
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 700, margin: 0, color: 'var(--neutral-dark)' }}>Viewed by Admin</p>
+                      <p style={{ fontSize: 9, color: 'var(--secondary-green)', margin: 0 }}>Under Review</p>
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 1, height: 2, background: 'var(--palette-blush)', margin: '0 8px' }} />
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Clock size={15} color="var(--muted-dark)" />
+                    <div>
+                      <p style={{ fontSize: 11, fontWeight: 700, margin: 0, color: 'var(--muted-dark)' }}>Decision</p>
+                      <p style={{ fontSize: 9, color: 'var(--muted-dark)', margin: 0 }}>Pending GM</p>
+                    </div>
+                  </div>
+                </div>
+
+                {pendingInvest.receipt_url && (
+                  <a
+                    href={pendingInvest.receipt_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: 11, color: 'var(--secondary-green)', textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                  >
+                    <FileText size={12} /> View Uploaded Receipt
+                  </a>
+                )}
+              </div>
+            ) : !pendingInvest && latestInvest?.status === 'rejected' ? (
+              /* Previous submission was rejected */
+              <div
+                style={{
+                  padding: '14px',
+                  background: 'var(--palette-cream)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid var(--palette-blush)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--expense-red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <AlertCircle size={14} /> Previous Submission Rejected
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--expense-red)' }}>
+                    {formatCurrency(latestInvest.amount)}
+                  </span>
+                </div>
+                <p style={{ fontSize: 11, color: '#6B4444', margin: 0 }}>
+                  Reason: {latestInvest.rejection_reason || 'Information or receipt could not be verified by the General Manager.'}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--neutral-dark)', margin: 0 }}>
+                  You are now unblocked to submit a new investment contribution with updated files.
+                </p>
               </div>
             ) : (
               <div style={{ padding: '12px', background: 'var(--palette-cream)', borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--muted-dark)' }}>

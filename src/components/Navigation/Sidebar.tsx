@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import {
-  LayoutDashboard, ArrowLeftRight, BarChart3,
+  LayoutDashboard, CheckSquare, ArrowLeftRight, BarChart3,
   PiggyBank, ClipboardList, FileText,
   Users, Settings, LogOut, ChevronRight, TrendingUp
 } from 'lucide-react';
@@ -20,6 +20,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+  { href: '/review', label: 'Review', icon: <CheckSquare size={18} />, roles: ['admin'] },
   { href: '/transactions', label: 'Transactions', icon: <ArrowLeftRight size={18} />, roles: ['admin', 'logistics'] },
   { href: '/analytics', label: 'Analytics', icon: <BarChart3 size={18} /> },
   { href: '/scaling-plan', label: 'Scaling Plan', icon: <TrendingUp size={18} />, roles: ['admin', 'investor'] },
