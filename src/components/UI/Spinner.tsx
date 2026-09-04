@@ -59,11 +59,34 @@ export function SkeletonCard() {
 export function SkeletonRow({ columns = 6 }: { columns?: number }) {
   return (
     <tr>
-      {Array.from({ length: columns }).map((_, i) => (
-        <td key={i} style={{ padding: '14px 16px' }}>
-          <Skeleton height={14} width={i === 0 ? '70%' : i === 1 ? '85%' : '50%'} />
-        </td>
-      ))}
+      {Array.from({ length: columns }).map((_, i) => {
+        // Last column is Actions
+        if (i === columns - 1) {
+          return (
+            <td key={i} style={{ padding: '10px 14px', textAlign: 'right' }}>
+              <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                <Skeleton height={28} width={56} />
+              </div>
+            </td>
+          );
+        }
+        // Second-to-last column is Status
+        if (i === columns - 2) {
+          return (
+            <td key={i} style={{ padding: '10px 14px' }}>
+              <Skeleton height={22} width={68} rounded />
+            </td>
+          );
+        }
+        return (
+          <td key={i} style={{ padding: '10px 14px' }}>
+            <Skeleton
+              height={14}
+              width={i === 0 ? '60%' : i === 1 ? '85%' : i === 2 ? '50%' : '65%'}
+            />
+          </td>
+        );
+      })}
     </tr>
   );
 }
