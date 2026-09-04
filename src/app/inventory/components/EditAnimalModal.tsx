@@ -28,6 +28,7 @@ export function EditAnimalModal({
 }: EditAnimalModalProps) {
   const [healthStatus, setHealthStatus] = useState<string>('healthy');
   const [status, setStatus] = useState<string>('active');
+  const [breedingPenId, setBreedingPenId] = useState<string>('');
   const [penId, setPenId] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
@@ -38,10 +39,11 @@ export function EditAnimalModal({
       setHealthStatus(animal.health_status || 'healthy');
       setStatus(animal.status || 'active');
       setPenId(animal.pen_id || '');
+      setBreedingPenId(animal.pen_id || (pens.length > 0 ? pens[0].id : ''));
       setWeight(animal.current_weight !== null && animal.current_weight !== undefined ? String(animal.current_weight) : '');
       setNotes(animal.notes || '');
     }
-  }, [animal]);
+  }, [animal, pens]);
 
   if (!isOpen || !animal) return null;
 
@@ -53,12 +55,25 @@ export function EditAnimalModal({
     try {
       const payload: Record<string, any> = {
         health_status: healthStatus,
-        status,
         notes: notes.trim(),
       };
 
-      if (penId && penId !== animal.pen_id) {
-        payload.pen_id = penId;
+      if (status === 'became_breeding_sow') {
+        const destPen = breedingPenId || penId;
+        if (!destPen) {
+          toast.error('Please select the pen where the breeding sow will be moved.', { id: toastId });
+          setIsSubmitting(false);
+          return;
+        }
+        payload.status = 'active';
+        payload.animal_type = 'breeding_sow';
+        payload.gender = 'female';
+        payload.pen_id = destPen;
+      } else {
+        payload.status = status;
+        if (penId && penId !== animal.pen_id) {
+          payload.pen_id = penId;
+        }
       }
 
       if (weight !== '') {
@@ -76,7 +91,12 @@ export function EditAnimalModal({
       if (!res.ok) {
         toast.error(getErrorMessage(json.error, 'Failed to update animal'), { id: toastId });
       } else {
-        toast.success('Animal updated successfully!', { id: toastId });
+        toast.success(
+          status === 'became_breeding_sow'
+            ? 'Animal successfully promoted to Breeding Sow and moved to pen!'
+            : 'Animal updated successfully!',
+          { id: toastId }
+        );
         onSuccess();
         onClose();
       }
@@ -97,10 +117,18 @@ export function EditAnimalModal({
     label: h.charAt(0).toUpperCase() + h.slice(1),
   }));
 
-  const statusOptions = ANIMAL_STATUSES.map((s) => ({
-    value: s,
-    label: s.charAt(0).toUpperCase() + s.slice(1),
-  }));
+  const statusOptions = animal.animal_type === 'breeding_sow'
+    ? [
+        { value: 'active', label: 'Active' },
+        { value: 'sold', label: 'Sold' },
+        { value: 'deceased', label: 'Deceased' },
+      ]
+    : [
+        { value: 'active', label: 'Active' },
+        { value: 'sold', label: 'Sold' },
+        { value: 'became_breeding_sow', label: 'Became Breeding Sow' },
+        { value: 'deceased', label: 'Deceased' },
+      ];
 
   return (
     <Modal
@@ -139,15 +167,34 @@ export function EditAnimalModal({
           </FormField>
         </div>
 
-        <div className="form-grid form-grid-2">
-          <FormField label="Assigned Pen" htmlFor="edit-animal-pen" required>
+        {status === 'became_breeding_sow' && (
+          <FormField
+            label="Move to Breeding Pen"
+            htmlFor="breeding-pen"
+            required
+            hint="Specify where this new breeding sow will be relocated"
+          >
             <FormSelect
-              id="edit-animal-pen"
-              value={penId}
-              onChange={(e) => setPenId(e.target.value)}
+              id="breeding-pen"
+              value={breedingPenId}
+              onChange={(e) => setBreedingPenId(e.target.value)}
               options={penOptions}
+              required
             />
           </FormField>
+        )}
+
+        <div className="form-grid form-grid-2">
+          {status !== 'became_breeding_sow' && (
+            <FormField label="Assigned Pen" htmlFor="edit-animal-pen" required>
+              <FormSelect
+                id="edit-animal-pen"
+                value={penId}
+                onChange={(e) => setPenId(e.target.value)}
+                options={penOptions}
+              />
+            </FormField>
+          )}
 
           <FormField label="Current Weight (kg)" htmlFor="edit-animal-weight">
             <input
