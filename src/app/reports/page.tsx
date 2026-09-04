@@ -31,53 +31,76 @@ export default function ReportsPage() {
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Discover all years from transactions
+  // Discover all years with actual recorded transactions or activity
   useEffect(() => {
     async function loadYears() {
       try {
         const supabase = createClient();
-        const { data: txYears } = await supabase
+        const { data: txList } = await supabase
           .from('transactions')
           .select('transaction_date')
-          .order('transaction_date', { ascending: true })
-          .limit(1);
+          .eq('status', 'approved');
 
-        const startYear = txYears && txYears.length > 0
-          ? new Date(txYears[0].transaction_date).getFullYear()
-          : currentYear;
+        const yearsSet = new Set<number>();
+        (txList || []).forEach((tx) => {
+          if (tx.transaction_date) {
+            const yr = new Date(tx.transaction_date).getFullYear();
+            if (!isNaN(yr)) yearsSet.add(yr);
+          }
+        });
 
-        const years: number[] = [];
-        for (let y = currentYear; y >= Math.min(startYear, currentYear - 2); y--) {
-          years.push(y);
+        // Also check if any monthly_analytics have recorded activity
+        const { data: analyticsList } = await supabase
+          .from('monthly_analytics')
+          .select('analytics_month, total_revenue, total_expenses');
+
+        (analyticsList || []).forEach((row) => {
+          if (row.analytics_month && (Number(row.total_revenue) > 0 || Number(row.total_expenses) > 0)) {
+            const yr = new Date(row.analytics_month).getFullYear();
+            if (!isNaN(yr)) yearsSet.add(yr);
+          }
+        });
+
+        const sorted = Array.from(yearsSet).sort((a, b) => b - a);
+        const resolvedYears = sorted.length > 0 ? sorted : [currentYear];
+        setAvailableYears(resolvedYears);
+
+        if (!yearsSet.has(selectedYear) && sorted.length > 0) {
+          setSelectedYear(sorted[0]);
         }
-        setAvailableYears(years);
       } catch {
         setAvailableYears([currentYear]);
       }
     }
     loadYears();
-  }, [currentYear]);
+  }, [currentYear, selectedYear]);
 
-  // Fetch all 12 months for selectedYear
+  // Fetch only months that have actual logged reports/data for selectedYear
   const fetchReports = useCallback(async (year: number) => {
     setIsLoading(true);
     try {
       const promises = Array.from({ length: 12 }).map(async (_, i) => {
-        // Month index 0 (Jan) to 11 (Dec)
         const monthNum = String(i + 1).padStart(2, '0');
         const monthStr = `${year}-${monthNum}-01`;
         const res = await fetch(`/api/reports/monthly-summary?month=${monthStr}`);
         if (res.ok) {
           const json = await res.json();
           if (json.data && json.data.analytics) {
-            return {
-              month: json.data.month,
-              total_revenue: json.data.analytics?.total_revenue ?? 0,
-              total_expenses: json.data.analytics?.total_expenses ?? 0,
-              net_profit: json.data.analytics?.net_profit ?? 0,
-              roi_percentage: json.data.analytics?.roi_percentage ?? 0,
-              animals_sold: json.data.analytics?.animals_sold ?? 0,
-            };
+            const rev = Number(json.data.analytics?.total_revenue) || 0;
+            const exp = Number(json.data.analytics?.total_expenses) || 0;
+            const txCount = json.data.transactions?.length || 0;
+
+            // Only return month if there is actual logged activity (transactions or financial numbers)
+            if (rev > 0 || exp > 0 || txCount > 0) {
+              return {
+                month: json.data.month,
+                total_revenue: rev,
+                total_expenses: exp,
+                net_profit: json.data.analytics?.net_profit ?? (rev - exp),
+                roi_percentage: json.data.analytics?.roi_percentage ?? 0,
+                animals_sold: json.data.analytics?.animals_sold ?? 0,
+              };
+            }
           }
         }
         return null;
@@ -343,10 +366,43 @@ export default function ReportsPage() {
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
           ) : reports.length === 0 ? (
-            <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-              <div className="empty-state-icon"><FileText size={28} color="#4B5563" /></div>
-              <p style={{ fontWeight: 600, marginTop: 8 }}>No reports available for {selectedYear}</p>
-              <p className="text-small text-muted">Financial analytics will populate as transactions occur</p>
+            <div
+              style={{
+                gridColumn: '1 / -1',
+                padding: '56px 24px',
+                background: 'var(--palette-cream)',
+                borderRadius: 'var(--radius-xl)',
+                border: '1.5px dashed var(--palette-sage)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  background: 'var(--palette-rose)',
+                  border: '1.5px solid var(--palette-blush)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 26,
+                  color: 'var(--secondary-green)',
+                }}
+              >
+                <FileText size={26} color="var(--secondary-green)" />
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--neutral-dark)', margin: 0 }}>
+                No Reports Logged Yet
+              </h3>
+              <p style={{ fontSize: 13, color: 'var(--muted-dark)', maxWidth: 400, margin: 0, lineHeight: 1.6, fontWeight: 500 }}>
+                There are no financial statements or transactions recorded for {selectedYear}. Once transactions are logged and approved, monthly summaries will automatically generate here.
+              </p>
             </div>
           ) : (
             reports.map((report) => {
