@@ -580,16 +580,16 @@ export default function ScalingPlanPage() {
                         <td style={{ fontWeight: 600, color: 'var(--muted-dark)' }}>{row.dateLabel}</td>
                         <td style={{ fontWeight: 700, color: 'var(--neutral-dark)' }}>{row.name}</td>
                         <td style={{ fontSize: 12, color: 'var(--muted-dark)' }}>{row.description}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--error)' }}>
+                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--expense-red)' }}>
                           {row.outflow > 0 ? `-${formatCurrency(row.outflow)}` : '₱0.00'}
                         </td>
-                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--success)' }}>
+                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--income-green)' }}>
                           {row.inflow > 0 ? `+${formatCurrency(row.inflow)}` : '₱0.00'}
                         </td>
                         <td style={{
                           textAlign: 'right',
                           fontWeight: 800,
-                          color: row.netCashflow >= 0 ? 'var(--success)' : 'var(--error)',
+                          color: row.netCashflow >= 0 ? 'var(--income-green)' : 'var(--expense-red)',
                         }}>
                           {row.netCashflow >= 0 ? '+' : ''}{formatCurrency(row.netCashflow)}
                         </td>
