@@ -92,10 +92,14 @@ export function formatShortDate(dateStr: string | Date): string {
 }
 
 /**
- * Get today's date as YYYY-MM-DD (for input[type="date"] default values)
+ * Get today's date in local timezone as YYYY-MM-DD (for input[type="date"] values)
  */
 export function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
