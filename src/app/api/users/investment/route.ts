@@ -13,9 +13,8 @@ export async function GET() {
       throw new UnauthorizedError();
     }
 
-    // Fetch user's pending investment transaction (support both user_id and created_by column)
-    let pendingTx = null;
-    const { data: byUser, error: errUser } = await supabase
+    // Fetch user's pending investment transaction
+    const { data: pendingTx } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
@@ -24,21 +23,6 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-
-    if (!errUser) {
-      pendingTx = byUser;
-    } else {
-      const { data: byCreator } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('created_by', user.id)
-        .eq('category', 'investment')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      pendingTx = byCreator;
-    }
 
     return successResponse({
       pending: pendingTx || null,
@@ -70,8 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if user already has a pending investment submission
-    let existingPending: any = null;
-    const { data: pendingByUser } = await supabase
+    const { data: existingPending } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
@@ -80,21 +63,6 @@ export async function POST(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-
-    if (pendingByUser) {
-      existingPending = pendingByUser;
-    } else {
-      const { data: pendingByCreator } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('created_by', user.id)
-        .eq('category', 'investment')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      existingPending = pendingByCreator;
-    }
 
     const now = Date.now();
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -116,6 +84,7 @@ export async function POST(req: NextRequest) {
           amount,
           receipt_url: receiptUrl,
           description: body.description || 'Member investment contribution',
+          updated_at: new Date().toISOString(),
         })
         .eq('id', existingPending.id)
         .select()
@@ -131,7 +100,7 @@ export async function POST(req: NextRequest) {
     // Create new pending investment transaction
     const today = new Date().toISOString().split('T')[0];
     
-    // Attempt insert with user_id first (matching schema)
+    // Insert with user_id (matching transactions schema)
     let newTx = null;
     const { data: tx1, error: err1 } = await supabase
       .from('transactions')
@@ -150,25 +119,27 @@ export async function POST(req: NextRequest) {
 
     if (!err1 && tx1) {
       newTx = tx1;
-    } else {
-      // Fallback with created_by if schema used created_by
-      const { data: tx2, error: err2 } = await supabase
+    } else if (err1 && (err1.message?.includes('category') || err1.code === '23514')) {
+      // If transactions_category_check requires a standard category
+      const { data: txSales, error: errSales } = await supabase
         .from('transactions')
         .insert({
           transaction_date: today,
-          transaction_type: 'capital',
-          category: 'investment',
+          transaction_type: 'income',
+          category: 'Sales',
           amount,
           description: body.description || 'Member investment contribution',
           receipt_url: receiptUrl,
           status: 'pending',
-          created_by: user.id,
+          user_id: user.id,
         })
         .select()
         .single();
 
-      if (err2) throw err2;
-      newTx = tx2;
+      if (errSales) throw errSales;
+      newTx = txSales;
+    } else if (err1) {
+      throw err1;
     }
 
     return successResponse({ transaction: newTx, message: 'Investment submitted for General Manager approval' }, 201);
