@@ -11,6 +11,7 @@ import { ImageCropModal } from '@/components/UI/ImageCropModal';
 import { formatCurrency } from '@/lib/utils/formatting';
 import { ROLE_LABELS } from '@/lib/constants';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '@/lib/utils/toast';
 import type { User } from '@/types/database';
 
 interface ProfileDrawerProps {
@@ -200,7 +201,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error?.message || 'Failed to update profile image', { id: toastId });
+        toast.error(getErrorMessage(json.error, 'Failed to update profile image'), { id: toastId });
       } else {
         toast.success('Profile picture updated!', { id: toastId });
         setProfile(json.data);
@@ -245,7 +246,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
         });
         const uploadJson = await uploadRes.json();
         if (!uploadRes.ok) {
-          toast.error(uploadJson.error?.message || 'Receipt upload failed', { id: toastId });
+          toast.error(getErrorMessage(uploadJson.error, 'Receipt upload failed'), { id: toastId });
           setIsSubmittingInvest(false);
           return;
         }
@@ -264,7 +265,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
 
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || 'Failed to submit investment', { id: toastId });
+        toast.error(getErrorMessage(json.error, 'Failed to submit investment'), { id: toastId });
       } else {
         toast.success('Investment submitted for General Manager approval!', { id: toastId });
         setShowInvestModal(false);
