@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getAuthUser } from '@/lib/auth';
-import { successResponse, handleError, ValidationError } from '@/lib/errors';
+import { successResponse, handleError, ValidationError, ConflictError } from '@/lib/errors';
 import type { Pen, Animal } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -80,11 +80,35 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Capacity must be greater than 0');
     }
 
+    const resolvedName = penName || `Pen ${penNumber}`;
+
+    // 1. Uniqueness check on pen_number
+    const { data: existingNum } = await supabase
+      .from('pens')
+      .select('id, pen_number')
+      .ilike('pen_number', penNumber)
+      .maybeSingle();
+
+    if (existingNum) {
+      throw new ConflictError(`Pen ID "${penNumber}" already exists. PEN IDs must be unique.`);
+    }
+
+    // 2. Uniqueness check on pen_name
+    const { data: existingName } = await supabase
+      .from('pens')
+      .select('id, pen_name')
+      .ilike('pen_name', resolvedName)
+      .maybeSingle();
+
+    if (existingName) {
+      throw new ConflictError(`A pen named "${resolvedName}" already exists. Pen names must be unique.`);
+    }
+
     const { data: newPen, error: insertError } = await supabase
       .from('pens')
       .insert({
         pen_number: penNumber,
-        pen_name: penName || `Pen ${penNumber}`,
+        pen_name: resolvedName,
         capacity,
         location: location || null,
         status: 'inactive',
@@ -92,7 +116,12 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      if ((insertError as any).code === '23505') {
+        throw new ConflictError(`A pen with number "${penNumber}" already exists. PEN IDs must be unique.`);
+      }
+      throw insertError;
+    }
 
     return successResponse(newPen, 201);
   } catch (error) {

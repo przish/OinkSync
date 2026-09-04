@@ -67,6 +67,7 @@ export interface KpiData {
   active_pig_count: number;
   mortality_count: number;
   mortality_rate: number;
+  litter_mortality_rate?: number;
   pending_transactions: number;
   total_capital: number;
   // Month-over-month comparison

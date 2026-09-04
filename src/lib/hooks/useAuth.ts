@@ -8,6 +8,7 @@ interface AuthState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
+  mustChangePassword?: boolean;
 }
 
 export function useAuth() {
@@ -15,6 +16,7 @@ export function useAuth() {
     user: null,
     isLoading: true,
     error: null,
+    mustChangePassword: false,
   });
 
   const supabase = useMemo(() => createClient(), []);
@@ -22,9 +24,10 @@ export function useAuth() {
   const fetchProfile = useCallback(async () => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) {
-      setState({ user: null, isLoading: false, error: null });
+      setState({ user: null, isLoading: false, error: null, mustChangePassword: false });
       return;
     }
+    const mustChange = authUser.user_metadata?.must_change_password === true;
     const { data: profile, error } = await supabase
       .from('users')
       .select('*')
@@ -32,9 +35,6 @@ export function useAuth() {
       .single();
 
     if (error || !profile) {
-      // No row in public.users — build a minimal fallback from Auth metadata
-      // so the user isn't kicked back to login by ProtectedRoute.
-      // This handles new users whose profile hasn't been seeded yet.
       const fallback: User = {
         id: authUser.id,
         email: authUser.email ?? '',
@@ -47,9 +47,9 @@ export function useAuth() {
         created_by: null,
         last_login: null,
       };
-      setState({ user: fallback, isLoading: false, error: null });
+      setState({ user: fallback, isLoading: false, error: null, mustChangePassword: mustChange });
     } else {
-      setState({ user: profile as unknown as User, isLoading: false, error: null });
+      setState({ user: profile as unknown as User, isLoading: false, error: null, mustChangePassword: mustChange });
     }
   }, [supabase]);
 
@@ -106,5 +106,6 @@ export function useAuth() {
     login,
     logout,
     refetch: fetchProfile,
+    mustChangePassword: state.mustChangePassword,
   };
 }

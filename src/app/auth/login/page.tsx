@@ -50,33 +50,36 @@ export default function LoginPage() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      background: 'linear-gradient(135deg, #0d1a05 0%, #1a2e0a 50%, #2D5016 100%)',
+      background: 'var(--palette-cream)',
     }}>
       {/* Left panel — branding */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '48px 40px', color: 'white',
+        padding: '48px 40px',
+        background: 'var(--palette-sage)',
+        color: 'var(--palette-cream)',
       }} className="login-brand-panel">
         <div style={{
-          width: 80, height: 80, borderRadius: 24,
-          background: 'linear-gradient(135deg, var(--tertiary-gold), #d4b890)',
+          width: 88, height: 88, borderRadius: 28,
+          background: 'var(--palette-cream)',
+          border: '2.5px solid var(--palette-blush)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 40, marginBottom: 24,
-          boxShadow: '0 20px 40px rgba(196,165,123,0.3)',
+          fontSize: 44, marginBottom: 24,
+          boxShadow: 'var(--shadow-md)',
         }}>
           🐷
         </div>
-        <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 12, textAlign: 'center' }}>
+        <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 12, textAlign: 'center', color: 'var(--palette-cream)' }}>
           OinkSync
         </h1>
-        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', textAlign: 'center', maxWidth: 320, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 16, color: 'var(--palette-cream)', opacity: 0.95, textAlign: 'center', maxWidth: 340, lineHeight: 1.7, fontWeight: 500 }}>
           The complete financial operating system for modern pig farm operations.
         </p>
 
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
-          gap: 16, marginTop: 48, width: '100%', maxWidth: 400,
+          gap: 16, marginTop: 44, width: '100%', maxWidth: 420,
         }}>
           {[
             { label: 'Track Capital', icon: '💰' },
@@ -84,13 +87,14 @@ export default function LoginPage() {
             { label: 'View Analytics', icon: '📈' },
           ].map((stat) => (
             <div key={stat.label} style={{
-              background: 'rgba(255,255,255,0.06)',
-              borderRadius: 12, padding: '16px 12px',
+              background: 'rgba(255, 253, 236, 0.16)',
+              borderRadius: 14, padding: '16px 12px',
               textAlign: 'center',
-              border: '1px solid rgba(255,255,255,0.1)',
+              border: '1.5px solid rgba(255, 253, 236, 0.35)',
+              backdropFilter: 'blur(8px)',
             }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>{stat.icon}</div>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', lineHeight: 1.4 }}>{stat.label}</p>
+              <div style={{ fontSize: 26, marginBottom: 8 }}>{stat.icon}</div>
+              <p style={{ fontSize: 12, color: 'var(--palette-cream)', fontWeight: 700, lineHeight: 1.4 }}>{stat.label}</p>
             </div>
           ))}
         </div>
@@ -99,7 +103,8 @@ export default function LoginPage() {
       {/* Right panel — login form */}
       <div style={{
         width: '100%', maxWidth: 480,
-        background: 'white',
+        background: 'var(--palette-cream)',
+        borderLeft: '1.5px solid var(--palette-blush)',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '48px 40px',
@@ -109,17 +114,11 @@ export default function LoginPage() {
             <h2 style={{ fontSize: 26, fontWeight: 800, color: 'var(--neutral-dark)', marginBottom: 8 }}>
               Welcome back 👋
             </h2>
-            <p style={{ color: '#4B5563', fontSize: 14 }}>
+            <p style={{ color: 'var(--muted-dark)', fontSize: 14, fontWeight: 500 }}>
               Sign in to access your farm dashboard
             </p>
           </div>
 
-          {/*
-            SECURITY FIX: method="post" prevents credentials from appearing in the URL.
-            react-hook-form's handleSubmit intercepts the submit event and calls
-            onSubmit with the validated data — the form never actually POSTs to the
-            server so action="#" is just a safe fallback.
-          */}
           <form
             onSubmit={handleSubmit(onSubmit)}
             method="post"
@@ -134,6 +133,7 @@ export default function LoginPage() {
                 className={`form-input${errors.email ? ' error' : ''}`}
                 placeholder="you@example.com"
                 autoComplete="email"
+                style={{ background: 'var(--palette-cream)', color: 'var(--neutral-dark)' }}
                 {...register('email')}
               />
             </FormField>
@@ -146,7 +146,7 @@ export default function LoginPage() {
                   className={`form-input${errors.password ? ' error' : ''}`}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  style={{ paddingRight: 40 }}
+                  style={{ paddingRight: 40, background: 'var(--palette-cream)', color: 'var(--neutral-dark)' }}
                   {...register('password')}
                 />
                 <button
@@ -156,7 +156,7 @@ export default function LoginPage() {
                     position: 'absolute', right: 12, top: '50%',
                     transform: 'translateY(-50%)',
                     background: 'none', border: 'none',
-                    cursor: 'pointer', color: '#4B5563',
+                    cursor: 'pointer', color: 'var(--muted-dark)',
                     display: 'flex', alignItems: 'center',
                   }}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
@@ -168,12 +168,12 @@ export default function LoginPage() {
 
             {serverError && (
               <div style={{
-                background: 'linear-gradient(135deg, #fde8e8, #f5c6c6)',
-                borderLeft: '4px solid #C85C5C',
+                background: 'var(--palette-rose)',
+                borderLeft: '4px solid var(--palette-blush)',
                 borderRadius: 10,
                 padding: '12px 16px',
               }}>
-                <p style={{ fontSize: 14, fontWeight: 500, color: '#991B1B' }}>{serverError}</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--neutral-dark)' }}>{serverError}</p>
               </div>
             )}
 
@@ -182,13 +182,13 @@ export default function LoginPage() {
               variant="primary"
               size="lg"
               isLoading={isSubmitting}
-              style={{ width: '100%', marginTop: 4 }}
+              style={{ width: '100%', marginTop: 4, fontWeight: 700 }}
             >
               {isSubmitting ? 'Signing in...' : 'Sign In to OinkSync'}
             </Button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: 28, fontSize: 13, color: '#4B5563' }}>
+          <p style={{ textAlign: 'center', marginTop: 28, fontSize: 13, color: 'var(--muted-dark)', fontWeight: 500 }}>
             Contact your administrator to get access
           </p>
         </div>

@@ -14,6 +14,7 @@ import { ROLE_LABELS } from '@/lib/constants';
 import { formatDate } from '@/lib/utils/formatting';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '@/lib/utils/toast';
 import type { User } from '@/types/database';
 
 export default function UsersPage() {
@@ -58,7 +59,7 @@ export default function UsersPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || 'Failed to delete user', { id: toastId });
+        toast.error(getErrorMessage(json.error, 'Failed to delete user'), { id: toastId });
       } else {
         toast.success('User deleted successfully', { id: toastId });
         setUserToDelete(null);

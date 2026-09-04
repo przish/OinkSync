@@ -10,14 +10,19 @@ import { SkeletonCard } from '@/components/UI/Spinner';
 import { PenList } from './components/PenList';
 import { AnimalForm } from './components/AnimalForm';
 import { AddPenModal } from '@/components/Forms/AddPenModal';
+import { MovePigletModal } from './components/MovePigletModal';
+import { EditAnimalModal } from './components/EditAnimalModal';
 import { useInventory } from '@/lib/hooks/useInventory';
 import { useToast, ToastContainer } from '@/components/UI/Toast';
-import type { CreateAnimalRequest } from '@/types/api';
+import type { CreateAnimalRequest, PenWithAnimals } from '@/types/api';
+import type { Animal } from '@/types/database';
 
 export default function InventoryPage() {
   const { summary, pens, animals, isLoading, fetchAll, addAnimal } = useInventory();
   const [showAddAnimal, setShowAddAnimal] = useState(false);
   const [showAddPen, setShowAddPen] = useState(false);
+  const [moveTargetPen, setMoveTargetPen] = useState<PenWithAnimals | null>(null);
+  const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
   const { toasts, toast, remove } = useToast();
 
   const load = useCallback(() => fetchAll(), [fetchAll]);
@@ -106,7 +111,7 @@ export default function InventoryPage() {
               {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : (
-            <PenList pens={pens} />
+            <PenList pens={pens} onMovePiglet={(pen) => setMoveTargetPen(pen)} />
           )}
         </Card>
 
@@ -115,7 +120,7 @@ export default function InventoryPage() {
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontWeight: 700, fontSize: 16 }}>
               All Animals
-              <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>
+              <span style={{ fontWeight: 400, color: 'var(--muted-dark)', fontSize: 13, marginLeft: 8 }}>
                 ({animals.length} total)
               </span>
             </h3>
@@ -133,12 +138,13 @@ export default function InventoryPage() {
                   <th>Health</th>
                   <th>Weight</th>
                   <th>Status</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {animals.length === 0 ? (
                   <tr>
-                    <td colSpan={6}>
+                    <td colSpan={7}>
                       <div className="empty-state">
                         <div className="empty-state-icon">🐷</div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No animals yet</p>
@@ -148,15 +154,25 @@ export default function InventoryPage() {
                 ) : (
                   animals.slice(0, 50).map((animal) => (
                     <tr key={animal.id}>
-                      <td style={{ fontWeight: 600 }}>{animal.animal_code ?? `#${animal.id.slice(0, 6)}`}</td>
-                      <td>{animal.animal_type.replace('_', ' ')}</td>
-                      <td style={{ color: '#4B5563' }}>
+                      <td style={{ fontWeight: 700 }}>{animal.animal_code ?? `#${animal.id.slice(0, 6)}`}</td>
+                      <td style={{ textTransform: 'capitalize' }}>{animal.animal_type.replace('_', ' ')}</td>
+                      <td style={{ color: 'var(--neutral-dark)', fontWeight: 600 }}>
                         {/* @ts-ignore - pen is populated from the API join */}
-                        {animal.pen ? `Pen ${animal.pen.pen_number}${animal.pen.pen_name ? ` — ${animal.pen.pen_name}` : ''}` : `${animal.pen_id.slice(0, 8)}...`}
+                        {animal.pen ? (animal.pen.pen_name || animal.pen.pen_number) : (animal.pen_id ? `${animal.pen_id.slice(0, 8)}...` : '—')}
                       </td>
                       <td><Badge variant={animal.health_status} /></td>
-                      <td style={{ color: '#4B5563' }}>{animal.current_weight ? `${animal.current_weight} kg` : '—'}</td>
+                      <td style={{ color: 'var(--neutral-dark)', fontWeight: 600 }}>{animal.current_weight ? `${animal.current_weight} kg` : '—'}</td>
                       <td><Badge variant={animal.status} /></td>
+                      <td style={{ textAlign: 'right' }}>
+                        <Button
+                          variant="outline-green"
+                          size="sm"
+                          onClick={() => setEditingAnimal(animal)}
+                          style={{ padding: '4px 10px', fontSize: 12, height: 28 }}
+                        >
+                          Edit
+                        </Button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -178,6 +194,22 @@ export default function InventoryPage() {
         onClose={() => setShowAddPen(false)}
         onPenCreated={load}
         existingCount={pens.length}
+      />
+
+      <MovePigletModal
+        isOpen={Boolean(moveTargetPen)}
+        onClose={() => setMoveTargetPen(null)}
+        targetPen={moveTargetPen}
+        allAnimals={animals}
+        onSuccess={load}
+      />
+
+      <EditAnimalModal
+        isOpen={Boolean(editingAnimal)}
+        onClose={() => setEditingAnimal(null)}
+        animal={editingAnimal}
+        pens={pens}
+        onSuccess={load}
       />
 
       <ToastContainer toasts={toasts} onRemove={remove} />

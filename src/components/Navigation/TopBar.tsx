@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { ROLE_LABELS } from '@/lib/constants';
 import { Badge } from '@/components/UI/Badge';
 import { ProfileDrawer } from './ProfileDrawer';
+import { ForcePasswordChangeModal } from '@/components/Forms/ForcePasswordChangeModal';
 
 interface TopBarProps {
   title: string;
@@ -14,7 +15,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ title, onMenuToggle, actions }: TopBarProps) {
-  const { user } = useAuth();
+  const { user, mustChangePassword, refetch } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   return (
@@ -119,6 +120,11 @@ export function TopBar({ title, onMenuToggle, actions }: TopBarProps) {
           // Trigger reload or state refresh if needed
           window.location.reload();
         }}
+      />
+
+      <ForcePasswordChangeModal
+        isOpen={Boolean(mustChangePassword)}
+        onSuccess={() => refetch()}
       />
     </>
   );

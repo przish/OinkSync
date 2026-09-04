@@ -5,6 +5,7 @@ import { X, Plus, PiggyBank } from 'lucide-react';
 import { Button } from '@/components/UI/Button';
 import { FormField } from '@/components/Forms/FormField';
 import { toast } from 'react-hot-toast';
+import { getErrorMessage } from '@/lib/utils/toast';
 
 interface AddPenModalProps {
   isOpen: boolean;
@@ -47,8 +48,8 @@ export function AddPenModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pen_number: penNumber.trim(),
-          pen_name: penName.trim() || `Pen ${penNumber.trim()}`,
+          pen_number: penNumber.trim().toUpperCase(),
+          pen_name: penName.trim() || `Pen ${penNumber.trim().toUpperCase()}`,
           capacity: capNum,
           location: location.trim() || null,
         }),
@@ -56,14 +57,14 @@ export function AddPenModal({
 
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || 'Failed to add pen', { id: toastId });
+        toast.error(getErrorMessage(json.error, 'Failed to add pen'), { id: toastId });
       } else {
         toast.success('Pen added successfully!', { id: toastId });
         onPenCreated();
         onClose();
       }
-    } catch {
-      toast.error('Error adding pen', { id: toastId });
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Error adding pen'), { id: toastId });
     } finally {
       setIsSubmitting(false);
     }

@@ -31,7 +31,7 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
     label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''}`,
   }));
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<PenLogFormValues>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<PenLogFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(penLogSchema) as any,
     defaultValues: {
@@ -44,6 +44,42 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
     },
   });
 
+  const animalsDied = Number(watch('animals_died')) || 0;
+  const animalsSick = Number(watch('animals_sick')) || 0;
+  const healthObservations = watch('health_observations') || '';
+
+  // Track if user manually wrote custom text
+  const prevCountsRef = React.useRef({ died: 0, sick: 0 });
+
+  const buildTemplate = React.useCallback((died: number, sick: number) => {
+    if (died <= 0 && sick <= 0) return '';
+    const lines: string[] = ['Please add your observation for each piglet:'];
+    for (let i = 1; i <= died; i++) {
+      lines.push(`• Animal died ${i} = `);
+    }
+    for (let i = 1; i <= sick; i++) {
+      lines.push(`• Animal sick ${i} = `);
+    }
+    return lines.join('\n');
+  }, []);
+
+  React.useEffect(() => {
+    const prev = prevCountsRef.current;
+    if (prev.died !== animalsDied || prev.sick !== animalsSick) {
+      prevCountsRef.current = { died: animalsDied, sick: animalsSick };
+
+      if (animalsDied > 0 || animalsSick > 0) {
+        // Automatically check issues_reported if there is illness or mortality
+        setValue('issues_reported', true);
+
+        // If observations is empty or is an older template, update with new template
+        if (!healthObservations || healthObservations.startsWith('Please add your observation for each piglet:')) {
+          setValue('health_observations', buildTemplate(animalsDied, animalsSick));
+        }
+      }
+    }
+  }, [animalsDied, animalsSick, healthObservations, setValue, buildTemplate]);
+
   const [serverError, setServerError] = React.useState<string | null>(null);
 
   const handleClose = () => { reset(); setServerError(null); onClose(); };
@@ -53,6 +89,10 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
     const { error } = await onSubmit(data);
     if (error) setServerError(error);
     else handleClose();
+  };
+
+  const handleInsertTemplate = () => {
+    setValue('health_observations', buildTemplate(animalsDied, animalsSick));
   };
 
   return (
@@ -101,8 +141,30 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
           </FormField>
         </div>
 
-        <FormField label="Health Observations" htmlFor="log-health">
-          <FormTextarea id="log-health" placeholder="Describe any health observations..." rows={2} {...register('health_observations')} />
+        <FormField
+          label="Health Observations"
+          htmlFor="log-health"
+          hint={
+            (animalsDied > 0 || animalsSick > 0) ? (
+              <span style={{ color: 'var(--neutral-dark)', fontWeight: 600 }}>
+                Template auto-generated for {animalsDied} dead and {animalsSick} sick animal(s).{' '}
+                <button
+                  type="button"
+                  onClick={handleInsertTemplate}
+                  style={{ background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', color: 'var(--secondary-green)', fontWeight: 700, padding: 0 }}
+                >
+                  Reset Template
+                </button>
+              </span>
+            ) : undefined
+          }
+        >
+          <FormTextarea
+            id="log-health"
+            placeholder="Describe any health observations..."
+            rows={animalsDied > 0 || animalsSick > 0 ? 5 : 2}
+            {...register('health_observations')}
+          />
         </FormField>
 
         <FormField label="General Notes" htmlFor="log-notes">

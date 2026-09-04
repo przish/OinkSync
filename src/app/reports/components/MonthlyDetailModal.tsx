@@ -280,41 +280,58 @@ export function MonthlyDetailModal({
 
                 {data.receipts && data.receipts.length > 0 ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12 }}>
-                    {data.receipts.map((rcpt) => (
-                      <div
-                        key={rcpt.id}
-                        onClick={() => setSelectedReceipt(rcpt.url)}
-                        style={{
-                          borderRadius: 'var(--radius-md)',
-                          border: '1.5px solid var(--card-border)',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          background: 'white',
-                          boxShadow: 'var(--shadow-sm)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                        }}
-                      >
-                        <div style={{ height: 110, background: '#F3F4F6', position: 'relative' }}>
-                          <img
-                            src={rcpt.url}
-                            alt={rcpt.description || 'Receipt'}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
+                    {data.receipts.map((rcpt) => {
+                      const isPdfDoc = rcpt.url.toLowerCase().includes('.pdf');
+                      return (
+                        <div
+                          key={rcpt.id}
+                          onClick={() => setSelectedReceipt(rcpt.url)}
+                          style={{
+                            borderRadius: 'var(--radius-md)',
+                            border: '1.5px solid var(--card-border)',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            background: 'white',
+                            boxShadow: 'var(--shadow-sm)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                          }}
+                        >
+                          <div style={{ height: 110, background: '#F3F4F6', position: 'relative' }}>
+                            {isPdfDoc ? (
+                              <div style={{
+                                width: '100%', height: '100%',
+                                display: 'flex', flexDirection: 'column',
+                                alignItems: 'center', justifyContent: 'center',
+                                background: 'var(--palette-cream)',
+                                borderBottom: '1px solid var(--card-border)',
+                                gap: 6,
+                              }}>
+                                <FileText size={36} color="var(--secondary-green)" />
+                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--neutral-dark)' }}>PDF Receipt</span>
+                              </div>
+                            ) : (
+                              <img
+                                src={rcpt.url}
+                                alt={rcpt.description || 'Receipt'}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            )}
+                          </div>
+                          <div style={{ padding: '8px 10px', fontSize: 11 }}>
+                            <p style={{ fontWeight: 700, margin: 0, color: 'var(--neutral-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {rcpt.description || rcpt.category}
+                            </p>
+                            <p style={{ color: 'var(--secondary-green)', fontWeight: 800, margin: '2px 0 0' }}>
+                              {formatCurrency(rcpt.amount)}
+                            </p>
+                            <p style={{ color: 'var(--muted-dark)', fontSize: 10, margin: '2px 0 0' }}>
+                              {formatDate(rcpt.date)}
+                            </p>
+                          </div>
                         </div>
-                        <div style={{ padding: '8px 10px', fontSize: 11 }}>
-                          <p style={{ fontWeight: 700, margin: 0, color: 'var(--neutral-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {rcpt.description || rcpt.category}
-                          </p>
-                          <p style={{ color: 'var(--secondary-green)', fontWeight: 800, margin: '2px 0 0' }}>
-                            {formatCurrency(rcpt.amount)}
-                          </p>
-                          <p style={{ color: 'var(--muted-dark)', fontSize: 10, margin: '2px 0 0' }}>
-                            {formatDate(rcpt.date)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div style={{ padding: '16px', background: 'var(--palette-cream)', borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--muted-dark)' }}>
@@ -420,7 +437,7 @@ export function MonthlyDetailModal({
                 maxHeight: '90vh',
                 background: 'white',
                 borderRadius: 'var(--radius-lg)',
-                padding: 12,
+                padding: 16,
                 boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
               }}
             >
@@ -440,15 +457,64 @@ export function MonthlyDetailModal({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  zIndex: 10,
                 }}
               >
                 <X size={18} />
               </button>
-              <img
-                src={selectedReceipt}
-                alt="Receipt Full Preview"
-                style={{ maxWidth: '85vw', maxHeight: '80vh', objectFit: 'contain', borderRadius: 'var(--radius-sm)' }}
-              />
+
+              {selectedReceipt.toLowerCase().includes('.pdf') ? (
+                <div style={{ width: '82vw', height: '80vh', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E5E7EB', paddingBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <FileText size={18} color="var(--secondary-green)" />
+                      <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--neutral-dark)' }}>PDF Document Receipt</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <a
+                        href={selectedReceipt}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '6px 14px', borderRadius: 8, background: 'var(--palette-sage)',
+                          color: 'var(--palette-cream)', fontSize: 12, fontWeight: 700,
+                        }}
+                      >
+                        <ExternalLink size={14} /> Open in New Tab
+                      </a>
+                      <a
+                        href={selectedReceipt}
+                        download="receipt.pdf"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          padding: '6px 14px', borderRadius: 8, background: 'var(--palette-cream)',
+                          border: '1.5px solid var(--palette-sage)', color: 'var(--neutral-dark)',
+                          fontSize: 12, fontWeight: 700,
+                        }}
+                      >
+                        <Download size={14} /> Download PDF
+                      </a>
+                    </div>
+                  </div>
+                  <iframe
+                    src={selectedReceipt}
+                    title="Receipt PDF Document"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  />
+                </div>
+              ) : (
+                <img
+                  src={selectedReceipt}
+                  alt="Receipt Full Preview"
+                  style={{ maxWidth: '85vw', maxHeight: '80vh', objectFit: 'contain', borderRadius: 'var(--radius-sm)' }}
+                />
+              )}
             </div>
           </div>
         )}

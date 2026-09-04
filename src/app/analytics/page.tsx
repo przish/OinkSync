@@ -11,7 +11,7 @@ import { BarChart } from '@/components/Charts/BarChart';
 import { AreaChart } from '@/components/Charts/AreaChart';
 import { useAnalytics, type TimeRange } from '@/lib/hooks/useAnalytics';
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
-import { BarChart3, TrendingUp, DollarSign, PiggyBank } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, PiggyBank, Activity } from 'lucide-react';
 
 const TIME_RANGE_TABS = [
   { label: '6 Months', value: '6mo' },
@@ -49,7 +49,7 @@ export default function AnalyticsPage() {
         ) : null}
 
         {/* Key Metrics */}
-        <div className="grid-kpi">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--spacing-4)' }}>
           {[
             {
               label: 'Profit Margin',
@@ -70,10 +70,16 @@ export default function AnalyticsPage() {
               color: 'var(--error)',
             },
             {
-              label: 'Mortality Rate',
+              label: 'Herd Mortality Rate',
               value: kpi ? formatPercentage(kpi.mortality_rate) : '—',
               icon: <PiggyBank size={18} />,
               color: kpi && kpi.mortality_rate > 5 ? 'var(--error)' : 'var(--success)',
+            },
+            {
+              label: 'Litter Mortality Rate',
+              value: kpi ? formatPercentage(kpi.litter_mortality_rate ?? 0) : '—',
+              icon: <Activity size={18} />,
+              color: kpi && (kpi.litter_mortality_rate ?? 0) > 8 ? 'var(--error)' : 'var(--secondary-green)',
             },
           ].map((metric) => (
             <div key={metric.label} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

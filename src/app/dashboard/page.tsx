@@ -189,60 +189,113 @@ export default function DashboardPage() {
         )}
 
         {/* Distribution Summary (admin only) */}
-        {isAdmin && (
-          <Card>
-            <CardHeader
-              title="Profit & Capital Distribution Policy"
-              subtitle="Capital is equally contributed; operations profit is distributed by role performance"
-              icon={<Users size={18} color="var(--secondary-green)" />}
-            />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
-              <div style={{
-                padding: '14px 16px',
-                background: 'var(--palette-rose)',
-                borderRadius: 'var(--radius-md)',
-                border: '1.5px solid var(--palette-blush)',
-              }}>
-                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>Pen Manager Work</p>
-                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>50% Share</p>
-                <p style={{ fontSize: 11, color: 'var(--palette-sage)', marginTop: 4, fontWeight: 600 }}>From operational profit share</p>
-              </div>
+        {isAdmin && (() => {
+          const netProfit = Math.max(0, kpi?.net_profit ?? 0);
+          const operationsPool = netProfit * 0.5;
+          const investorPool = netProfit * 0.5;
+          const activeMembers = 4; // Equal investor share across members
+          const investorDividend = activeMembers > 0 ? investorPool / activeMembers : 0;
 
-              <div style={{
-                padding: '14px 16px',
-                background: 'var(--palette-cream)',
-                borderRadius: 'var(--radius-md)',
-                border: '1.5px solid var(--palette-sage)',
-              }}>
-                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>General Manager</p>
-                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--palette-sage)' }}>25% Share</p>
-                <p style={{ fontSize: 11, color: 'var(--neutral-dark)', marginTop: 4, fontWeight: 600 }}>From operational profit share</p>
-              </div>
+          const penManagerWork = operationsPool * 0.50;
+          const penManagerTotal = penManagerWork + investorDividend;
 
-              <div style={{
-                padding: '14px 16px',
-                background: 'var(--palette-cream)',
-                borderRadius: 'var(--radius-md)',
-                border: '1.5px solid var(--palette-sage)',
-              }}>
-                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>Logistics Team</p>
-                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--palette-sage)' }}>25% Share</p>
-                <p style={{ fontSize: 11, color: 'var(--neutral-dark)', marginTop: 4, fontWeight: 600 }}>From operational profit share</p>
-              </div>
+          const gmWork = operationsPool * 0.25;
+          const gmTotal = gmWork + investorDividend;
 
-              <div style={{
-                padding: '14px 16px',
-                background: 'var(--palette-blush)',
-                borderRadius: 'var(--radius-md)',
-                border: '1.5px solid var(--palette-rose)',
-              }}>
-                <p className="metric-label" style={{ color: 'var(--neutral-dark)', marginBottom: 4 }}>Investor Pool</p>
-                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>Equal Share</p>
-                <p style={{ fontSize: 11, color: 'var(--palette-sage)', marginTop: 4, fontWeight: 600 }}>Evenly across all members/investors</p>
+          const logisticsWork = operationsPool * 0.25;
+          const logisticsTotal = logisticsWork + investorDividend;
+
+          return (
+            <Card>
+              <CardHeader
+                title="Profit & Capital Distribution Policy"
+                subtitle="Capital is equally contributed; operations profit is distributed by role performance"
+                icon={<Users size={18} color="var(--secondary-green)" />}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14 }}>
+                <div style={{
+                  padding: '14px 16px',
+                  background: 'var(--palette-rose)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid var(--palette-blush)',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>Pen Manager</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-blush)', padding: '2px 6px', borderRadius: 4, color: 'var(--neutral-dark)' }}>50% Work</span>
+                  </div>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                    {formatCurrency(penManagerTotal)}
+                  </p>
+                  <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
+                    <p style={{ margin: 0 }}><strong>Work:</strong> {formatCurrency(penManagerWork)}</p>
+                    <p style={{ margin: 0 }}><strong>Dividend:</strong> {formatCurrency(investorDividend)}</p>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '14px 16px',
+                  background: 'var(--palette-cream)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid var(--palette-sage)',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>General Manager</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-sage)', color: 'var(--palette-cream)', padding: '2px 6px', borderRadius: 4 }}>25% Work</span>
+                  </div>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                    {formatCurrency(gmTotal)}
+                  </p>
+                  <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
+                    <p style={{ margin: 0 }}><strong>Work:</strong> {formatCurrency(gmWork)}</p>
+                    <p style={{ margin: 0 }}><strong>Dividend:</strong> {formatCurrency(investorDividend)}</p>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '14px 16px',
+                  background: 'var(--palette-cream)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid var(--palette-sage)',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>Logistics Team</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-sage)', color: 'var(--palette-cream)', padding: '2px 6px', borderRadius: 4 }}>25% Work</span>
+                  </div>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                    {formatCurrency(logisticsTotal)}
+                  </p>
+                  <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
+                    <p style={{ margin: 0 }}><strong>Work:</strong> {formatCurrency(logisticsWork)}</p>
+                    <p style={{ margin: 0 }}><strong>Dividend:</strong> {formatCurrency(investorDividend)}</p>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '14px 16px',
+                  background: 'var(--palette-blush)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1.5px solid var(--palette-rose)',
+                  display: 'flex', flexDirection: 'column', gap: 6,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>Investor Pool</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-rose)', padding: '2px 6px', borderRadius: 4, color: 'var(--neutral-dark)' }}>Equal Share</span>
+                  </div>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                    {formatCurrency(investorDividend)}
+                  </p>
+                  <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
+                    <p style={{ margin: 0 }}><strong>Dividend Only:</strong> Equal share</p>
+                    <p style={{ margin: 0 }}><strong>Pool Total:</strong> {formatCurrency(investorPool)}</p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </Card>
-        )}
+            </Card>
+          );
+        })()}
 
         {/* Recent Transactions */}
         <Card>

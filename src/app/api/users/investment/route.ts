@@ -13,19 +13,31 @@ export async function GET() {
       throw new UnauthorizedError();
     }
 
-    // Fetch user's pending investment transaction
-    const { data: pendingTx, error } = await supabase
+    // Fetch user's pending investment transaction (support both user_id and created_by column)
+    let pendingTx = null;
+    const { data: byUser, error: errUser } = await supabase
       .from('transactions')
       .select('*')
-      .eq('created_by', user.id)
+      .eq('user_id', user.id)
       .eq('category', 'investment')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (error) {
-      throw error;
+    if (!errUser) {
+      pendingTx = byUser;
+    } else {
+      const { data: byCreator } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('created_by', user.id)
+        .eq('category', 'investment')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      pendingTx = byCreator;
     }
 
     return successResponse({
@@ -58,15 +70,31 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if user already has a pending investment submission
-    const { data: existingPending } = await supabase
+    let existingPending: any = null;
+    const { data: pendingByUser } = await supabase
       .from('transactions')
       .select('*')
-      .eq('created_by', user.id)
+      .eq('user_id', user.id)
       .eq('category', 'investment')
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    if (pendingByUser) {
+      existingPending = pendingByUser;
+    } else {
+      const { data: pendingByCreator } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('created_by', user.id)
+        .eq('category', 'investment')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      existingPending = pendingByCreator;
+    }
 
     const now = Date.now();
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -102,23 +130,45 @@ export async function POST(req: NextRequest) {
 
     // Create new pending investment transaction
     const today = new Date().toISOString().split('T')[0];
-    const { data: newTx, error: insertErr } = await supabase
+    
+    // Attempt insert with user_id first (matching schema)
+    let newTx = null;
+    const { data: tx1, error: err1 } = await supabase
       .from('transactions')
       .insert({
         transaction_date: today,
-        transaction_type: 'capital',
+        transaction_type: 'income',
         category: 'investment',
         amount,
         description: body.description || 'Member investment contribution',
         receipt_url: receiptUrl,
         status: 'pending',
-        created_by: user.id,
+        user_id: user.id,
       })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (insertErr) {
-      throw insertErr;
+    if (!err1 && tx1) {
+      newTx = tx1;
+    } else {
+      // Fallback with created_by if schema used created_by
+      const { data: tx2, error: err2 } = await supabase
+        .from('transactions')
+        .insert({
+          transaction_date: today,
+          transaction_type: 'capital',
+          category: 'investment',
+          amount,
+          description: body.description || 'Member investment contribution',
+          receipt_url: receiptUrl,
+          status: 'pending',
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (err2) throw err2;
+      newTx = tx2;
     }
 
     return successResponse({ transaction: newTx, message: 'Investment submitted for General Manager approval' }, 201);

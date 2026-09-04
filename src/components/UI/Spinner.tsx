@@ -45,20 +45,23 @@ export function Skeleton({ width, height = 16, className, rounded = false }: Ske
 
 export function SkeletonCard() {
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <Skeleton height={12} width="60%" />
-      <Skeleton height={32} width="80%" />
-      <Skeleton height={12} width="40%" />
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14, minHeight: 120 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Skeleton height={14} width="45%" />
+        <Skeleton height={24} width={24} rounded />
+      </div>
+      <Skeleton height={32} width="75%" />
+      <Skeleton height={12} width="35%" />
     </div>
   );
 }
 
-export function SkeletonRow() {
+export function SkeletonRow({ columns = 6 }: { columns?: number }) {
   return (
     <tr>
-      {Array.from({ length: 5 }).map((_, i) => (
+      {Array.from({ length: columns }).map((_, i) => (
         <td key={i} style={{ padding: '14px 16px' }}>
-          <Skeleton height={12} />
+          <Skeleton height={14} width={i === 0 ? '70%' : i === 1 ? '85%' : '50%'} />
         </td>
       ))}
     </tr>
