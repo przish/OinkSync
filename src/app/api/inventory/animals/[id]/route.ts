@@ -61,6 +61,14 @@ export async function PATCH(
       updateData.pen_id = body.pen_id;
     }
 
+    if (body.animal_type !== undefined) {
+      updateData.animal_type = body.animal_type;
+    }
+
+    if (body.gender !== undefined) {
+      updateData.gender = body.gender;
+    }
+
     if (body.sale_date !== undefined) {
       updateData.sale_date = body.sale_date;
       updateData.status = 'sold';
