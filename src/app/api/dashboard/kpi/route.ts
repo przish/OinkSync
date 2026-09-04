@@ -121,6 +121,27 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Piglet-specific mortality rate
+    let litterMortRate = 0;
+    try {
+      const { count: totalPiglets } = await supabase
+        .from('animals')
+        .select('*', { count: 'exact', head: true })
+        .eq('animal_type', 'piglet');
+
+      const { count: deadPiglets } = await supabase
+        .from('animals')
+        .select('*', { count: 'exact', head: true })
+        .eq('animal_type', 'piglet')
+        .eq('status', 'deceased');
+
+      if ((totalPiglets ?? 0) > 0) {
+        litterMortRate = Number((((deadPiglets ?? 0) / (totalPiglets ?? 1)) * 100).toFixed(2));
+      }
+    } catch {
+      // Fallback cleanly if query fails
+    }
+
     const calcChange = (current: number, previous: number | undefined): number | null => {
       if (!previous || previous === 0) return null;
       return Number((((current - previous) / Math.abs(previous)) * 100).toFixed(2));
@@ -134,6 +155,7 @@ export async function GET(request: NextRequest) {
       active_pig_count: Number(currentKpi?.active_pig_count) || 0,
       mortality_count: Number(currentKpi?.mortality_count) || 0,
       mortality_rate: Number(currentKpi?.mortality_rate) || 0,
+      litter_mortality_rate: litterMortRate,
       pending_transactions: Number(currentKpi?.pending_transactions) || 0,
       total_capital: Number(currentKpi?.total_capital) || 0,
       revenue_change_percent: calcChange(Number(currentKpi?.total_revenue) || 0, undefined),
