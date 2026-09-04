@@ -92,11 +92,23 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
     }
 
     setServerError(null);
-    setIsSubmitting(true);
 
     const qtyNumber = animalType === 'piglet' ? (Number(quantity) || 1) : 1;
     const numMales = Number(maleCount) || 0;
     const numFemales = Number(femaleCount) || 0;
+
+    if (animalType === 'piglet') {
+      if (!quantity || Number(quantity) <= 0) {
+        setServerError('Please enter a valid piglet quantity.');
+        return;
+      }
+      if (numMales + numFemales > qtyNumber) {
+        setServerError(`Total male (${numMales}) and female (${numFemales}) piglets cannot exceed total quantity (${qtyNumber}).`);
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
 
     const payload: CreateAnimalRequest = {
       pen_id: penId,
@@ -357,9 +369,28 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
                   onChange={(e) => setFemaleCount(e.target.value ? Number(e.target.value) : '')}
                   className="form-input"
                   placeholder="Count"
+                  style={
+                    typeof quantity === 'number' && (Number(maleCount || 0) + Number(femaleCount || 0) > quantity)
+                      ? { borderColor: 'var(--palette-blush)', background: 'var(--palette-rose)' }
+                      : undefined
+                  }
                 />
               </FormField>
             </div>
+
+            {typeof quantity === 'number' && quantity > 0 && (Number(maleCount || 0) + Number(femaleCount || 0) > quantity) && (
+              <div style={{
+                padding: '8px 12px',
+                background: 'var(--palette-rose)',
+                border: '1.5px solid var(--palette-blush)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--neutral-dark)',
+                fontSize: 12,
+                fontWeight: 700,
+              }}>
+                ⚠️ Total male ({Number(maleCount || 0)}) and female ({Number(femaleCount || 0)}) count ({Number(maleCount || 0) + Number(femaleCount || 0)}) exceeds the total quantity of {quantity} piglets.
+              </div>
+            )}
 
             <div className="form-grid form-grid-2">
               <FormField label="Birth Date" htmlFor="piglet-birth" required>
