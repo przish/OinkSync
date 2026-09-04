@@ -55,7 +55,7 @@ export async function GET() {
     const { data: userInvestTx } = await supabase
       .from('transactions')
       .select('amount')
-      .eq('created_by', profile.id)
+      .eq('user_id', profile.id)
       .eq('category', 'investment')
       .eq('status', 'approved');
 
