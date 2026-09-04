@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Target, TrendingUp, CheckCircle, AlertCircle, Calendar, ArrowRight, DollarSign, Clock, Layers } from 'lucide-react';
+import { Target, TrendingUp, CheckCircle, AlertCircle, Calendar, ArrowRight, DollarSign, Clock, Layers, ShieldAlert } from 'lucide-react';
 import { TopBar } from '@/components/Navigation/TopBar';
 import { Card, CardHeader } from '@/components/UI/Card';
 import { Button } from '@/components/UI/Button';
@@ -31,6 +31,7 @@ export default function ScalingPlanPage() {
   const [targetSows, setTargetSows] = useState<number>(3);
   const [sowCost, setSowCost] = useState<number>(25000);
   const [pigletsPerSow, setPigletsPerSow] = useState<number>(10);
+  const [litterMortalityRate, setLitterMortalityRate] = useState<number>(5);
   const [rearingCostPerPig, setRearingCostPerPig] = useState<number>(4760);
   const [salePricePerKg, setSalePricePerKg] = useState<number>(220);
   const [targetMarketKg, setTargetMarketKg] = useState<number>(90);
@@ -73,12 +74,14 @@ export default function ScalingPlanPage() {
     fetchData();
   }, [fetchData]);
 
-  // Total Piglets Expected
-  const totalFatteners = targetSows * pigletsPerSow;
+  // Total Piglets Expected & Mortality Loss
+  const totalBornPiglets = targetSows * pigletsPerSow;
+  const deceasedPiglets = Math.round(totalBornPiglets * (litterMortalityRate / 100));
+  const marketableFatteners = Math.max(0, totalBornPiglets - deceasedPiglets);
 
   // Capital Calculations: Sow Purchase + Feed/Medication up to Fattener Stage
   const sowAcquisitionTotal = targetSows * sowCost;
-  const rearingExpensesTotal = totalFatteners * rearingCostPerPig;
+  const rearingExpensesTotal = marketableFatteners * rearingCostPerPig;
   const requiredCapital = sowAcquisitionTotal + rearingExpensesTotal;
 
   const currentCapital = data?.current_capital || 0;
@@ -87,9 +90,20 @@ export default function ScalingPlanPage() {
 
   // Expected Revenue at Month 9 Sales
   const expectedRevenuePerPig = salePricePerKg * targetMarketKg;
-  const projectedTotalHarvestRevenue = totalFatteners * expectedRevenuePerPig;
+  const projectedTotalHarvestRevenue = marketableFatteners * expectedRevenuePerPig;
   const projectedNetHarvestProfit = projectedTotalHarvestRevenue - rearingExpensesTotal;
   const projectedCycleRoi = requiredCapital > 0 ? (projectedNetHarvestProfit / requiredCapital) * 100 : 0;
+
+  // Ideal (0% mortality) baseline calculations for Margin of Error:
+  const idealHarvestRevenue = totalBornPiglets * expectedRevenuePerPig;
+  const idealRearingExpenses = totalBornPiglets * rearingCostPerPig;
+  const idealNetHarvestProfit = idealHarvestRevenue - idealRearingExpenses;
+
+  // Profit Margin of Error (variance between 0% mortality benchmark and realistic expectation)
+  const profitMarginOfErrorAmount = Math.max(0, idealNetHarvestProfit - projectedNetHarvestProfit);
+  const profitMarginOfErrorPercent = idealNetHarvestProfit > 0
+    ? (profitMarginOfErrorAmount / idealNetHarvestProfit) * 100
+    : 0;
 
   // 9-Month Staggered Cashflow Plan
   const staggeredCashflow = useMemo(() => {
@@ -126,7 +140,7 @@ export default function ScalingPlanPage() {
       {
         month: 5,
         name: 'Farrowing & Lactation',
-        description: `Birth of approx. ${totalFatteners} piglets, colostrum feeding, iron shots & pre-starter creep feed.`,
+        description: `Birth of approx. ${totalBornPiglets} piglets (${deceasedPiglets > 0 ? `${deceasedPiglets} estimated loss from ${litterMortalityRate}% mortality, yielding ${marketableFatteners} surviving piglets` : 'zero expected mortality'}). Colostrum feeding & initial creep feed.`,
         outflow: rearingExpensesTotal * 0.12,
         inflow: 0,
       },
@@ -154,7 +168,7 @@ export default function ScalingPlanPage() {
       {
         month: 9,
         name: 'Final Finishing & Market Harvest!',
-        description: `Animals achieve ~${targetMarketKg}kg target weight. Harvest and market dispatch to buyers.`,
+        description: `${marketableFatteners} animals achieve ~${targetMarketKg}kg target weight. Harvest and market dispatch to buyers.`,
         outflow: rearingExpensesTotal * 0.10,
         inflow: projectedTotalHarvestRevenue,
       },
@@ -170,7 +184,7 @@ export default function ScalingPlanPage() {
         netCashflow: net,
       };
     });
-  }, [startDate, targetSows, sowAcquisitionTotal, rearingExpensesTotal, totalFatteners, targetMarketKg, projectedTotalHarvestRevenue]);
+  }, [startDate, targetSows, sowAcquisitionTotal, rearingExpensesTotal, totalBornPiglets, deceasedPiglets, litterMortalityRate, marketableFatteners, targetMarketKg, projectedTotalHarvestRevenue]);
 
   return (
     <>
@@ -233,8 +247,8 @@ export default function ScalingPlanPage() {
                   </div>
                   <p style={{ fontSize: 14, color: 'var(--palette-cream)', opacity: 0.9, marginTop: 4 }}>
                     {isReady
-                      ? `Farm capital of ${formatCurrency(currentCapital)} is ready to fund ${targetSows} sows and raise ${totalFatteners} piglets to fattener stage.`
-                      : `Capital gap of ${formatCurrency(capitalGap)} required to procure ${targetSows} sows and fund their ${totalFatteners} piglets through 9 months.`}
+                      ? `Farm capital of ${formatCurrency(currentCapital)} is ready to fund ${targetSows} sows and raise ${marketableFatteners} fatteners (${totalBornPiglets} born, ${litterMortalityRate}% mortality) to market.`
+                      : `Capital gap of ${formatCurrency(capitalGap)} required to procure ${targetSows} sows and fund their ${marketableFatteners} fatteners through 9 months.`}
                   </p>
                 </div>
               </div>
@@ -288,8 +302,53 @@ export default function ScalingPlanPage() {
                     </div>
                   </div>
 
-                  <div style={{ padding: '10px 12px', background: 'var(--palette-cream)', borderRadius: 'var(--radius-sm)', fontSize: 12 }}>
-                    <strong>Expected Litter:</strong> {totalFatteners} piglets to be reared to Fattener stage.
+                  <div className="form-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="form-label" htmlFor="litter-mortality" style={{ margin: 0 }}>
+                        Litter Mortality Rate (%)
+                      </label>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: litterMortalityRate > 10 ? 'var(--error)' : 'var(--secondary-green)' }}>
+                        {litterMortalityRate}%
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                      <input
+                        id="litter-mortality"
+                        type="range"
+                        min="0"
+                        max="30"
+                        step="1"
+                        style={{ flex: 1, accentColor: 'var(--secondary-green)' }}
+                        value={litterMortalityRate}
+                        onChange={(e) => setLitterMortalityRate(Math.max(0, Math.min(30, parseInt(e.target.value) || 0)))}
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        style={{ width: 64, textAlign: 'center' }}
+                        className="form-input"
+                        value={litterMortalityRate}
+                        onChange={(e) => setLitterMortalityRate(Math.max(0, Math.min(30, parseInt(e.target.value) || 0)))}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px 14px', background: 'var(--palette-cream)', borderRadius: 'var(--radius-sm)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 6, border: '1px solid var(--card-border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--muted-dark)' }}>Total Born Piglets:</span>
+                      <strong>{totalBornPiglets} piglets</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--muted-dark)' }}>Mortality Allowance ({litterMortalityRate}%):</span>
+                      <strong style={{ color: deceasedPiglets > 0 ? 'var(--error)' : 'inherit' }}>
+                        {deceasedPiglets > 0 ? `-${deceasedPiglets} deceased` : '0 loss'}
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--card-border)', paddingTop: 6, marginTop: 2 }}>
+                      <span style={{ fontWeight: 700, color: 'var(--neutral-dark)' }}>Marketable Fatteners:</span>
+                      <strong style={{ fontWeight: 800, color: 'var(--secondary-green)', fontSize: 13 }}>{marketableFatteners} pigs</strong>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -309,7 +368,7 @@ export default function ScalingPlanPage() {
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6, borderBottom: '1px solid var(--card-border)' }}>
                     <span style={{ fontSize: 13, color: 'var(--muted-dark)' }}>
-                      Fattener Rearing ({totalFatteners} × {formatCurrency(rearingCostPerPig)}):
+                      Fattener Rearing ({marketableFatteners} × {formatCurrency(rearingCostPerPig)}):
                     </span>
                     <strong style={{ fontSize: 14 }}>{formatCurrency(rearingExpensesTotal)}</strong>
                   </div>
@@ -370,12 +429,100 @@ export default function ScalingPlanPage() {
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--muted-dark)' }}>Projected Harvest Revenue:</span>
+                    <span style={{ color: 'var(--muted-dark)' }}>Projected Harvest Revenue ({marketableFatteners} pigs):</span>
                     <strong style={{ color: 'var(--success)' }}>{formatCurrency(projectedTotalHarvestRevenue)}</strong>
                   </div>
                 </div>
               </Card>
             </div>
+
+            {/* Profit Margin of Error & Sensitivity Analysis */}
+            <Card>
+              <CardHeader
+                title="Profit Margin of Error & Risk Sensitivity"
+                subtitle="Calculates the variance between 0% optimal benchmark and configured mortality risk"
+                icon={<ShieldAlert size={18} color="var(--secondary-green)" />}
+              />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginTop: 4 }}>
+                <div style={{
+                  padding: '16px',
+                  background: 'var(--palette-cream)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--card-border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--neutral-dark)' }}>Optimal Benchmark (0% Mortality)</span>
+                    <span style={{ fontSize: 11, padding: '2px 8px', background: 'var(--palette-rose)', borderRadius: 12, fontWeight: 700 }}>Optimal</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--muted-dark)' }}>
+                    All {totalBornPiglets} piglets reared to ~{targetMarketKg}kg market weight
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
+                    <span style={{ fontSize: 12, color: 'var(--muted-dark)' }}>Gross Revenue:</span>
+                    <strong style={{ fontSize: 13 }}>{formatCurrency(idealHarvestRevenue)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 12, color: 'var(--muted-dark)' }}>Net Harvest Profit:</span>
+                    <strong style={{ fontSize: 15, fontWeight: 800, color: 'var(--success)' }}>{formatCurrency(idealNetHarvestProfit)}</strong>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '16px',
+                  background: 'var(--palette-cream)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--card-border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--neutral-dark)' }}>Realized Projection ({litterMortalityRate}% Mortality)</span>
+                    <span style={{ fontSize: 11, padding: '2px 8px', background: 'var(--palette-blush)', borderRadius: 12, fontWeight: 700 }}>Realistic</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--muted-dark)' }}>
+                    {marketableFatteners} surviving fatteners marketed (-{deceasedPiglets} deceased)
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
+                    <span style={{ fontSize: 12, color: 'var(--muted-dark)' }}>Gross Revenue:</span>
+                    <strong style={{ fontSize: 13 }}>{formatCurrency(projectedTotalHarvestRevenue)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 12, color: 'var(--muted-dark)' }}>Net Harvest Profit:</span>
+                    <strong style={{ fontSize: 15, fontWeight: 800, color: 'var(--secondary-green)' }}>{formatCurrency(projectedNetHarvestProfit)}</strong>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '16px',
+                  background: 'var(--palette-rose)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--palette-blush)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--neutral-dark)' }}>Profit Margin of Error</span>
+                    <span style={{ fontSize: 11, padding: '2px 8px', background: 'rgba(0,0,0,0.06)', borderRadius: 12, fontWeight: 700 }}>Risk Buffer</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--muted-dark)' }}>
+                    Expected profit reduction due to piglet mortality
+                  </div>
+                  <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--neutral-dark)' }}>
+                      ± {formatCurrency(profitMarginOfErrorAmount)}
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted-dark)' }}>
+                      {formatPercentage(profitMarginOfErrorPercent)} margin of error from optimal profit
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
 
             {/* Staggered 9-Month Cashflow Plan */}
             <Card style={{ padding: 0 }}>
