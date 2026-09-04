@@ -3,9 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ExternalLink, CheckCircle, XCircle } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/UI/Badge';
-import { Button } from '@/components/UI/Button';
 import { SkeletonRow } from '@/components/UI/Spinner';
 import { formatCurrency, formatDate } from '@/lib/utils/formatting';
 import type { TransactionWithUser } from '@/types/api';
@@ -13,17 +12,11 @@ import type { TransactionWithUser } from '@/types/api';
 interface TransactionPreviewProps {
   transactions: TransactionWithUser[];
   isLoading?: boolean;
-  canApprove?: boolean;
-  onApprove?: (id: string) => void;
-  onReject?: (id: string) => void;
 }
 
 export function TransactionPreview({
   transactions,
   isLoading = false,
-  canApprove = false,
-  onApprove,
-  onReject,
 }: TransactionPreviewProps) {
   const router = useRouter();
 
@@ -39,7 +32,6 @@ export function TransactionPreview({
               <th>Amount</th>
               <th>Type</th>
               <th>Status</th>
-              {canApprove && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -47,7 +39,7 @@ export function TransactionPreview({
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
             ) : transactions.length === 0 ? (
               <tr>
-                <td colSpan={canApprove ? 7 : 6}>
+                <td colSpan={6}>
                   <div className="empty-state">
                     <div className="empty-state-icon">💸</div>
                     <p style={{ fontWeight: 600, marginTop: 8 }}>No transactions yet</p>
@@ -86,40 +78,6 @@ export function TransactionPreview({
                   </td>
                   <td><Badge variant={tx.transaction_type} /></td>
                   <td><Badge variant={tx.status} /></td>
-                  {canApprove && (
-                    <td>
-                      {tx.status === 'pending' ? (
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            leftIcon={<CheckCircle size={13} />}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onApprove?.(tx.id);
-                            }}
-                            style={{ color: 'var(--income-green)', borderColor: 'var(--income-green)' }}
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            leftIcon={<XCircle size={13} />}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onReject?.(tx.id);
-                            }}
-                            style={{ color: 'var(--expense-red)', borderColor: 'var(--expense-red)' }}
-                          >
-                            Reject
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-small text-muted">—</span>
-                      )}
-                    </td>
-                  )}
                 </tr>
               ))
             )}
