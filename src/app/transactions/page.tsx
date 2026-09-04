@@ -159,7 +159,7 @@ export default function TransactionsPage() {
                       <td>
                         <span style={{
                           fontWeight: 700,
-                          color: tx.transaction_type === 'income' ? 'var(--success)' : 'var(--error)',
+                          color: tx.transaction_type === 'income' ? 'var(--income-green)' : 'var(--expense-red)',
                         }}>
                           {tx.transaction_type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                         </span>
@@ -173,11 +173,11 @@ export default function TransactionsPage() {
                           {tx.status === 'pending' ? (
                             <div style={{ display: 'flex', gap: 6 }}>
                               <Button variant="ghost" size="sm" onClick={() => handleApprove(tx.id)}
-                                style={{ color: 'var(--success)', borderColor: 'var(--success)', padding: '4px 10px' }}>
+                                style={{ color: 'var(--income-green)', borderColor: 'var(--income-green)', padding: '4px 10px' }}>
                                 ✓
                               </Button>
                               <Button variant="ghost" size="sm" onClick={() => handleReject(tx.id)}
-                                style={{ color: 'var(--error)', borderColor: 'var(--error)', padding: '4px 10px' }}>
+                                style={{ color: 'var(--expense-red)', borderColor: 'var(--expense-red)', padding: '4px 10px' }}>
                                 ✗
                               </Button>
                             </div>
