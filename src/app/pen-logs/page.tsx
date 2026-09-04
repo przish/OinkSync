@@ -109,7 +109,7 @@ export default function PenLogsPage() {
       <TopBar title="Pen Logs" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Card style={{ padding: 0 }}>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h3 style={{ fontWeight: 700, fontSize: 16 }}>Daily Pen Logs</h3>
@@ -137,23 +137,23 @@ export default function PenLogsPage() {
             </div>
           </div>
 
-          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, overflow: 'hidden' }}>
             <table className="table">
               <thead>
                 <tr>
-                  <th>Date</th>
+                  <th>Log Date</th>
                   <th>Pen</th>
-                  <th>Feed</th>
+                  <th>Feed Type</th>
+                  <th>Feed (kg)</th>
                   <th>Died</th>
                   <th>Sick</th>
-                  <th>Cleaning</th>
                   <th>Issues</th>
                   <th>Logged By</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
+                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
                 ) : logs.length === 0 ? (
                   <tr>
                     <td colSpan={8}>
