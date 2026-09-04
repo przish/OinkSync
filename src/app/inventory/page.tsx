@@ -40,6 +40,9 @@ export default function InventoryPage() {
   };
 
   const sickAnimals = animals.filter((a) => a.health_status === 'sick' || a.health_status === 'recovering');
+  const totalCapacity = pens.reduce((acc, p) => acc + (p.capacity || 0), 0);
+  const totalAnimalsInPens = pens.reduce((acc, p) => acc + (p.current_count || 0), 0);
+  const overallOccupancy = totalCapacity > 0 ? Math.round((totalAnimalsInPens / totalCapacity) * 100) : 0;
 
   return (
     <>
@@ -55,7 +58,7 @@ export default function InventoryPage() {
               <Card>
                 <CardHeader title="Total Pigs" subtitle="All active animals" icon={<PiggyBank size={18} color="var(--secondary-green)" />} />
                 <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--secondary-green)', marginTop: 8 }}>
-                  {summary?.total_animals ?? 0}
+                  {summary?.total_active ?? animals.length}
                 </p>
                 <p style={{ fontSize: 12, color: 'var(--muted-dark)', marginTop: 4 }}>
                   {summary?.breeding_sows ?? 0} sows &bull; {summary?.piglets ?? 0} piglets
@@ -68,7 +71,7 @@ export default function InventoryPage() {
                   {pens.filter((p) => (p.current_count ?? 0) > 0).length} / {pens.length}
                 </p>
                 <p style={{ fontSize: 12, color: 'var(--muted-dark)', marginTop: 4 }}>
-                  Overall {summary?.occupancy_rate ?? 0}% capacity
+                  Overall {overallOccupancy}% capacity
                 </p>
               </Card>
 
@@ -111,8 +114,6 @@ export default function InventoryPage() {
 
           <PenList
             pens={pens}
-            isLoading={isLoading}
-            onPenClick={() => {}}
             onMovePiglet={(pen) => setMoveTargetPen(pen)}
           />
         </div>
