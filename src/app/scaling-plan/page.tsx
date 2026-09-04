@@ -247,8 +247,8 @@ export default function ScalingPlanPage() {
                   </div>
                   <p style={{ fontSize: 14, color: 'var(--palette-cream)', opacity: 0.9, marginTop: 4 }}>
                     {isReady
-                      ? `Farm capital of ${formatCurrency(currentCapital)} is ready to fund ${targetSows} sows and raise ${marketableFatteners} fatteners (${totalBornPiglets} born, ${litterMortalityRate}% mortality) to market.`
-                      : `Capital gap of ${formatCurrency(capitalGap)} required to procure ${targetSows} sows and fund their ${marketableFatteners} fatteners through 9 months.`}
+                      ? `Farm capital of ${formatCurrency(currentCapital)} is ready to fund ${targetSows} sows. Revenue before mortality: ${formatCurrency(idealHarvestRevenue)} (${totalBornPiglets} born); Revenue after ${litterMortalityRate}% mortality: ${formatCurrency(projectedTotalHarvestRevenue)} (${marketableFatteners} harvest pigs).`
+                      : `Capital gap of ${formatCurrency(capitalGap)} required to fund ${targetSows} sows. Revenue before mortality: ${formatCurrency(idealHarvestRevenue)} (${totalBornPiglets} born); Revenue after ${litterMortalityRate}% mortality: ${formatCurrency(projectedTotalHarvestRevenue)} (${marketableFatteners} harvest pigs).`}
                   </p>
                 </div>
               </div>
@@ -428,9 +428,23 @@ export default function ScalingPlanPage() {
                     <strong>{staggeredCashflow[8]?.dateLabel || '—'}</strong>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--muted-dark)' }}>Projected Harvest Revenue ({marketableFatteners} pigs):</span>
-                    <strong style={{ color: 'var(--success)' }}>{formatCurrency(projectedTotalHarvestRevenue)}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, borderTop: '1px solid var(--card-border)', paddingTop: 10, marginTop: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                      <span style={{ color: 'var(--muted-dark)' }}>Revenue (Before Mortality Rate):</span>
+                      <strong style={{ color: 'var(--neutral-dark)' }}>{formatCurrency(idealHarvestRevenue)}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                      <span style={{ color: 'var(--muted-dark)' }}>Revenue (After {litterMortalityRate}% Mortality):</span>
+                      <strong style={{ color: 'var(--success)' }}>{formatCurrency(projectedTotalHarvestRevenue)}</strong>
+                    </div>
+
+                    {deceasedPiglets > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--error)' }}>
+                        <span>Mortality Deduction (-{deceasedPiglets} pigs):</span>
+                        <strong>-{formatCurrency(idealHarvestRevenue - projectedTotalHarvestRevenue)}</strong>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
