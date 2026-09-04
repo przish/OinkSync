@@ -14,6 +14,7 @@ import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
 import { BarChart3, TrendingUp, DollarSign, PiggyBank, Activity } from 'lucide-react';
 
 const TIME_RANGE_TABS = [
+  { label: '1 Month', value: '1mo' },
   { label: '6 Months', value: '6mo' },
   { label: '1 Year', value: '1yr' },
   { label: '2 Years', value: '2yr' },
@@ -37,6 +38,7 @@ export default function AnalyticsPage() {
             tabs={TIME_RANGE_TABS}
             value={timeRange}
             onChange={(v) => setTimeRange(v as TimeRange)}
+            size="sm"
             style={{ width: 'auto' }}
           />
         </div>
