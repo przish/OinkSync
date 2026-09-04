@@ -9,10 +9,10 @@ import type {
   ScalingReadiness,
 } from '@/types/api';
 
-export type TimeRange = '6mo' | '1yr' | '2yr';
+export type TimeRange = '1mo' | '6mo' | '1yr' | '2yr';
 
 function timeRangeToMonths(range: TimeRange): number {
-  return range === '6mo' ? 6 : range === '1yr' ? 12 : 24;
+  return range === '1mo' ? 1 : range === '6mo' ? 6 : range === '1yr' ? 12 : 24;
 }
 
 export function useAnalytics() {
