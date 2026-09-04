@@ -9,7 +9,7 @@ interface FormFieldProps {
   htmlFor?: string;
   error?: string;
   required?: boolean;
-  hint?: string;
+  hint?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }
