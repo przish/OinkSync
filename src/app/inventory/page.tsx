@@ -119,7 +119,7 @@ export default function InventoryPage() {
         </div>
 
         {/* All Animals Table */}
-        <Card style={{ padding: 0, overflow: 'hidden' }}>
+        <Card style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-xl)' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontWeight: 700, fontSize: 16 }}>
               All Animals
@@ -131,18 +131,18 @@ export default function InventoryPage() {
               Add Animal
             </Button>
           </div>
-          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, overflow: 'hidden' }}>
-            <table className="table">
+          <div className="table-wrapper" style={{ border: 'none', borderRadius: '0 0 var(--radius-xl) var(--radius-xl)', overflow: 'hidden' }}>
+            <table className="table" style={{ width: '100%' }}>
               <thead>
                 <tr>
-                  <th>Code</th>
-                  <th>Type</th>
-                  <th>Gender</th>
-                  <th>Pen</th>
-                  <th>Health</th>
-                  <th>Weight</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th style={{ width: '12%' }}>Code</th>
+                  <th style={{ width: '12%' }}>Type</th>
+                  <th style={{ width: '12%' }}>Gender</th>
+                  <th style={{ width: '18%' }}>Pen</th>
+                  <th style={{ width: '14%' }}>Health</th>
+                  <th style={{ width: '12%' }}>Weight</th>
+                  <th style={{ width: '12%' }}>Status</th>
+                  <th style={{ width: '8%', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
