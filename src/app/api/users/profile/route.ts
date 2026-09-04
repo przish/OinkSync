@@ -56,7 +56,7 @@ export async function GET() {
       .from('transactions')
       .select('amount')
       .eq('user_id', profile.id)
-      .eq('category', 'investment')
+      .or('category.eq.investment,description.ilike.%investment%')
       .eq('status', 'approved');
 
     const sumUserInvest = (userInvestTx || []).reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
