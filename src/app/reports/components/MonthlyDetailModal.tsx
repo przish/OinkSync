@@ -235,28 +235,28 @@ export function MonthlyDetailModal({
             <>
               {/* Key Metrics */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-                <div style={{ padding: 14, background: 'rgba(42, 104, 48, 0.08)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(42, 104, 48, 0.2)' }}>
-                  <p className="metric-label" style={{ color: 'var(--success)' }}>Total Revenue</p>
-                  <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--success)', marginTop: 4 }}>
+                <div style={{ padding: 14, background: 'var(--palette-cream)', borderRadius: 'var(--radius-lg)', border: '1.5px solid var(--palette-sage)' }}>
+                  <p className="metric-label" style={{ color: 'var(--income-green)', fontWeight: 700 }}>Total Revenue</p>
+                  <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--income-green)', marginTop: 4 }}>
                     {formatCurrency(data.analytics.total_revenue)}
                   </p>
                 </div>
 
-                <div style={{ padding: 14, background: 'rgba(186, 60, 60, 0.08)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(186, 60, 60, 0.2)' }}>
-                  <p className="metric-label" style={{ color: 'var(--error)' }}>Total Expenses</p>
-                  <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--error)', marginTop: 4 }}>
+                <div style={{ padding: 14, background: 'var(--palette-cream)', borderRadius: 'var(--radius-lg)', border: '1.5px solid var(--palette-blush)' }}>
+                  <p className="metric-label" style={{ color: 'var(--expense-red)', fontWeight: 700 }}>Total Expenses</p>
+                  <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--expense-red)', marginTop: 4 }}>
                     {formatCurrency(data.analytics.total_expenses)}
                   </p>
                 </div>
 
                 <div style={{
                   padding: 14,
-                  background: data.analytics.net_profit >= 0 ? 'var(--palette-rose)' : 'rgba(186, 60, 60, 0.1)',
+                  background: 'var(--palette-cream)',
                   borderRadius: 'var(--radius-lg)',
-                  border: '1px solid rgba(255, 207, 207, 0.9)',
+                  border: `1.5px solid ${data.analytics.net_profit >= 0 ? 'var(--palette-sage)' : 'var(--palette-blush)'}`,
                 }}>
-                  <p className="metric-label" style={{ color: '#883333' }}>Net Profit</p>
-                  <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--neutral-dark)', marginTop: 4 }}>
+                  <p className="metric-label" style={{ color: 'var(--neutral-dark)', fontWeight: 700 }}>Net Profit</p>
+                  <p style={{ fontSize: 20, fontWeight: 800, color: data.analytics.net_profit >= 0 ? 'var(--income-green)' : 'var(--expense-red)', marginTop: 4 }}>
                     {formatCurrency(data.analytics.net_profit)}
                   </p>
                 </div>
@@ -373,7 +373,7 @@ export function MonthlyDetailModal({
                                 textTransform: 'uppercase',
                                 fontSize: 11,
                                 fontWeight: 700,
-                                color: tx.transaction_type === 'income' ? 'var(--success)' : 'var(--error)',
+                                color: tx.transaction_type === 'income' ? 'var(--income-green)' : 'var(--expense-red)',
                               }}>
                                 {tx.transaction_type}
                               </span>
@@ -381,7 +381,7 @@ export function MonthlyDetailModal({
                             <td style={{
                               textAlign: 'right',
                               fontWeight: 800,
-                              color: tx.transaction_type === 'income' ? 'var(--success)' : 'var(--error)',
+                              color: tx.transaction_type === 'income' ? 'var(--income-green)' : 'var(--expense-red)',
                             }}>
                               {tx.transaction_type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                             </td>
