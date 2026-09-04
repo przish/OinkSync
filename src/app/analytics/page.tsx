@@ -14,14 +14,15 @@ import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
 import { BarChart3, TrendingUp, DollarSign, PiggyBank, Activity } from 'lucide-react';
 
 const TIME_RANGE_TABS = [
-  { label: '1 Month', value: '1mo' },
-  { label: '6 Months', value: '6mo' },
-  { label: '1 Year', value: '1yr' },
-  { label: '2 Years', value: '2yr' },
+  { label: '30 days', value: '30d' },
+  { label: '3 months', value: '3mo' },
+  { label: '6 months', value: '6mo' },
+  { label: '1 year', value: '1yr' },
+  { label: 'Max', value: 'max' },
 ];
 
 export default function AnalyticsPage() {
-  const [timeRange, setTimeRange] = useState<TimeRange>('1yr');
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const { kpi, revenueExpense, expenseBreakdown, roiTrend, scalingReadiness, isLoading, fetchAll } = useAnalytics();
 
   const load = useCallback(() => fetchAll(timeRange), [fetchAll, timeRange]);
@@ -84,15 +85,10 @@ export default function AnalyticsPage() {
               color: kpi && (kpi.litter_mortality_rate ?? 0) > 8 ? 'var(--expense-red)' : 'var(--income-green)',
             },
           ].map((metric) => {
-            const isExpense = metric.label === 'Total Expenses';
-            const isRevenue = metric.label === 'Total Revenue';
-            const isProfit = metric.label === 'Profit Margin';
-            const cardBg = (isExpense || isRevenue || isProfit) ? 'var(--palette-cream)' : 'var(--card-bg)';
+            const isExpense = metric.label === 'Total Expenses' || metric.color === 'var(--expense-red)';
             const cardBorder = isExpense
               ? '1.5px solid var(--palette-blush)'
-              : (isRevenue || isProfit)
-                ? '1.5px solid var(--palette-sage)'
-                : '1.5px solid var(--card-border)';
+              : '1.5px solid var(--palette-sage)';
 
             return (
               <div
@@ -102,7 +98,7 @@ export default function AnalyticsPage() {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 8,
-                  background: cardBg,
+                  background: 'var(--palette-cream)',
                   border: cardBorder,
                 }}
               >
@@ -128,7 +124,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Revenue vs Expenses Chart */}
-        <Card>
+        <Card style={{ background: 'var(--palette-cream)', border: '1.5px solid var(--palette-sage)' }}>
           <CardHeader
             title="Revenue vs Expenses"
             subtitle="Monthly comparison"
@@ -141,9 +137,9 @@ export default function AnalyticsPage() {
               data={revenueExpense}
               xKey="month"
               lines={[
-                { key: 'revenue', label: 'Revenue', color: '#2D7C2D' },
-                { key: 'expenses', label: 'Expenses', color: '#C85C5C' },
-                { key: 'net_profit', label: 'Net Profit', color: '#C4A57B' },
+                { key: 'revenue', label: 'Revenue', color: '#14532D' },
+                { key: 'expenses', label: 'Expenses', color: '#991B1B' },
+                { key: 'net_profit', label: 'Net Profit', color: '#86A788' },
               ]}
             />
           )}
@@ -152,7 +148,7 @@ export default function AnalyticsPage() {
         {/* Charts row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
           {/* Expense Breakdown */}
-          <Card>
+          <Card style={{ background: 'var(--palette-cream)', border: '1.5px solid var(--palette-blush)' }}>
             <CardHeader
               title="Expense Breakdown"
               subtitle="By category"
@@ -166,7 +162,7 @@ export default function AnalyticsPage() {
           </Card>
 
           {/* ROI Trend */}
-          <Card>
+          <Card style={{ background: 'var(--palette-cream)', border: '1.5px solid var(--palette-sage)' }}>
             <CardHeader
               title="ROI Trend"
               subtitle="Return on investment over time"
@@ -178,8 +174,9 @@ export default function AnalyticsPage() {
               <AreaChart
                 data={roiTrend}
                 areaKey="roi_percentage"
+                areaLabel="Return on Investment"
                 xKey="month"
-                color="#2D5016"
+                color="#14532D"
                 formatAsPercent
               />
             )}
@@ -188,7 +185,7 @@ export default function AnalyticsPage() {
 
         {/* Expense table */}
         {expenseBreakdown.length > 0 && (
-          <Card>
+          <Card style={{ background: 'var(--palette-cream)', border: '1.5px solid var(--palette-blush)' }}>
             <CardHeader title="Expense Category Breakdown" subtitle="Detailed view" />
             <div className="table-wrapper">
               <table className="table">
@@ -211,13 +208,13 @@ export default function AnalyticsPage() {
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{
-                            flex: 1, height: 6, background: 'var(--primary-beige)',
+                            flex: 1, height: 6, background: 'var(--palette-rose)',
                             borderRadius: 'var(--radius-full)', overflow: 'hidden',
                           }}>
                             <div style={{
                               height: '100%',
                               width: `${item.percentage_of_total}%`,
-                              background: 'var(--secondary-green)',
+                              background: 'var(--expense-red)',
                               borderRadius: 'var(--radius-full)',
                             }} />
                           </div>

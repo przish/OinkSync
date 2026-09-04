@@ -64,13 +64,12 @@ export async function POST(req: NextRequest) {
       throw new ValidationError('Receipt upload is required for investment approval');
     }
 
-    // Check if user already has a pending investment submission (one submission at a time)
-    const { data: existingPending } = await supabase
+    // Check if user has an existing investment submission (one submission at a time)
+    const { data: latestTx } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_id', user.id)
       .or('category.eq.investment,description.ilike.%investment%')
-      .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -78,34 +77,38 @@ export async function POST(req: NextRequest) {
     const now = Date.now();
     const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-    if (existingPending) {
-      const createdAt = new Date(existingPending.created_at).getTime();
+    if (latestTx) {
+      const createdAt = new Date(latestTx.created_at).getTime();
       const isWithin24Hours = (now - createdAt) <= ONE_DAY_MS;
 
-      if (!isWithin24Hours) {
+      if (isWithin24Hours) {
+        // User can edit files, receipt, or amount within the 24-hour window
+        const { data: updated, error: updateErr } = await supabase
+          .from('transactions')
+          .update({
+            amount,
+            receipt_url: receiptUrl,
+            description: body.description || 'Member investment contribution',
+            status: 'pending', // reset to pending so GM reviews the updated files
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', latestTx.id)
+          .select()
+          .single();
+
+        if (updateErr) {
+          throw updateErr;
+        }
+
+        return successResponse({ transaction: updated, message: 'Investment submission updated successfully' });
+      }
+
+      // If beyond 24 hours and still pending: block additional submissions
+      if (latestTx.status === 'pending') {
         throw new ValidationError(
           'Your investment submission is locked after 24 hours and is awaiting General Manager review. Only one submission is permitted at a time.'
         );
       }
-
-      // Update existing pending transaction
-      const { data: updated, error: updateErr } = await supabase
-        .from('transactions')
-        .update({
-          amount,
-          receipt_url: receiptUrl,
-          description: body.description || 'Member investment contribution',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', existingPending.id)
-        .select()
-        .single();
-
-      if (updateErr) {
-        throw updateErr;
-      }
-
-      return successResponse({ transaction: updated, message: 'Investment submission updated successfully' });
     }
 
     // Create new pending investment transaction

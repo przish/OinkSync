@@ -16,6 +16,7 @@ interface AreaChartProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Array<Record<string, any>>;
   areaKey: string;
+  areaLabel?: string;
   xKey?: string;
   color?: string;
   height?: number;
@@ -25,6 +26,7 @@ interface AreaChartProps {
 export function AreaChart({
   data,
   areaKey,
+  areaLabel = 'Return on Investment',
   xKey = 'month',
   color = '#2D5016',
   height = 280,
@@ -56,9 +58,10 @@ export function AreaChart({
             tickLine={false}
           />
           <Tooltip
-            formatter={(value) =>
-              formatAsPercent ? formatPercentage(Number(value)) : formatCurrencyCompact(Number(value))
-            }
+            formatter={(value, name) => [
+              formatAsPercent ? formatPercentage(Number(value)) : formatCurrencyCompact(Number(value)),
+              name || areaLabel,
+            ]}
             contentStyle={{
               borderRadius: 10, border: '1px solid var(--card-border)',
               fontSize: 13, fontWeight: 600,
@@ -67,6 +70,7 @@ export function AreaChart({
           <Area
             type="monotone"
             dataKey={areaKey}
+            name={areaLabel}
             stroke={color}
             strokeWidth={2.5}
             fill={`url(#${gradientId})`}

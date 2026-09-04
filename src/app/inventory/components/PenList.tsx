@@ -25,7 +25,13 @@ export function PenList({ pens, onMovePiglet }: PenListProps) {
   }
 
   return (
-    <div className="grid-cards">
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: 'var(--spacing-4)',
+      }}
+    >
       {pens.map((pen) => {
         const pct = pen.occupancy_percentage ?? 0;
         const barClass = pct >= 90 ? 'danger' : pct >= 75 ? 'warning' : '';

@@ -539,7 +539,7 @@ export default function ScalingPlanPage() {
             </Card>
 
             {/* Staggered 9-Month Cashflow Plan */}
-            <Card style={{ padding: 0 }}>
+            <Card style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--radius-xl)' }}>
               <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: 'var(--neutral-dark)' }}>
@@ -560,7 +560,14 @@ export default function ScalingPlanPage() {
                 </div>
               </div>
 
-              <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+              <div
+                className="table-wrapper"
+                style={{
+                  border: 'none',
+                  borderRadius: '0 0 var(--radius-xl) var(--radius-xl)',
+                  overflow: 'hidden',
+                }}
+              >
                 <table className="table">
                   <thead>
                     <tr>

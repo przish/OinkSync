@@ -60,9 +60,11 @@ export default function AdminReviewPage() {
       const res = await fetch('/api/transactions?limit=100&sort_by=created_at&sort_order=desc');
       if (!res.ok) throw new Error('Failed to fetch transactions for review');
       const json = await res.json();
-      setTransactions(json.data ?? []);
+      const rawList = json.data?.data ?? json.data ?? [];
+      setTransactions(Array.isArray(rawList) ? rawList : []);
     } catch (err) {
       toast.error(getErrorMessage(err, 'Failed to load review items'));
+      setTransactions([]);
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +161,9 @@ export default function AdminReviewPage() {
   };
 
   // Filter transactions
-  const filteredTransactions = transactions.filter((tx) => {
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
+  const filteredTransactions = safeTransactions.filter((tx) => {
     const matchesStatus = activeTab === 'all' ? true : tx.status === activeTab;
     const matchesCategory = selectedCategory === 'all' ? true : tx.category === selectedCategory;
     const query = searchQuery.toLowerCase().trim();
@@ -175,7 +179,7 @@ export default function AdminReviewPage() {
   });
 
   // Calculate top KPI aggregates
-  const pendingItems = transactions.filter((t) => t.status === 'pending');
+  const pendingItems = safeTransactions.filter((t) => t.status === 'pending');
   const pendingTotal = pendingItems.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
   const pendingIncome = pendingItems
     .filter((t) => t.transaction_type === 'income')

@@ -9,10 +9,26 @@ import type {
   ScalingReadiness,
 } from '@/types/api';
 
-export type TimeRange = '1mo' | '6mo' | '1yr' | '2yr';
+export type TimeRange = '30d' | '3mo' | '6mo' | '1yr' | 'max' | '1mo' | '2yr';
 
 function timeRangeToMonths(range: TimeRange): number {
-  return range === '1mo' ? 1 : range === '6mo' ? 6 : range === '1yr' ? 12 : 24;
+  switch (range) {
+    case '30d':
+    case '1mo':
+      return 1;
+    case '3mo':
+      return 3;
+    case '6mo':
+      return 6;
+    case '1yr':
+      return 12;
+    case '2yr':
+      return 24;
+    case 'max':
+      return 120;
+    default:
+      return 12;
+  }
 }
 
 export function useAnalytics() {
