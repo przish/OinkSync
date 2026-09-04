@@ -77,12 +77,12 @@ export default function UsersPage() {
       <TopBar title="Team Members" />
 
       <div className="page-body">
-        <Card style={{ padding: 0 }}>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h3 style={{ fontWeight: 700, fontSize: 16, margin: 0, color: 'var(--neutral-dark)' }}>
                 All Team Members
-                <span style={{ fontWeight: 400, color: '#4B5563', fontSize: 13, marginLeft: 8 }}>({users.length})</span>
+                <span style={{ fontWeight: 400, color: 'var(--muted-dark)', fontSize: 13, marginLeft: 8 }}>({users.length})</span>
               </h3>
               {!isAdmin && (
                 <p style={{ fontSize: 12, color: 'var(--muted-dark)', margin: '2px 0 0' }}>
@@ -103,7 +103,7 @@ export default function UsersPage() {
             )}
           </div>
 
-          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, overflow: 'hidden' }}>
             <table className="table">
               <thead>
                 <tr>
@@ -118,7 +118,7 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} columns={isAdmin ? 7 : 6} />)
                 ) : users.length === 0 ? (
                   <tr>
                     <td colSpan={isAdmin ? 7 : 6}>

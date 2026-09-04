@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     const resolvedName = penName || `Pen ${penNumber}`;
 
-    // 1. Uniqueness check on pen_number
+    // 1. Uniqueness check on pen_number only (pen names/purposes can be non-unique)
     const { data: existingNum } = await supabase
       .from('pens')
       .select('id, pen_number')
@@ -91,17 +91,6 @@ export async function POST(request: NextRequest) {
 
     if (existingNum) {
       throw new ConflictError(`Pen ID "${penNumber}" already exists. PEN IDs must be unique.`);
-    }
-
-    // 2. Uniqueness check on pen_name
-    const { data: existingName } = await supabase
-      .from('pens')
-      .select('id, pen_name')
-      .ilike('pen_name', resolvedName)
-      .maybeSingle();
-
-    if (existingName) {
-      throw new ConflictError(`A pen named "${resolvedName}" already exists. Pen names must be unique.`);
     }
 
     const { data: newPen, error: insertError } = await supabase

@@ -84,7 +84,7 @@ export default function TransactionsPage() {
         <TransactionFiltersPanel
           filters={filters}
           onChange={handleFiltersChange}
-          onReset={() => { setFilters(EMPTY_FILTERS); setPage(1); }}
+          onReset={() => { setFilters(EMPTY_FILTERS); setSearch(''); setPage(1); }}
         />
 
         {/* Search */}
@@ -103,7 +103,7 @@ export default function TransactionsPage() {
         </Card>
 
         {/* Table */}
-        <Card style={{ padding: 0 }}>
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ fontWeight: 700, fontSize: 16 }}>
               All Transactions
@@ -116,7 +116,7 @@ export default function TransactionsPage() {
             )}
           </div>
 
-          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, overflow: 'hidden' }}>
             <table className="table">
               <thead>
                 <tr>
@@ -127,12 +127,12 @@ export default function TransactionsPage() {
                   <th>Amount</th>
                   <th>Submitted By</th>
                   <th>Status</th>
-                  {canApprove && <th>Actions</th>}
+                  {canApprove && <th style={{ textAlign: 'right' }}>Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
+                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={canApprove ? 8 : 7} />)
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={canApprove ? 8 : 7}>

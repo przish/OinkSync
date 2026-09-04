@@ -6,7 +6,7 @@ import { TopBar } from '@/components/Navigation/TopBar';
 import { Card, CardHeader } from '@/components/UI/Card';
 import { Button } from '@/components/UI/Button';
 import { Badge } from '@/components/UI/Badge';
-import { SkeletonCard } from '@/components/UI/Spinner';
+import { SkeletonCard, SkeletonRow } from '@/components/UI/Spinner';
 import { PenList } from './components/PenList';
 import { AnimalForm } from './components/AnimalForm';
 import { AddPenModal } from '@/components/Forms/AddPenModal';
@@ -40,83 +40,86 @@ export default function InventoryPage() {
   };
 
   const sickAnimals = animals.filter((a) => a.health_status === 'sick' || a.health_status === 'recovering');
+  const totalCapacity = pens.reduce((acc, p) => acc + (p.capacity || 0), 0);
+  const totalAnimalsInPens = pens.reduce((acc, p) => acc + (p.current_count || 0), 0);
+  const overallOccupancy = totalCapacity > 0 ? Math.round((totalAnimalsInPens / totalCapacity) * 100) : 0;
 
   return (
     <>
       <TopBar title="Inventory" />
 
       <div className="page-body" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Summary cards */}
+        {/* KPI Cards */}
         <div className="grid-kpi">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
           ) : (
             <>
-              {[
-                { label: 'Total Active', value: summary?.total_active ?? 0, icon: <PiggyBank size={18} />, color: 'var(--secondary-green)' },
-                { label: 'Breeding Sows', value: summary?.breeding_sows ?? 0, icon: <Heart size={18} />, color: '#C4A57B' },
-                { label: 'Piglets', value: summary?.piglets ?? 0, icon: '🐷', color: 'var(--secondary-green)' },
-                { label: 'Market Ready', value: summary?.market_ready ?? 0, icon: '📦', color: '#3B82F6' },
-              ].map((item) => (
-                <div key={item.label} className="card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <p className="metric-label">{item.label}</p>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 8,
-                      background: `${item.color}18`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: typeof item.icon === 'string' ? 16 : undefined,
-                      color: item.color,
-                    }}>
-                      {item.icon}
-                    </div>
-                  </div>
-                  <p style={{ fontSize: 32, fontWeight: 800, color: item.color }}>{item.value}</p>
-                </div>
-              ))}
+              <Card>
+                <CardHeader title="Total Pigs" subtitle="All active animals" icon={<PiggyBank size={18} color="var(--secondary-green)" />} />
+                <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--secondary-green)', marginTop: 8 }}>
+                  {summary?.total_active ?? animals.length}
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--muted-dark)', marginTop: 4 }}>
+                  {summary?.breeding_sows ?? 0} sows &bull; {summary?.piglets ?? 0} piglets
+                </p>
+              </Card>
+
+              <Card>
+                <CardHeader title="Active Pens" subtitle="Pens with animals" icon={<PiggyBank size={18} color="var(--secondary-green)" />} />
+                <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--secondary-green)', marginTop: 8 }}>
+                  {pens.filter((p) => (p.current_count ?? 0) > 0).length} / {pens.length}
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--muted-dark)', marginTop: 4 }}>
+                  Overall {overallOccupancy}% capacity
+                </p>
+              </Card>
+
+              <Card>
+                <CardHeader title="Sick / Recovering" subtitle="Needs attention" icon={<Heart size={18} color="var(--error)" />} />
+                <p style={{ fontSize: 28, fontWeight: 800, color: sickAnimals.length > 0 ? 'var(--error)' : 'var(--secondary-green)', marginTop: 8 }}>
+                  {sickAnimals.length}
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--muted-dark)', marginTop: 4 }}>
+                  {sickAnimals.length === 0 ? 'All animals healthy' : `${sickAnimals.length} require care`}
+                </p>
+              </Card>
+
+              <Card>
+                <CardHeader title="Market Ready" subtitle="Ready for harvest/sale" icon={<AlertTriangle size={18} color="var(--secondary-green)" />} />
+                <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--secondary-green)', marginTop: 8 }}>
+                  {summary?.market_ready ?? 0}
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--muted-dark)', marginTop: 4 }}>
+                  Fatteners reaching market weight
+                </p>
+              </Card>
             </>
           )}
         </div>
 
-        {/* Health alerts */}
-        {sickAnimals.length > 0 && (
-          <div className="alert-banner" style={{ borderLeftColor: 'var(--error)', background: 'linear-gradient(135deg, #fde8e8, #f5c6c6)' }}>
-            <AlertTriangle size={20} color="var(--error)" />
+        {/* Pens Section */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div>
-              <p style={{ fontWeight: 700 }}>{sickAnimals.length} animal{sickAnimals.length > 1 ? 's' : ''} need attention</p>
-              <p className="text-small">{sickAnimals.filter(a => a.health_status === 'sick').length} sick · {sickAnimals.filter(a => a.health_status === 'recovering').length} recovering</p>
+              <h2 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--neutral-dark)' }}>Pens & Facilities</h2>
+              <p style={{ fontSize: 13, color: 'var(--muted-dark)', margin: '2px 0 0' }}>
+                Monitor pen assignments, capacity limits, and move piglets between pens
+              </p>
             </div>
+            <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddPen(true)}>
+              Add Pen
+            </Button>
           </div>
-        )}
 
-        {/* Pen List */}
-        <Card>
-          <CardHeader
-            title="Pen Overview"
-            subtitle={`${pens.length} pens total`}
-            icon={<PiggyBank size={18} color="var(--secondary-green)" />}
-            action={
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<Plus size={14} />}
-                onClick={() => setShowAddPen(true)}
-              >
-                Add Pen
-              </Button>
-            }
+          <PenList
+            pens={pens}
+            onMovePiglet={(pen) => setMoveTargetPen(pen)}
           />
-          {isLoading ? (
-            <div className="grid-cards">
-              {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-          ) : (
-            <PenList pens={pens} onMovePiglet={(pen) => setMoveTargetPen(pen)} />
-          )}
-        </Card>
+        </div>
 
-        {/* Animals table */}
-        <Card style={{ padding: 0 }}>
+        {/* All Animals Table */}
+        <Card style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontWeight: 700, fontSize: 16 }}>
               All Animals
@@ -128,12 +131,13 @@ export default function InventoryPage() {
               Add Animal
             </Button>
           </div>
-          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0 }}>
+          <div className="table-wrapper" style={{ border: 'none', borderRadius: 0, overflow: 'hidden' }}>
             <table className="table">
               <thead>
                 <tr>
                   <th>Code</th>
                   <th>Type</th>
+                  <th>Gender</th>
                   <th>Pen</th>
                   <th>Health</th>
                   <th>Weight</th>
@@ -142,9 +146,11 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {animals.length === 0 ? (
+                {isLoading ? (
+                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
+                ) : animals.length === 0 ? (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={8}>
                       <div className="empty-state">
                         <div className="empty-state-icon">🐷</div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No animals yet</p>
@@ -156,6 +162,25 @@ export default function InventoryPage() {
                     <tr key={animal.id}>
                       <td style={{ fontWeight: 700 }}>{animal.animal_code ?? `#${animal.id.slice(0, 6)}`}</td>
                       <td style={{ textTransform: 'capitalize' }}>{animal.animal_type.replace('_', ' ')}</td>
+                      <td>
+                        {animal.gender ? (
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 8px',
+                            borderRadius: 'var(--radius-full)',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            background: animal.gender === 'male' ? 'rgba(134, 167, 136, 0.18)' : 'rgba(255, 207, 207, 0.5)',
+                            color: 'var(--neutral-dark)',
+                          }}>
+                            {animal.gender === 'male' ? '♂ Male' : '♀ Female'}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--muted-dark)' }}>—</span>
+                        )}
+                      </td>
                       <td style={{ color: 'var(--neutral-dark)', fontWeight: 600 }}>
                         {/* @ts-ignore - pen is populated from the API join */}
                         {animal.pen ? (animal.pen.pen_name || animal.pen.pen_number) : (animal.pen_id ? `${animal.pen_id.slice(0, 8)}...` : '—')}
@@ -194,6 +219,7 @@ export default function InventoryPage() {
         onClose={() => setShowAddPen(false)}
         onPenCreated={load}
         existingCount={pens.length}
+        pens={pens}
       />
 
       <MovePigletModal

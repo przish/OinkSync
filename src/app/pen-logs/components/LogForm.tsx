@@ -95,6 +95,14 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
     setValue('health_observations', buildTemplate(animalsDied, animalsSick));
   };
 
+  // Calculate dynamic height for health observations textarea (capped at +50% of base 80px = 120px)
+  const baseObsHeight = 80;
+  const maxObsHeight = 120; // +50% cap of original
+  const obsLineCount = healthObservations ? healthObservations.split('\n').length : 1;
+  const calculatedObsHeight = (animalsDied > 0 || animalsSick > 0 || obsLineCount > 2)
+    ? Math.min(maxObsHeight, baseObsHeight + Math.max(0, obsLineCount - 2) * 8)
+    : baseObsHeight;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -162,7 +170,12 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
           <FormTextarea
             id="log-health"
             placeholder="Describe any health observations..."
-            rows={animalsDied > 0 || animalsSick > 0 ? 5 : 2}
+            style={{
+              height: `${calculatedObsHeight}px`,
+              minHeight: `${baseObsHeight}px`,
+              maxHeight: `${maxObsHeight}px`,
+              transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
             {...register('health_observations')}
           />
         </FormField>

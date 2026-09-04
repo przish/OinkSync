@@ -50,20 +50,33 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('A password is required for member account creation.');
     }
 
-    // 1. Create the user in auth.users
-    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name, role, must_change_password: true }
+    // 1. Send official invite email via Supabase admin auth or fallback to createUser
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin || 'http://localhost:3000';
+    let userId: string;
+
+    const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${siteUrl}/auth/login`,
+      data: { full_name, role, must_change_password: true },
     });
-    
-    if (authError) {
-      // If user already exists in auth, Supabase returns an error
-      throw authError;
+
+    if (!inviteError && inviteData?.user) {
+      userId = inviteData.user.id;
+      if (password) {
+        await adminClient.auth.admin.updateUserById(userId, { password, email_confirm: true }).catch(() => {});
+      }
+    } else {
+      // If inviteUserByEmail is unavailable or user already exists, create via admin.createUser
+      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name, role, must_change_password: true },
+      });
+      if (authError) {
+        throw authError;
+      }
+      userId = authData.user.id;
     }
-    
-    const userId = authData.user.id;
     
     // 2. Upsert into public.users (safely handles cases where auth.users trigger auto-created the row)
     const { data: userData, error: userError } = await adminClient

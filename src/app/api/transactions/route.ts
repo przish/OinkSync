@@ -101,6 +101,10 @@ export async function POST(request: NextRequest) {
       throw new ValidationError(`Category "${category}" should have transaction_type "expense".`);
     }
 
+    if (!body.receipt_url) {
+      throw new ValidationError('A receipt attachment or receipt upload is required for all transactions.');
+    }
+
     const insertData = {
       user_id: profile.id,
       transaction_date: transactionDate,
