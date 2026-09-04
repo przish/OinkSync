@@ -79,7 +79,7 @@ export function TransactionPreview({
                   <td>
                     <span style={{
                       fontWeight: 700,
-                      color: tx.transaction_type === 'income' ? 'var(--success)' : 'var(--error)',
+                      color: tx.transaction_type === 'income' ? 'var(--income-green)' : 'var(--expense-red)',
                     }}>
                       {tx.transaction_type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </span>
@@ -98,7 +98,7 @@ export function TransactionPreview({
                               e.stopPropagation();
                               onApprove?.(tx.id);
                             }}
-                            style={{ color: 'var(--success)', borderColor: 'var(--success)' }}
+                            style={{ color: 'var(--income-green)', borderColor: 'var(--income-green)' }}
                           >
                             Approve
                           </Button>
@@ -110,7 +110,7 @@ export function TransactionPreview({
                               e.stopPropagation();
                               onReject?.(tx.id);
                             }}
-                            style={{ color: 'var(--error)', borderColor: 'var(--error)' }}
+                            style={{ color: 'var(--expense-red)', borderColor: 'var(--expense-red)' }}
                           >
                             Reject
                           </Button>
