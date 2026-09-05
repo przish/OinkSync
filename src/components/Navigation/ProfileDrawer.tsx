@@ -122,17 +122,17 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
 
   const cooldownDays = calculateCooldownDays();
 
-  // Calculate 24-hour investment edit countdown
-  const activeSubmission = pendingInvest || (latestInvest && (nowTime - new Date(latestInvest.created_at).getTime() <= 24 * 60 * 60 * 1000) ? latestInvest : null);
+  // Calculate 3-hour investment edit countdown
+  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+  const activeSubmission = pendingInvest || (latestInvest && (nowTime - new Date(latestInvest.created_at).getTime() <= THREE_HOURS_MS) ? latestInvest : null);
 
   const getInvestmentTimeLeft = (): { canEdit: boolean; hours: number; mins: number; text: string } => {
     if (!activeSubmission) return { canEdit: false, hours: 0, mins: 0, text: '' };
     const createdAt = new Date(activeSubmission.created_at).getTime();
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-    const msRemaining = (createdAt + ONE_DAY_MS) - nowTime;
+    const msRemaining = (createdAt + THREE_HOURS_MS) - nowTime;
 
     if (msRemaining <= 0) {
-      return { canEdit: false, hours: 0, mins: 0, text: 'Locked after 24 hours — Under General Manager review' };
+      return { canEdit: false, hours: 0, mins: 0, text: 'Locked after 3 hours — Under General Manager review' };
     }
 
     const hours = Math.floor(msRemaining / (1000 * 60 * 60));
@@ -638,7 +638,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
               )}
             </div>
 
-            {/* Pending Investment Status Banner (Within 24h) */}
+            {/* Pending Investment Status Banner (Within 3h) */}
             {activeSubmission && investTime.canEdit ? (
               <div
                 style={{
@@ -653,7 +653,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--income-green)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Clock size={13} /> Active Submission (24h Edit Window)
+                    <Clock size={13} /> Active Submission (3h Edit Window)
                   </span>
                   <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--income-green)' }}>
                     {formatCurrency(activeSubmission.amount)}
@@ -677,7 +677,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                 </div>
 
                 <p style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.4, margin: 0 }}>
-                  <strong>One submission at a time:</strong> You can still edit the files or information while the 24-hour countdown is running.
+                  <strong>One submission at a time:</strong> You can still edit the files or information while the 3-hour countdown is running.
                 </p>
 
                 {activeSubmission.receipt_url && (
@@ -692,7 +692,7 @@ export function ProfileDrawer({ isOpen, onClose, currentUser, onProfileUpdated }
                 )}
               </div>
             ) : pendingInvest && !investTime.canEdit ? (
-              /* Pending Investment Status Card (Beyond 24h — Adding blocked, Status: Sent -> Viewed by Admin -> Decision) */
+              /* Pending Investment Status Card (Beyond 3h — Adding blocked, Status: Sent -> Viewed by Admin -> Decision) */
               <div
                 style={{
                   padding: '16px',

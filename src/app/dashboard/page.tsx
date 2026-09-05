@@ -176,12 +176,12 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Distribution Summary (admin only) */}
-        {isAdmin && (() => {
+        {/* Distribution Summary (visible to all farm members) */}
+        {(() => {
           const netProfit = Math.max(0, kpi?.net_profit ?? 0);
           const operationsPool = netProfit * 0.5;
           const investorPool = netProfit * 0.5;
-          const activeMembers = kpi?.active_members_count && kpi.active_members_count > 0 ? kpi.active_members_count : 2;
+          const activeMembers = kpi?.active_members_count && kpi.active_members_count > 0 ? kpi.active_members_count : 1;
           const investorDividend = activeMembers > 0 ? investorPool / activeMembers : 0;
 
           const penManagerWork = operationsPool * 0.50;

@@ -52,7 +52,17 @@ export async function GET(request: NextRequest) {
 
     if (txError) throw txError;
 
-    const monthTransactions = monthTxData || [];
+    // Exclude non-approved investment contributions from the statement and receipts until approved
+    const monthTransactions = (monthTxData || []).filter((tx) => {
+      const isInvestment =
+        tx.category?.toLowerCase() === 'investment' ||
+        tx.description?.toLowerCase().includes('member investment contribution') ||
+        tx.description?.toLowerCase().includes('investment');
+      if (isInvestment && tx.status !== 'approved') {
+        return false;
+      }
+      return true;
+    });
 
     // Calculate dynamic totals from transactions
     let dynamicRevenue = 0;
@@ -70,7 +80,7 @@ export async function GET(request: NextRequest) {
       ? Number(((netProfit / dynamicExpenses) * 100).toFixed(1))
       : 0;
 
-    // Filter receipts uploaded during this month
+    // Filter receipts uploaded during this month (only from included transactions)
     const receipts = monthTransactions
       .filter((tx) => tx.receipt_url && tx.receipt_url.trim().length > 0)
       .map((tx) => ({

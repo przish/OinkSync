@@ -10,7 +10,7 @@ export const transactionSchema = z.object({
   transaction_date: z.string().min(1, 'Date is required'),
   amount: z.number({ error: 'Amount must be a number' }).positive('Amount must be greater than 0'),
   category: z.enum(
-    ['Feed', 'Vitamins', 'Infrastructure', 'Veterinary', 'Labor', 'Transportation', 'Sales'],
+    ['Feed', 'Vitamins', 'Infrastructure', 'Veterinary', 'Labor', 'Transportation', 'Sales', 'Investment'],
     { error: 'Category is required' }
   ),
   transaction_type: z.enum(['expense', 'income'], { error: 'Type is required' }),
@@ -52,7 +52,7 @@ export type AnimalFormValues = z.infer<typeof animalSchema>;
 export const penLogSchema = z.object({
   pen_id: z.string().min(1, 'Pen is required'),
   log_date: z.string().min(1, 'Date is required'),
-  feed_type: z.string().optional(),
+  feed_type: z.string().min(1, 'Feed type is required'),
   feed_amount_kg: z
     .number({ error: 'Feed amount must be a number' })
     .min(0, 'Feed amount cannot be negative'),

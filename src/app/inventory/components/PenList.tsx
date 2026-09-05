@@ -43,7 +43,7 @@ export function PenList({ pens, onMovePiglet }: PenListProps) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--neutral-dark)' }}>
-                    Pen {pen.pen_number}
+                    {pen.pen_number}
                   </p>
                   {pen.pen_name && (
                     <p style={{ fontSize: 12, color: 'var(--muted-dark)', marginTop: 2, fontWeight: 600 }}>{pen.pen_name}</p>

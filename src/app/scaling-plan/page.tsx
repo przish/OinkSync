@@ -18,6 +18,7 @@ interface ScalingData {
   projected_scale_date: string;
   target_sows: number;
   target_pig_count: number;
+  target_monthly_profit?: number;
   sow_cost: number;
   cost_per_pig_rearing: number;
   cycle_months: number;
@@ -274,6 +275,11 @@ export default function ScalingPlanPage() {
                       value={targetSows}
                       onChange={(e) => setTargetSows(Math.max(1, parseInt(e.target.value) || 1))}
                     />
+                    <div style={{ marginTop: 6 }}>
+                      <span style={{ fontSize: 11, color: '#14532D', background: '#FFFDEC', border: '1px solid #86A788', padding: '3px 8px', borderRadius: 4, display: 'inline-block' }}>
+                        Referenced from Target Monthly Profit: {formatCurrency(data?.target_monthly_profit || 50000)}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="form-grid form-grid-2">
@@ -583,30 +589,31 @@ export default function ScalingPlanPage() {
                       <th style={{ width: 110 }}>Date</th>
                       <th>Stage & Growth Milestone</th>
                       <th>Operational Activities</th>
-                      <th style={{ textAlign: 'right' }}>Outflow (₱)</th>
-                      <th style={{ textAlign: 'right' }}>Inflow (₱)</th>
-                      <th style={{ textAlign: 'right' }}>Net Cashflow (₱)</th>
+                      <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Outflow (₱)</th>
+                      <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Inflow (₱)</th>
+                      <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>Net Cashflow (₱)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {staggeredCashflow.map((row) => (
                       <tr key={row.month}>
-                        <td style={{ fontWeight: 800 }}>M{row.month}</td>
-                        <td style={{ fontWeight: 600, color: 'var(--muted-dark)' }}>{row.dateLabel}</td>
+                        <td style={{ fontWeight: 800, whiteSpace: 'nowrap' }}>M{row.month}</td>
+                        <td style={{ fontWeight: 600, color: 'var(--muted-dark)', whiteSpace: 'nowrap' }}>{row.dateLabel}</td>
                         <td style={{ fontWeight: 700, color: 'var(--neutral-dark)' }}>{row.name}</td>
                         <td style={{ fontSize: 12, color: 'var(--muted-dark)' }}>{row.description}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--expense-red)' }}>
+                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--expense-red)', whiteSpace: 'nowrap' }}>
                           {row.outflow > 0 ? `-${formatCurrency(row.outflow)}` : '₱0.00'}
                         </td>
-                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--income-green)' }}>
+                        <td style={{ textAlign: 'right', fontWeight: 600, color: 'var(--income-green)', whiteSpace: 'nowrap' }}>
                           {row.inflow > 0 ? `+${formatCurrency(row.inflow)}` : '₱0.00'}
                         </td>
                         <td style={{
                           textAlign: 'right',
                           fontWeight: 800,
                           color: row.netCashflow >= 0 ? 'var(--income-green)' : 'var(--expense-red)',
+                          whiteSpace: 'nowrap',
                         }}>
-                          {row.netCashflow >= 0 ? '+' : ''}{formatCurrency(row.netCashflow)}
+                          {`${row.netCashflow >= 0 ? '+' : ''}${formatCurrency(row.netCashflow)}`}
                         </td>
                       </tr>
                     ))}

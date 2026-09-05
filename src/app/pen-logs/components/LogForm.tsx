@@ -18,6 +18,15 @@ const CLEANING_OPTIONS = [
   ...Object.entries(CLEANING_STATUS_LABELS).map(([v, l]) => ({ value: v, label: l })),
 ];
 
+const FEED_TYPE_OPTIONS = [
+  { value: 'Lactating', label: 'Lactating' },
+  { value: 'Pre-starter', label: 'Pre-starter' },
+  { value: 'Starter', label: 'Starter' },
+  { value: 'Breeder', label: 'Breeder' },
+  { value: 'Grower', label: 'Grower' },
+  { value: 'Finisher', label: 'Finisher' },
+];
+
 interface LogFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,7 +37,7 @@ interface LogFormProps {
 export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
   const penOptions = pens.map((p) => ({
     value: p.id,
-    label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''}`,
+    label: `${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''}`,
   }));
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<PenLogFormValues>({
@@ -36,6 +45,7 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
     resolver: zodResolver(penLogSchema) as any,
     defaultValues: {
       log_date: todayISO(),
+      feed_type: 'Grower',
       feed_amount_kg: 0,
       water_provided: true,
       animals_died: 0,
@@ -86,6 +96,9 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
 
   const onFormSubmit = async (data: PenLogFormValues) => {
     setServerError(null);
+    if (animalsDied > 0 || animalsSick > 0) {
+      data.issues_reported = true;
+    }
     const { error } = await onSubmit(data);
     if (error) setServerError(error);
     else handleClose();
@@ -129,8 +142,14 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
         </div>
 
         <div className="form-grid form-grid-2">
-          <FormField label="Feed Type" htmlFor="log-feed-type">
-            <input id="log-feed-type" type="text" className="form-input" placeholder="Enter feed type" {...register('feed_type')} />
+          <FormField label="Feed Type" htmlFor="log-feed-type" error={errors.feed_type?.message} required>
+            <FormSelect
+              id="log-feed-type"
+              options={FEED_TYPE_OPTIONS}
+              placeholder="Select feed type"
+              error={!!errors.feed_type}
+              {...register('feed_type', { required: 'Feed type is required' })}
+            />
           </FormField>
           <FormField label="Feed Amount (kg)" htmlFor="log-feed-kg" error={errors.feed_amount_kg?.message} required>
             <input id="log-feed-kg" type="number" step="0.1" min="0" className={`form-input${errors.feed_amount_kg ? ' error' : ''}`} {...register('feed_amount_kg', { valueAsNumber: true })} />
@@ -189,9 +208,17 @@ export function LogForm({ isOpen, onClose, pens, onSubmit }: LogFormProps) {
             <input type="checkbox" {...register('water_provided')} style={{ width: 16, height: 16 }} />
             <span style={{ fontSize: 13, fontWeight: 500 }}>Water provided</span>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-            <input type="checkbox" {...register('issues_reported')} style={{ width: 16, height: 16 }} />
-            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--error)' }}>Issues reported</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: (animalsDied > 0 || animalsSick > 0) ? 'not-allowed' : 'pointer' }}>
+            <input
+              type="checkbox"
+              {...register('issues_reported')}
+              disabled={animalsDied > 0 || animalsSick > 0}
+              checked={animalsDied > 0 || animalsSick > 0 ? true : watch('issues_reported')}
+              style={{ width: 16, height: 16 }}
+            />
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--error)' }}>
+              Issues reported {(animalsDied > 0 || animalsSick > 0) ? '(locked on due to sick/dead animals)' : ''}
+            </span>
           </label>
         </div>
 

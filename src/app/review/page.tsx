@@ -135,8 +135,8 @@ export default function AdminReviewPage() {
     }
   };
 
-  // Helper to check 24-hour edit status for member contributions
-  const get24HourStatus = (createdAtStr?: string, category?: string, description?: string) => {
+  // Helper to check 3-hour edit status for member contributions
+  const get3HourStatus = (createdAtStr?: string, category?: string, description?: string) => {
     const isInvestment =
       category?.toLowerCase() === 'investment' ||
       description?.toLowerCase().includes('investment') ||
@@ -145,18 +145,19 @@ export default function AdminReviewPage() {
     if (!isInvestment || !createdAtStr) return null;
 
     const createdAt = new Date(createdAtStr).getTime();
-    const msRemaining = createdAt + 24 * 60 * 60 * 1000 - Date.now();
+    const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+    const msRemaining = createdAt + THREE_HOURS_MS - Date.now();
     if (msRemaining > 0) {
       const hours = Math.floor(msRemaining / (1000 * 60 * 60));
       const mins = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
       return {
-        isWithin24h: true,
-        text: `Locked: Member 24h edit window active (${hours}h ${mins}m remaining)`,
+        isWithin3h: true,
+        text: `Locked: Member 3h edit window active (${hours}h ${mins}m remaining)`,
       };
     }
     return {
-      isWithin24h: false,
-      text: 'Unlocked: 24h edit window passed (Ready for review)',
+      isWithin3h: false,
+      text: 'Unlocked: 3h edit window passed (Ready for review)',
     };
   };
 
@@ -432,7 +433,7 @@ export default function AdminReviewPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {filteredTransactions.map((tx) => {
               const isIncome = tx.transaction_type === 'income';
-              const timerStatus = get24HourStatus(tx.created_at, tx.category, tx.description);
+              const timerStatus = get3HourStatus(tx.created_at, tx.category, tx.description);
               const isProcessing = actionTxId === tx.id && isSubmittingAction;
 
               return (
@@ -497,7 +498,7 @@ export default function AdminReviewPage() {
                   </div>
 
                   {/* Item Middle: Financial Details + Receipt Preview */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, alignItems: 'start' }}>
                     {/* Financial details */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div>
@@ -532,7 +533,7 @@ export default function AdminReviewPage() {
                         </p>
                       </div>
 
-                      {/* 24-hour edit status banner for investment contributions */}
+                      {/* 3-hour edit status banner for investment contributions */}
                       {timerStatus && (
                         <div
                           style={{
@@ -541,11 +542,11 @@ export default function AdminReviewPage() {
                             gap: 6,
                             fontSize: 11,
                             fontWeight: 700,
-                            color: timerStatus.isWithin24h ? '#854D0E' : 'var(--neutral-dark)',
+                            color: timerStatus.isWithin3h ? '#854D0E' : 'var(--neutral-dark)',
                             padding: '6px 10px',
-                            background: timerStatus.isWithin24h ? 'rgba(234, 179, 8, 0.12)' : 'var(--palette-cream)',
+                            background: timerStatus.isWithin3h ? 'rgba(234, 179, 8, 0.12)' : 'var(--palette-cream)',
                             borderRadius: 'var(--radius-sm)',
-                            border: `1px solid ${timerStatus.isWithin24h ? 'rgba(234, 179, 8, 0.3)' : 'var(--palette-sage)'}`,
+                            border: `1px solid ${timerStatus.isWithin3h ? 'rgba(234, 179, 8, 0.3)' : 'var(--palette-sage)'}`,
                           }}
                         >
                           <Clock size={13} />
@@ -606,61 +607,123 @@ export default function AdminReviewPage() {
                         )}
                       </div>
 
-                      {tx.receipt_url ? (
-                        <div
-                          onClick={() => {
-                            setInspectReceiptUrl(tx.receipt_url);
-                            setInspectReceiptTitle(`${tx.user?.full_name || 'Member'} - ${formatCurrency(tx.amount)}`);
-                          }}
-                          style={{
-                            borderRadius: 'var(--radius-md)',
-                            overflow: 'hidden',
-                            border: '1px solid var(--palette-sage)',
-                            position: 'relative',
-                            cursor: 'pointer',
-                            background: 'var(--palette-cream)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: 8,
-                            width: 'fit-content',
-                            maxWidth: '100%',
-                          }}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={tx.receipt_url}
-                            alt="Receipt"
-                            style={{
-                              maxWidth: '100%',
-                              maxHeight: 280,
-                              width: 'auto',
-                              height: 'auto',
-                              objectFit: 'contain',
-                              borderRadius: 'var(--radius-sm)',
-                              display: 'block',
-                            }}
-                          />
+                      {tx.receipt_url ? (() => {
+                        const isPdf = tx.receipt_url?.toLowerCase().includes('.pdf') || tx.receipt_filename?.toLowerCase().endsWith('.pdf');
+                        return isPdf ? (
                           <div
+                            onClick={() => {
+                              setInspectReceiptUrl(tx.receipt_url);
+                              setInspectReceiptTitle(`${tx.user?.full_name || 'Member'} - ${formatCurrency(tx.amount)}`);
+                            }}
                             style={{
-                              position: 'absolute',
-                              bottom: 12,
-                              right: 12,
-                              background: 'rgba(24, 43, 29, 0.85)',
-                              color: '#fff',
-                              padding: '4px 8px',
-                              borderRadius: 'var(--radius-sm)',
-                              fontSize: 11,
-                              fontWeight: 700,
-                              display: 'inline-flex',
+                              borderRadius: 'var(--radius-md)',
+                              overflow: 'hidden',
+                              border: '1.5px solid var(--palette-sage)',
+                              position: 'relative',
+                              cursor: 'pointer',
+                              background: 'var(--palette-cream)',
+                              display: 'flex',
+                              flexDirection: 'column',
                               alignItems: 'center',
-                              gap: 4,
+                              justifyContent: 'center',
+                              padding: '24px 20px',
+                              width: '100%',
+                              maxWidth: 340,
+                              gap: 10,
+                              boxShadow: 'var(--shadow-sm)',
                             }}
                           >
-                            <Eye size={12} /> Inspect Receipt
+                            <div style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 'var(--radius-md)',
+                              background: 'var(--palette-rose)',
+                              border: '1px solid var(--palette-blush)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}>
+                              <FileText size={24} color="var(--expense-red)" />
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--neutral-dark)', textAlign: 'center', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {tx.receipt_filename || 'PDF Receipt Document'}
+                            </span>
+                            <span style={{ fontSize: 11, color: 'var(--muted-dark)' }}>
+                              Click to inspect or preview PDF
+                            </span>
+                            <div
+                              style={{
+                                marginTop: 4,
+                                background: 'var(--palette-sage)',
+                                color: 'var(--palette-cream)',
+                                padding: '4px 10px',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              <Eye size={12} /> Inspect PDF
+                            </div>
                           </div>
-                        </div>
-                      ) : (
+                        ) : (
+                          <div
+                            onClick={() => {
+                              setInspectReceiptUrl(tx.receipt_url);
+                              setInspectReceiptTitle(`${tx.user?.full_name || 'Member'} - ${formatCurrency(tx.amount)}`);
+                            }}
+                            style={{
+                              borderRadius: 'var(--radius-md)',
+                              overflow: 'hidden',
+                              border: '1px solid var(--palette-sage)',
+                              position: 'relative',
+                              cursor: 'pointer',
+                              background: 'var(--palette-cream)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: 8,
+                              width: 'fit-content',
+                              maxWidth: 360,
+                            }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={tx.receipt_url}
+                              alt="Receipt"
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: 260,
+                                width: 'auto',
+                                height: 'auto',
+                                objectFit: 'contain',
+                                borderRadius: 'var(--radius-sm)',
+                                display: 'block',
+                              }}
+                            />
+                            <div
+                              style={{
+                                position: 'absolute',
+                                bottom: 12,
+                                right: 12,
+                                background: 'rgba(24, 43, 29, 0.85)',
+                                color: '#fff',
+                                padding: '4px 8px',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              <Eye size={12} /> Inspect Receipt
+                            </div>
+                          </div>
+                        );
+                      })() : (
                         <div
                           style={{
                             height: 120,
@@ -697,7 +760,7 @@ export default function AdminReviewPage() {
                         paddingTop: 14,
                       }}
                     >
-                      {timerStatus?.isWithin24h ? (
+                      {timerStatus?.isWithin3h ? (
                         <div
                           style={{
                             display: 'inline-flex',
@@ -713,7 +776,7 @@ export default function AdminReviewPage() {
                           }}
                         >
                           <Lock size={13} />
-                          Locked until 24-hour member edit window expires
+                          Locked until 3-hour member edit window expires
                         </div>
                       ) : (
                         <div />
@@ -728,15 +791,15 @@ export default function AdminReviewPage() {
                             setRejectingTx(tx);
                             setRejectionReason('');
                           }}
-                          disabled={isProcessing || (timerStatus?.isWithin24h ?? false)}
+                          disabled={isProcessing || (timerStatus?.isWithin3h ?? false)}
                           style={{
                             color: 'var(--expense-red)',
                             borderColor: 'var(--palette-blush)',
                             background: 'var(--palette-rose)',
-                            opacity: timerStatus?.isWithin24h ? 0.5 : 1,
-                            cursor: timerStatus?.isWithin24h ? 'not-allowed' : 'pointer',
+                            opacity: timerStatus?.isWithin3h ? 0.5 : 1,
+                            cursor: timerStatus?.isWithin3h ? 'not-allowed' : 'pointer',
                           }}
-                          title={timerStatus?.isWithin24h ? 'Locked during member 24-hour edit window' : undefined}
+                          title={timerStatus?.isWithin3h ? 'Locked during member 3-hour edit window' : undefined}
                         >
                           Reject Transaction
                         </Button>
@@ -747,12 +810,12 @@ export default function AdminReviewPage() {
                           leftIcon={<CheckCircle size={15} />}
                           onClick={() => handleApprove(tx)}
                           isLoading={isProcessing}
-                          disabled={isProcessing || (timerStatus?.isWithin24h ?? false)}
+                          disabled={isProcessing || (timerStatus?.isWithin3h ?? false)}
                           style={{
-                            opacity: timerStatus?.isWithin24h ? 0.5 : 1,
-                            cursor: timerStatus?.isWithin24h ? 'not-allowed' : 'pointer',
+                            opacity: timerStatus?.isWithin3h ? 0.5 : 1,
+                            cursor: timerStatus?.isWithin3h ? 'not-allowed' : 'pointer',
                           }}
-                          title={timerStatus?.isWithin24h ? 'Locked during member 24-hour edit window' : undefined}
+                          title={timerStatus?.isWithin3h ? 'Locked during member 3-hour edit window' : undefined}
                         >
                           Approve Transaction
                         </Button>
@@ -858,29 +921,38 @@ export default function AdminReviewPage() {
               </div>
             </div>
 
-            {/* Receipt Image View */}
+            {/* Receipt Image / PDF Document View */}
             <div
               style={{
-                padding: 16,
+                padding: inspectReceiptUrl?.toLowerCase().includes('.pdf') ? 0 : 16,
                 overflow: 'auto',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: '#1F2937',
+                background: inspectReceiptUrl?.toLowerCase().includes('.pdf') ? '#fff' : '#1F2937',
                 maxHeight: '75vh',
+                height: inspectReceiptUrl?.toLowerCase().includes('.pdf') ? '75vh' : 'auto',
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={inspectReceiptUrl}
-                alt="Receipt Full Preview"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain',
-                  borderRadius: 'var(--radius-md)',
-                }}
-              />
+              {inspectReceiptUrl?.toLowerCase().includes('.pdf') ? (
+                <iframe
+                  src={inspectReceiptUrl}
+                  title="PDF Receipt Preview"
+                  style={{ width: '100%', height: '100%', border: 'none', minHeight: 480 }}
+                />
+              ) : (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={inspectReceiptUrl}
+                  alt="Receipt Full Preview"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    objectFit: 'contain',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>

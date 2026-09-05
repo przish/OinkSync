@@ -27,7 +27,10 @@ export const TRANSACTION_CATEGORIES = [
   'Labor',
   'Transportation',
   'Sales',
+  'Investment',
 ] as const;
+
+export const INCOME_CATEGORIES = ['Sales', 'Investment'] as const;
 
 export const EXPENSE_CATEGORIES = [
   'Feed',

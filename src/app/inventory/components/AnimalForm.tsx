@@ -147,10 +147,22 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
 
   const penOptions = pens.map((p) => ({
     value: p.id,
-    label: `Pen ${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''} (${p.current_count}/${p.capacity})`,
+    label: `${p.pen_number}${p.pen_name ? ` — ${p.pen_name}` : ''} (${p.current_count}/${p.capacity})`,
   }));
 
   const parsedQty = Number(quantity) || 0;
+
+  const predictedLaborDate = React.useMemo(() => {
+    if (!birthDate) return null;
+    const d = new Date(birthDate);
+    if (isNaN(d.getTime())) return null;
+    d.setDate(d.getDate() + 114);
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }, [birthDate]);
 
   return (
     <Modal
@@ -264,15 +276,25 @@ export function AnimalForm({ isOpen, onClose, pens, onSubmit }: AnimalFormProps)
                 />
               </FormField>
 
-              <FormField label="Birth Date" htmlFor="sow-birth" required>
+              <FormField
+                label="Insemination Date"
+                htmlFor="sow-insemination"
+                required
+                hint={predictedLaborDate ? `Predicted Labor: ${predictedLaborDate} (+114 days)` : undefined}
+              >
                 <input
-                  id="sow-birth"
+                  id="sow-insemination"
                   type="date"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
                   className="form-input"
                   required
                 />
+                {predictedLaborDate && (
+                  <p style={{ fontSize: 12, color: 'var(--secondary-green)', fontWeight: 600, marginTop: 4 }}>
+                    📅 Predicted Farrowing / Labor: {predictedLaborDate}
+                  </p>
+                )}
               </FormField>
             </div>
 

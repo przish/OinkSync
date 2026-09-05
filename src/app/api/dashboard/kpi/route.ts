@@ -82,20 +82,7 @@ export async function GET(request: NextRequest) {
         else if (t.transaction_type === 'expense') exp += amt;
       });
 
-      // Capital from business profile + all approved member investments
-      const { data: bp } = await supabase.from('business_profile').select('total_capital').maybeSingle();
-      const baseCap = Number(bp?.total_capital) || 0;
-
-      const { data: investTx } = await supabase
-        .from('transactions')
-        .select('amount')
-        .eq('status', 'approved')
-        .or('category.eq.investment,description.ilike.%investment%');
-
-      const memberInvestments = (investTx || []).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-      const cap = baseCap + memberInvestments;
       const profit = rev - exp;
-      const roi = cap > 0 ? Number(((profit / cap) * 100).toFixed(2)) : 0;
 
       // Active & mortality counts from animals
       const { count: activeCount } = await supabase
@@ -114,12 +101,6 @@ export async function GET(request: NextRequest) {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
 
-      // Count active members for dynamic dividend distribution
-      const { count: memberCount } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
-
       const totalAnimals = (activeCount ?? 0) + (deadCount ?? 0);
       const mortRate = totalAnimals > 0 ? Number((((deadCount ?? 0) / totalAnimals) * 100).toFixed(2)) : 0;
 
@@ -127,15 +108,45 @@ export async function GET(request: NextRequest) {
         total_revenue: rev,
         total_expenses: exp,
         net_profit: profit,
-        roi_percentage: roi,
+        roi_percentage: 0,
         active_pig_count: activeCount ?? 0,
         mortality_count: deadCount ?? 0,
         mortality_rate: mortRate,
         pending_transactions: pendingCount ?? 0,
-        total_capital: cap,
-        active_members_count: memberCount && memberCount > 0 ? memberCount : 1,
+        total_capital: 0,
       };
     }
+
+    // 3. Always ensure total_capital includes approved member investments & count active members
+    const { data: bp } = await supabase.from('business_profile').select('total_capital').maybeSingle();
+    const baseCap = Number(bp?.total_capital) || 0;
+
+    const { data: investTx } = await supabase
+      .from('transactions')
+      .select('amount, category, description')
+      .eq('status', 'approved');
+
+    const memberInvestments = (investTx || []).reduce((sum, t) => {
+      const isInv =
+        t.category?.toLowerCase() === 'investment' ||
+        t.description?.toLowerCase().includes('member investment contribution') ||
+        t.description?.toLowerCase().includes('investment');
+      return isInv ? sum + (Number(t.amount) || 0) : sum;
+    }, 0);
+
+    const totalCap = baseCap + memberInvestments;
+    currentKpi.total_capital = totalCap;
+
+    const netProfitVal = Number(currentKpi.net_profit) || 0;
+    currentKpi.roi_percentage = totalCap > 0 ? Number(((netProfitVal / totalCap) * 100).toFixed(2)) : 0;
+
+    // Count active members in farm team
+    const { count: memberCount } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true);
+
+    currentKpi.active_members_count = memberCount && memberCount > 0 ? memberCount : 1;
 
     // Piglet-specific mortality rate
     let litterMortRate = 0;

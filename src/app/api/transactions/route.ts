@@ -39,10 +39,6 @@ export async function GET(request: NextRequest) {
       .from('transactions')
       .select('*, user:users!transactions_user_id_fkey(full_name, email)', { count: 'exact' });
 
-    if (profile.role !== 'admin') {
-      query = query.eq('user_id', profile.id);
-    }
-
     if (category) query = query.eq('category', category);
     if (status) query = query.eq('status', status);
     if (transactionType) query = query.eq('transaction_type', transactionType);
@@ -93,11 +89,11 @@ export async function POST(request: NextRequest) {
     const transactionType = validateTransactionType(body.transaction_type);
     const description = requireString(body.description, 'description');
 
-    if (category === 'Sales' && transactionType !== 'income') {
-      throw new ValidationError('Sales category must have transaction_type "income".');
+    if ((category === 'Sales' || category === 'Investment') && transactionType !== 'income') {
+      throw new ValidationError(`${category} category must have transaction_type "income".`);
     }
 
-    if (category !== 'Sales' && transactionType !== 'expense') {
+    if (category !== 'Sales' && category !== 'Investment' && transactionType !== 'expense') {
       throw new ValidationError(`Category "${category}" should have transaction_type "expense".`);
     }
 

@@ -75,14 +75,14 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     const now = Date.now();
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
 
     if (latestTx) {
       const createdAt = new Date(latestTx.created_at).getTime();
-      const isWithin24Hours = (now - createdAt) <= ONE_DAY_MS;
+      const isWithin3Hours = (now - createdAt) <= THREE_HOURS_MS;
 
-      if (isWithin24Hours) {
-        // User can edit files, receipt, or amount within the 24-hour window
+      if (isWithin3Hours) {
+        // User can edit files, receipt, or amount within the 3-hour window
         const { data: updated, error: updateErr } = await supabase
           .from('transactions')
           .update({

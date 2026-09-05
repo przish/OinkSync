@@ -22,8 +22,17 @@ export async function GET() {
       .select('*')
       .maybeSingle();
 
-    const targetPigCount = profile?.target_pig_count || 30;
     const costPerPigRearing = profile?.cost_per_pig_rearing || 4760;
+    const sowCost = profile?.sow_cost || 25000; // Estimated sow purchase cost
+    const targetMonthlyProfit = profile?.target_monthly_profit || 50000;
+    const expectedSalePrice = profile?.expected_sale_price_per_pig || 19800;
+
+    // Dynamically calculate target sows from target_monthly_profit
+    const profitPerPig = Math.max(1000, expectedSalePrice - costPerPigRearing);
+    const pigsPerMonthNeeded = Math.ceil(targetMonthlyProfit / profitPerPig);
+    // 1 sow yields ~20 pigs/yr = ~1.67 pigs/month
+    const targetSows = Math.max(1, Math.ceil(pigsPerMonthNeeded / 1.67));
+    const targetPigCount = targetSows * 10;
 
     // Fetch approved member investment transactions
     const { data: approvedInvestments } = await supabase
@@ -41,11 +50,6 @@ export async function GET() {
 
     const baseCapital = Number(profile?.total_capital) || 0;
     const currentCapital = baseCapital + totalApprovedInvestments;
-
-    // A sow typically yields 8 to 10 piglets per cycle.
-    const pigletsPerSow = 10;
-    const targetSows = Math.max(1, Math.ceil(targetPigCount / pigletsPerSow));
-    const sowCost = profile?.sow_cost || 25000; // Estimated sow purchase cost
 
     // Capital required accounts for buying the sows AND raising piglets to fattener stage (9 months)
     const sowCapital = targetSows * sowCost;
@@ -74,6 +78,7 @@ export async function GET() {
       projected_scale_date: projectedScaleDate,
       target_sows: targetSows,
       target_pig_count: targetPigCount,
+      target_monthly_profit: targetMonthlyProfit,
       sow_cost: sowCost,
       cost_per_pig_rearing: costPerPigRearing,
       cycle_months: 9,
