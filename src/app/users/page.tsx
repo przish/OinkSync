@@ -17,11 +17,13 @@ import { toast } from 'react-hot-toast';
 import { getErrorMessage } from '@/lib/utils/toast';
 import type { User } from '@/types/database';
 
+type UserWithPassword = User & { password_changed?: boolean };
+
 export default function UsersPage() {
   const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.role === 'admin';
 
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserWithPassword[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -111,6 +113,7 @@ export default function UsersPage() {
                   <th>Email</th>
                   <th>Role</th>
                   <th>Phone</th>
+                  <th>Password Changed</th>
                   <th>Status</th>
                   <th>Joined</th>
                   {isAdmin && <th style={{ textAlign: 'right' }}>Actions</th>}
@@ -118,10 +121,10 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} columns={isAdmin ? 7 : 6} />)
+                  Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} columns={isAdmin ? 8 : 7} />)
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan={isAdmin ? 7 : 6}>
+                    <td colSpan={isAdmin ? 8 : 7}>
                       <div className="empty-state">
                         <div className="empty-state-icon"><Users size={28} color="#4B5563" /></div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No team members</p>
@@ -147,6 +150,41 @@ export default function UsersPage() {
                       <td style={{ color: '#4B5563', fontSize: 13 }}>{user.email}</td>
                       <td><Badge variant={user.role}>{ROLE_LABELS[user.role]}</Badge></td>
                       <td style={{ color: '#4B5563', fontSize: 13 }}>{user.phone_number ?? '—'}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        {user.password_changed ? (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-full)',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              backgroundColor: '#FFFDEC',
+                              border: '1px solid #86A788',
+                              color: '#14532D',
+                            }}
+                          >
+                            Changed
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-full)',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              backgroundColor: '#FFE2E2',
+                              border: '1px solid #FFCFCF',
+                              color: '#991B1B',
+                            }}
+                          >
+                            Default
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span className={`status-dot${user.is_active ? ' green' : ' gray'}`} />
