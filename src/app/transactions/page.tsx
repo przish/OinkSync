@@ -176,7 +176,7 @@ export default function TransactionsPage() {
                         <td style={{ whiteSpace: 'nowrap' }}>
                           {canEdit ? (
                             <Button
-                              variant="outline"
+                              variant="outline-green"
                               size="sm"
                               leftIcon={<Edit3 size={13} />}
                               onClick={() => setEditingTransaction(tx)}
