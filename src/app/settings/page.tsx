@@ -437,18 +437,6 @@ export default function SettingsPage() {
                       <span style={{ fontSize: 11, color: 'var(--muted-dark)' }}>~2 pigs/mo/sow</span>
                     </div>
                   </div>
-
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    type="submit"
-                    leftIcon={<Save size={15} />}
-                    isLoading={isSubmitting}
-                    disabled={!isDirty}
-                    style={{ marginTop: 4, width: '100%' }}
-                  >
-                    Save Changes
-                  </Button>
                 </div>
               </Card>
             </div>

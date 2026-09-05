@@ -144,19 +144,19 @@ export default function DashboardPage() {
                 trend={kpi?.revenue_change_percent ?? null}
               />
               <KPICard
-                label="Active Pigs"
-                value={kpi?.active_pig_count ?? 0}
-                icon={<PiggyBank size={18} />}
-                variant="gold"
-                isCurrency={false}
-                suffix=" hd"
-              />
-              <KPICard
                 label="Total Expenses"
                 value={kpi?.total_expenses ?? 0}
                 icon={<Receipt size={18} />}
                 variant="expense"
                 trend={kpi?.expense_change_percent ?? null}
+              />
+              <KPICard
+                label="Total Pigs"
+                value={kpi?.active_pig_count ?? 0}
+                icon={<PiggyBank size={18} />}
+                variant="beige"
+                isCurrency={false}
+                suffix=" hd"
               />
             </>
           )}
@@ -181,7 +181,7 @@ export default function DashboardPage() {
           const netProfit = Math.max(0, kpi?.net_profit ?? 0);
           const operationsPool = netProfit * 0.5;
           const investorPool = netProfit * 0.5;
-          const activeMembers = 4; // Equal investor share across members
+          const activeMembers = kpi?.active_members_count && kpi.active_members_count > 0 ? kpi.active_members_count : 2;
           const investorDividend = activeMembers > 0 ? investorPool / activeMembers : 0;
 
           const penManagerWork = operationsPool * 0.50;
@@ -194,25 +194,25 @@ export default function DashboardPage() {
           const logisticsTotal = logisticsWork + investorDividend;
 
           return (
-            <Card>
+            <Card style={{ background: 'var(--palette-cream)', border: '1.5px solid var(--palette-sage)' }}>
               <CardHeader
                 title="Profit & Capital Distribution Policy"
-                subtitle="Capital is equally contributed; operations profit is distributed by role performance"
+                subtitle={`Capital is equally contributed; dividend is split equally among ${activeMembers} members; operations profit is distributed by role performance`}
                 icon={<Users size={18} color="var(--secondary-green)" />}
               />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14 }}>
                 <div style={{
                   padding: '14px 16px',
-                  background: 'var(--palette-rose)',
+                  background: 'var(--palette-cream)',
                   borderRadius: 'var(--radius-md)',
-                  border: '1.5px solid var(--palette-blush)',
+                  border: '1.5px solid var(--palette-sage)',
                   display: 'flex', flexDirection: 'column', gap: 6,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>Pen Manager</p>
-                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-blush)', padding: '2px 6px', borderRadius: 4, color: 'var(--neutral-dark)' }}>50% Work</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-sage)', color: 'var(--palette-cream)', padding: '2px 6px', borderRadius: 4 }}>50% Work</span>
                   </div>
-                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--income-green)', margin: '2px 0' }}>
                     {formatCurrency(penManagerTotal)}
                   </p>
                   <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
@@ -232,7 +232,7 @@ export default function DashboardPage() {
                     <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>General Manager</p>
                     <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-sage)', color: 'var(--palette-cream)', padding: '2px 6px', borderRadius: 4 }}>25% Work</span>
                   </div>
-                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--income-green)', margin: '2px 0' }}>
                     {formatCurrency(gmTotal)}
                   </p>
                   <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
                     <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>Logistics Team</p>
                     <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-sage)', color: 'var(--palette-cream)', padding: '2px 6px', borderRadius: 4 }}>25% Work</span>
                   </div>
-                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--income-green)', margin: '2px 0' }}>
                     {formatCurrency(logisticsTotal)}
                   </p>
                   <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
@@ -263,21 +263,21 @@ export default function DashboardPage() {
 
                 <div style={{
                   padding: '14px 16px',
-                  background: 'var(--palette-blush)',
+                  background: 'var(--palette-cream)',
                   borderRadius: 'var(--radius-md)',
-                  border: '1.5px solid var(--palette-rose)',
+                  border: '1.5px solid var(--palette-sage)',
                   display: 'flex', flexDirection: 'column', gap: 6,
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <p className="metric-label" style={{ color: 'var(--neutral-dark)', margin: 0, fontWeight: 700 }}>Investor Pool</p>
-                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-rose)', padding: '2px 6px', borderRadius: 4, color: 'var(--neutral-dark)' }}>Equal Share</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--palette-rose)', padding: '2px 6px', borderRadius: 4, color: 'var(--neutral-dark)' }}>Equal Share ({activeMembers})</span>
                   </div>
-                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--neutral-dark)', margin: '2px 0' }}>
+                  <p style={{ fontWeight: 800, fontSize: 22, color: 'var(--income-green)', margin: '2px 0' }}>
                     {formatCurrency(investorDividend)}
                   </p>
                   <div style={{ fontSize: 11, color: 'var(--neutral-dark)', lineHeight: 1.5, borderTop: '1px solid rgba(24, 43, 29, 0.12)', paddingTop: 6 }}>
-                    <p style={{ margin: 0 }}><strong>Dividend Only:</strong> Equal share</p>
-                    <p style={{ margin: 0 }}><strong>Pool Total:</strong> {formatCurrency(investorPool)}</p>
+                    <p style={{ margin: 0 }}><strong>Dividend per Member:</strong> {formatCurrency(investorDividend)}</p>
+                    <p style={{ margin: 0 }}><strong>Pool Total ({activeMembers} members):</strong> {formatCurrency(investorPool)}</p>
                   </div>
                 </div>
               </div>

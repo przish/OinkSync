@@ -56,7 +56,7 @@ export function useAnalytics() {
     setError(null);
     try {
       const months = timeRangeToMonths(timeRange);
-      const res = await fetch(`/api/analytics/revenue-expenses?months=${months}`);
+      const res = await fetch(`/api/analytics/revenue-expenses?range=${timeRange}&months=${months}`);
       if (!res.ok) throw new Error('Failed to fetch revenue/expense data');
       const json = await res.json();
       setRevenueExpense(json.data ?? []);
@@ -70,7 +70,7 @@ export function useAnalytics() {
   const fetchExpenseBreakdown = useCallback(async (timeRange: TimeRange = '1yr') => {
     try {
       const months = timeRangeToMonths(timeRange);
-      const res = await fetch(`/api/analytics/expense-breakdown?months=${months}`);
+      const res = await fetch(`/api/analytics/expense-breakdown?range=${timeRange}&months=${months}`);
       if (!res.ok) throw new Error('Failed to fetch expense breakdown');
       const json = await res.json();
       setExpenseBreakdown(json.data ?? []);
@@ -82,7 +82,7 @@ export function useAnalytics() {
   const fetchRoiTrend = useCallback(async (timeRange: TimeRange = '1yr') => {
     try {
       const months = timeRangeToMonths(timeRange);
-      const res = await fetch(`/api/analytics/roi-trend?months=${months}`);
+      const res = await fetch(`/api/analytics/roi-trend?range=${timeRange}&months=${months}`);
       if (!res.ok) throw new Error('Failed to fetch ROI trend');
       const json = await res.json();
       setRoiTrend(json.data ?? []);
