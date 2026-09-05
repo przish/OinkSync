@@ -48,13 +48,13 @@ export async function PATCH(
       );
     }
 
-    // Protect 24-hour member edit window for investment contributions
+    // Protect 3-hour member edit window for investment contributions
     const isInvestment = existing.category?.toLowerCase() === 'investment' || existing.description?.toLowerCase().includes('investment');
     if (isInvestment && existing.created_at) {
       const createdAt = new Date(existing.created_at).getTime();
-      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-      if (Date.now() - createdAt < ONE_DAY_MS) {
-        throw new ValidationError('This investment contribution is currently in the 24-hour member edit window and cannot be reviewed yet.');
+      const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+      if (Date.now() - createdAt < THREE_HOURS_MS) {
+        throw new ValidationError('This investment contribution is currently in the 3-hour member edit window and cannot be reviewed yet.');
       }
     }
 
