@@ -52,7 +52,7 @@ export type AnimalFormValues = z.infer<typeof animalSchema>;
 export const penLogSchema = z.object({
   pen_id: z.string().min(1, 'Pen is required'),
   log_date: z.string().min(1, 'Date is required'),
-  feed_type: z.string().optional(),
+  feed_type: z.string().min(1, 'Feed type is required'),
   feed_amount_kg: z
     .number({ error: 'Feed amount must be a number' })
     .min(0, 'Feed amount cannot be negative'),
