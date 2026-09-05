@@ -14,8 +14,18 @@ export async function GET() {
   try {
     await getAuthUser();
     let supabase;
+    const authUsersMap: Record<string, boolean> = {};
+
     try {
-      supabase = createAdminClient();
+      const adminClient = createAdminClient();
+      supabase = adminClient;
+      const { data: authData } = await adminClient.auth.admin.listUsers();
+      if (authData?.users) {
+        authData.users.forEach((u) => {
+          const mustChange = u.user_metadata?.must_change_password === true;
+          authUsersMap[u.id] = !mustChange;
+        });
+      }
     } catch {
       supabase = await createClient();
     }
@@ -26,7 +36,13 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return successResponse(users ?? []);
+
+    const enrichedUsers = (users ?? []).map((u) => ({
+      ...u,
+      password_changed: authUsersMap[u.id] ?? true,
+    }));
+
+    return successResponse(enrichedUsers);
   } catch (error) {
     return handleError(error);
   }
