@@ -70,6 +70,7 @@ export interface KpiData {
   litter_mortality_rate?: number;
   pending_transactions: number;
   total_capital: number;
+  active_members_count?: number;
   // Month-over-month comparison
   revenue_change_percent: number | null;
   expense_change_percent: number | null;
