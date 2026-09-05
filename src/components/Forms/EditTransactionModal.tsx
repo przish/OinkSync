@@ -44,12 +44,13 @@ export function EditTransactionModal({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TransactionFormValues>({
-    resolver: zodResolver(transactionSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(transactionSchema) as any,
     defaultValues: {
       transaction_date: '',
       transaction_type: 'expense',
       amount: 0,
-      category: 'Feeds',
+      category: 'Feed',
       description: '',
     },
   });
@@ -293,7 +294,7 @@ export function EditTransactionModal({
               {!isExpired && (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="outline-green"
                   size="sm"
                   onClick={() => setHasExistingReceipt(false)}
                 >
