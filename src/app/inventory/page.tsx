@@ -23,6 +23,8 @@ export default function InventoryPage() {
   const [showAddPen, setShowAddPen] = useState(false);
   const [moveTargetPen, setMoveTargetPen] = useState<PenWithAnimals | null>(null);
   const [editingAnimal, setEditingAnimal] = useState<Animal | null>(null);
+  const [selectedAnimalIds, setSelectedAnimalIds] = useState<string[]>([]);
+  const [isMarkingSold, setIsMarkingSold] = useState(false);
   const { toasts, toast, remove } = useToast();
 
   const load = useCallback(() => fetchAll(), [fetchAll]);
@@ -37,6 +39,43 @@ export default function InventoryPage() {
       toast.error(result.error);
     }
     return result;
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedAnimalIds.length === animals.length) {
+      setSelectedAnimalIds([]);
+    } else {
+      setSelectedAnimalIds(animals.map((a) => a.id));
+    }
+  };
+
+  const toggleSelectAnimal = (id: string) => {
+    setSelectedAnimalIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleMarkAsSold = async () => {
+    if (selectedAnimalIds.length === 0) return;
+    setIsMarkingSold(true);
+    try {
+      const res = await fetch('/api/inventory/animals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ animal_ids: selectedAnimalIds, status: 'sold' }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message || 'Failed to mark as sold');
+      }
+      toast.success(`Successfully marked ${selectedAnimalIds.length} animal(s) as sold`);
+      setSelectedAnimalIds([]);
+      load();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error updating status');
+    } finally {
+      setIsMarkingSold(false);
+    }
   };
 
   const sickAnimals = animals.filter((a) => a.health_status === 'sick' || a.health_status === 'recovering');
@@ -127,30 +166,52 @@ export default function InventoryPage() {
                 ({animals.length} total)
               </span>
             </h3>
-            <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddAnimal(true)}>
-              Add Animal
-            </Button>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {selectedAnimalIds.length > 0 && (
+                <Button
+                  variant="outline-green"
+                  size="sm"
+                  isLoading={isMarkingSold}
+                  onClick={handleMarkAsSold}
+                  style={{ backgroundColor: '#FFFDEC', borderColor: '#86A788', color: '#14532D', fontWeight: 700 }}
+                >
+                  Mark as Sold ({selectedAnimalIds.length})
+                </Button>
+              )}
+              <Button variant="primary" size="sm" leftIcon={<Plus size={15} />} onClick={() => setShowAddAnimal(true)}>
+                Add Animal
+              </Button>
+            </div>
           </div>
           <div className="table-wrapper" style={{ border: 'none', borderRadius: '0 0 var(--radius-xl) var(--radius-xl)', overflow: 'hidden' }}>
             <table className="table" style={{ width: '100%' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '12%' }}>Code</th>
-                  <th style={{ width: '12%' }}>Type</th>
-                  <th style={{ width: '12%' }}>Gender</th>
-                  <th style={{ width: '18%' }}>Pen</th>
-                  <th style={{ width: '14%' }}>Health</th>
-                  <th style={{ width: '12%' }}>Weight</th>
-                  <th style={{ width: '12%' }}>Status</th>
-                  <th style={{ width: '8%', textAlign: 'right' }}>Actions</th>
+                  <th style={{ width: 40, textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={animals.length > 0 && selectedAnimalIds.length === animals.length}
+                      onChange={toggleSelectAll}
+                      style={{ cursor: 'pointer', accentColor: 'var(--secondary-green)' }}
+                      aria-label="Select all animals"
+                    />
+                  </th>
+                  <th style={{ width: '11%' }}>Code</th>
+                  <th style={{ width: '11%' }}>Type</th>
+                  <th style={{ width: '11%' }}>Gender</th>
+                  <th style={{ width: '17%' }}>Pen</th>
+                  <th style={{ width: '13%' }}>Health</th>
+                  <th style={{ width: '11%' }}>Weight</th>
+                  <th style={{ width: '11%' }}>Status</th>
+                  <th style={{ width: '10%', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
+                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={9} />)
                 ) : animals.length === 0 ? (
                   <tr>
-                    <td colSpan={8}>
+                    <td colSpan={9}>
                       <div className="empty-state">
                         <div className="empty-state-icon">🐷</div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No animals yet</p>
@@ -160,6 +221,15 @@ export default function InventoryPage() {
                 ) : (
                   animals.slice(0, 50).map((animal) => (
                     <tr key={animal.id}>
+                      <td style={{ textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedAnimalIds.includes(animal.id)}
+                          onChange={() => toggleSelectAnimal(animal.id)}
+                          style={{ cursor: 'pointer', accentColor: 'var(--secondary-green)' }}
+                          aria-label={`Select ${animal.animal_code || animal.id}`}
+                        />
+                      </td>
                       <td style={{ fontWeight: 700 }}>{animal.animal_code ?? `#${animal.id.slice(0, 6)}`}</td>
                       <td style={{ textTransform: 'capitalize' }}>{animal.animal_type.replace('_', ' ')}</td>
                       <td>
