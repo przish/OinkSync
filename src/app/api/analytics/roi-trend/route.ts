@@ -113,8 +113,7 @@ export async function GET(request: NextRequest) {
     } else if (range === '1yr') {
       monthsCount = 12;
     } else if (range === 'max') {
-      // Find earliest transaction date
-      let earliestDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+      // Find earliest transaction date starting strictly from when records started
       const { data: earliestTx } = await supabase
         .from('transactions')
         .select('transaction_date')
@@ -123,14 +122,14 @@ export async function GET(request: NextRequest) {
 
       if (earliestTx && earliestTx.length > 0 && earliestTx[0].transaction_date) {
         const parsed = new Date(earliestTx[0].transaction_date);
-        if (parsed < earliestDate) {
-          earliestDate = new Date(parsed.getFullYear(), parsed.getMonth(), 1);
-        }
+        const earliestDate = new Date(parsed.getFullYear(), parsed.getMonth(), 1);
+        monthsCount = Math.max(
+          1,
+          (now.getFullYear() - earliestDate.getFullYear()) * 12 + (now.getMonth() - earliestDate.getMonth()) + 1
+        );
+      } else {
+        monthsCount = 1;
       }
-      monthsCount = Math.max(
-        12,
-        (now.getFullYear() - earliestDate.getFullYear()) * 12 + (now.getMonth() - earliestDate.getMonth()) + 1
-      );
     } else if (monthsParam) {
       monthsCount = Math.max(1, parseInt(monthsParam, 10));
     }
