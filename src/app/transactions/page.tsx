@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Edit3, Lock } from 'lucide-react';
 import { TopBar } from '@/components/Navigation/TopBar';
 import { TransactionFiltersPanel } from './components/TransactionFilters';
 import { AddTransactionModal } from '@/components/Forms/AddTransactionModal';
+import { EditTransactionModal } from '@/components/Forms/EditTransactionModal';
 import { Badge } from '@/components/UI/Badge';
 import { Button } from '@/components/UI/Button';
 import { Card } from '@/components/UI/Card';
@@ -13,19 +14,28 @@ import { useTransactions } from '@/lib/hooks/useTransactions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useToast, ToastContainer } from '@/components/UI/Toast';
 import { formatCurrency, formatDate } from '@/lib/utils/formatting';
-import type { TransactionFilters } from '@/types/api';
+import type { TransactionFilters, TransactionWithUser } from '@/types/api';
 import type { TransactionFormValues } from '@/lib/utils/zod-schemas';
 
 const EMPTY_FILTERS: TransactionFilters = {};
 
 export default function TransactionsPage() {
-  const { isAdmin, canAddTransactions } = useAuth();
+  const { user, isAdmin, canAddTransactions } = useAuth();
   const { transactions, pagination, isLoading, fetchTransactions, addTransaction } = useTransactions();
   const { toasts, toast, remove } = useToast();
   const [filters, setFilters] = useState<TransactionFilters>(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<TransactionWithUser | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const load = useCallback(() => {
     fetchTransactions({ ...filters, page, limit: 20 });
@@ -115,14 +125,15 @@ export default function TransactionsPage() {
                   <th>Amount</th>
                   <th>Submitted By</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={7} />)
+                  Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} columns={8} />)
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={8}>
                       <div className="empty-state">
                         <div className="empty-state-icon">💸</div>
                         <p style={{ fontWeight: 600, marginTop: 8 }}>No transactions found</p>
@@ -131,32 +142,74 @@ export default function TransactionsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((tx) => (
-                    <tr key={tx.id}>
-                      <td className="text-small" style={{ whiteSpace: 'nowrap', color: '#4B5563' }}>
-                        {formatDate(tx.transaction_date)}
-                      </td>
-                      <td style={{ maxWidth: 200 }}>
-                        <p style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {tx.description}
-                        </p>
-                      </td>
-                      <td><span style={{ fontWeight: 500 }}>{tx.category}</span></td>
-                      <td><Badge variant={tx.transaction_type} /></td>
-                      <td>
-                        <span style={{
-                          fontWeight: 700,
-                          color: tx.transaction_type === 'income' ? 'var(--income-green)' : 'var(--expense-red)',
-                        }}>
-                          {tx.transaction_type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
-                        </span>
-                      </td>
-                      <td className="text-small" style={{ color: '#4B5563' }}>
-                        {tx.user?.full_name ?? '—'}
-                      </td>
-                      <td><Badge variant={tx.status} /></td>
-                    </tr>
-                  ))
+                  filtered.map((tx) => {
+                    const createdMs = new Date(tx.created_at).getTime();
+                    const remainingMs = Math.max(0, 5 * 60 * 1000 - (currentTime - createdMs));
+                    const canEdit = tx.status === 'pending' && (isAdmin || (user && tx.user_id === user.id)) && remainingMs > 0;
+                    const remM = Math.floor(remainingMs / 60000);
+                    const remS = Math.floor((remainingMs % 60000) / 1000);
+
+                    return (
+                      <tr key={tx.id}>
+                        <td className="text-small" style={{ whiteSpace: 'nowrap', color: '#4B5563' }}>
+                          {formatDate(tx.transaction_date)}
+                        </td>
+                        <td style={{ maxWidth: 200 }}>
+                          <p style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {tx.description}
+                          </p>
+                        </td>
+                        <td><span style={{ fontWeight: 500 }}>{tx.category}</span></td>
+                        <td><Badge variant={tx.transaction_type} /></td>
+                        <td>
+                          <span style={{
+                            fontWeight: 700,
+                            color: tx.transaction_type === 'income' ? 'var(--income-green)' : 'var(--expense-red)',
+                          }}>
+                            {tx.transaction_type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                          </span>
+                        </td>
+                        <td className="text-small" style={{ color: '#4B5563' }}>
+                          {tx.user?.full_name ?? '—'}
+                        </td>
+                        <td><Badge variant={tx.status} /></td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {canEdit ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              leftIcon={<Edit3 size={13} />}
+                              onClick={() => setEditingTransaction(tx)}
+                              style={{
+                                padding: '4px 10px',
+                                fontSize: 12,
+                                borderColor: '#86A788',
+                                color: '#14532D',
+                                backgroundColor: '#FFFDEC',
+                              }}
+                            >
+                              Edit ({remM}m {remS.toString().padStart(2, '0')}s)
+                            </Button>
+                          ) : tx.status === 'pending' ? (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                color: '#9CA3AF',
+                                fontSize: 12,
+                              }}
+                              title="5-minute edit window expired"
+                            >
+                              <Lock size={12} /> Locked
+                            </span>
+                          ) : (
+                            <span style={{ color: '#D1D5DB', fontSize: 12 }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -200,6 +253,16 @@ export default function TransactionsPage() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleAddTransaction}
+      />
+
+      <EditTransactionModal
+        isOpen={Boolean(editingTransaction)}
+        transaction={editingTransaction}
+        onClose={() => setEditingTransaction(null)}
+        onSuccess={() => {
+          toast.success('Transaction updated successfully!');
+          load();
+        }}
       />
 
       <ToastContainer toasts={toasts} onRemove={remove} />
