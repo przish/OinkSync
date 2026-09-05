@@ -24,7 +24,23 @@ export async function GET() {
 
     const targetPigCount = profile?.target_pig_count || 30;
     const costPerPigRearing = profile?.cost_per_pig_rearing || 4760;
-    const currentCapital = Number(profile?.total_capital) || 0;
+
+    // Fetch approved member investment transactions
+    const { data: approvedInvestments } = await supabase
+      .from('transactions')
+      .select('amount, category, description')
+      .eq('status', 'approved');
+
+    const totalApprovedInvestments = (approvedInvestments ?? []).reduce((sum, tx) => {
+      const isInv =
+        tx.category?.toLowerCase() === 'investment' ||
+        tx.description?.toLowerCase().includes('member investment contribution') ||
+        tx.description?.toLowerCase().includes('investment');
+      return isInv ? sum + (Number(tx.amount) || 0) : sum;
+    }, 0);
+
+    const baseCapital = Number(profile?.total_capital) || 0;
+    const currentCapital = baseCapital + totalApprovedInvestments;
 
     // A sow typically yields 8 to 10 piglets per cycle.
     const pigletsPerSow = 10;
