@@ -18,7 +18,8 @@ export type TransactionCategory =
   | 'Veterinary'
   | 'Labor'
   | 'Transportation'
-  | 'Sales';
+  | 'Sales'
+  | 'Investment';
 
 export type TransactionType = 'expense' | 'income';
 
