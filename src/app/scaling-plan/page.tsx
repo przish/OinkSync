@@ -380,20 +380,28 @@ export default function ScalingPlanPage() {
                     </span>
                   </div>
 
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: '1px dashed var(--card-border)' }}>
+                    <span style={{ fontSize: 13, color: 'var(--neutral-dark)', fontWeight: 600 }}>Current Farm Capital:</span>
+                    <strong style={{ fontSize: 14, color: 'var(--income-green)' }}>{formatCurrency(currentCapital)}</strong>
+                  </div>
+
                   <div
                     style={{
                       marginTop: 6,
                       padding: '10px 12px',
-                      background: isReady ? 'var(--palette-rose)' : 'rgba(239,68,68,0.1)',
+                      background: isReady ? 'var(--palette-cream)' : 'var(--palette-rose)',
                       borderRadius: 'var(--radius-md)',
+                      border: `1px solid ${isReady ? 'var(--palette-sage)' : 'var(--palette-blush)'}`,
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
                   >
-                    <span style={{ fontSize: 12, fontWeight: 600 }}>{isReady ? 'Current Farm Capital:' : 'Capital Gap:'}</span>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: isReady ? 'var(--secondary-green)' : 'var(--error)' }}>
-                      {isReady ? formatCurrency(currentCapital) : formatCurrency(capitalGap)}
+                    <span style={{ fontSize: 12, fontWeight: 700, color: isReady ? 'var(--income-green)' : 'var(--expense-red)' }}>
+                      {isReady ? 'Surplus Capital:' : 'Capital Gap:'}
+                    </span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: isReady ? 'var(--income-green)' : 'var(--expense-red)' }}>
+                      {isReady ? `+${formatCurrency(currentCapital - requiredCapital)}` : formatCurrency(capitalGap)}
                     </span>
                   </div>
                 </div>
