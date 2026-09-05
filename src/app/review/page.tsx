@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   CheckSquare, Search, CheckCircle, XCircle, FileText,
   ExternalLink, Clock, AlertTriangle, Filter, Eye, Download, X,
-  ArrowUpRight, ArrowDownRight, RefreshCw, ShieldAlert
+  ArrowUpRight, ArrowDownRight, RefreshCw, ShieldAlert, Lock
 } from 'lucide-react';
 import { TopBar } from '@/components/Navigation/TopBar';
 import { Card } from '@/components/UI/Card';
@@ -151,12 +151,12 @@ export default function AdminReviewPage() {
       const mins = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
       return {
         isWithin24h: true,
-        text: `Within member 24h edit window (${hours}h ${mins}m remaining)`,
+        text: `Locked: Member 24h edit window active (${hours}h ${mins}m remaining)`,
       };
     }
     return {
       isWithin24h: false,
-      text: 'Locked for GM Review (24h edit window expired)',
+      text: 'Unlocked: 24h edit window passed (Ready for review)',
     };
   };
 
@@ -613,16 +613,18 @@ export default function AdminReviewPage() {
                             setInspectReceiptTitle(`${tx.user?.full_name || 'Member'} - ${formatCurrency(tx.amount)}`);
                           }}
                           style={{
-                            height: 140,
                             borderRadius: 'var(--radius-md)',
                             overflow: 'hidden',
                             border: '1px solid var(--palette-sage)',
                             position: 'relative',
                             cursor: 'pointer',
-                            background: '#000',
+                            background: 'var(--palette-cream)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
+                            padding: 8,
+                            width: 'fit-content',
+                            maxWidth: '100%',
                           }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -630,18 +632,21 @@ export default function AdminReviewPage() {
                             src={tx.receipt_url}
                             alt="Receipt"
                             style={{
-                              width: '100%',
-                              height: '100%',
+                              maxWidth: '100%',
+                              maxHeight: 280,
+                              width: 'auto',
+                              height: 'auto',
                               objectFit: 'contain',
-                              opacity: 0.95,
+                              borderRadius: 'var(--radius-sm)',
+                              display: 'block',
                             }}
                           />
                           <div
                             style={{
                               position: 'absolute',
-                              bottom: 8,
-                              right: 8,
-                              background: 'rgba(24, 43, 29, 0.75)',
+                              bottom: 12,
+                              right: 12,
+                              background: 'rgba(24, 43, 29, 0.85)',
                               color: '#fff',
                               padding: '4px 8px',
                               borderRadius: 'var(--radius-sm)',
@@ -684,40 +689,74 @@ export default function AdminReviewPage() {
                     <div
                       style={{
                         display: 'flex',
-                        justifyContent: 'flex-end',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
                         gap: 10,
                         borderTop: '1px solid rgba(24, 43, 29, 0.08)',
                         paddingTop: 14,
                       }}
                     >
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        leftIcon={<XCircle size={15} />}
-                        onClick={() => {
-                          setRejectingTx(tx);
-                          setRejectionReason('');
-                        }}
-                        disabled={isProcessing}
-                        style={{
-                          color: 'var(--expense-red)',
-                          borderColor: 'var(--palette-blush)',
-                          background: 'var(--palette-rose)',
-                        }}
-                      >
-                        Reject Transaction
-                      </Button>
+                      {timerStatus?.isWithin24h ? (
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: '#854D0E',
+                            background: 'rgba(234, 179, 8, 0.12)',
+                            padding: '6px 12px',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid rgba(234, 179, 8, 0.3)',
+                          }}
+                        >
+                          <Lock size={13} />
+                          Locked until 24-hour member edit window expires
+                        </div>
+                      ) : (
+                        <div />
+                      )}
 
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        leftIcon={<CheckCircle size={15} />}
-                        onClick={() => handleApprove(tx)}
-                        isLoading={isProcessing}
-                        disabled={isProcessing}
-                      >
-                        Approve Transaction
-                      </Button>
+                      <div style={{ display: 'flex', gap: 10, marginLeft: 'auto' }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          leftIcon={<XCircle size={15} />}
+                          onClick={() => {
+                            setRejectingTx(tx);
+                            setRejectionReason('');
+                          }}
+                          disabled={isProcessing || (timerStatus?.isWithin24h ?? false)}
+                          style={{
+                            color: 'var(--expense-red)',
+                            borderColor: 'var(--palette-blush)',
+                            background: 'var(--palette-rose)',
+                            opacity: timerStatus?.isWithin24h ? 0.5 : 1,
+                            cursor: timerStatus?.isWithin24h ? 'not-allowed' : 'pointer',
+                          }}
+                          title={timerStatus?.isWithin24h ? 'Locked during member 24-hour edit window' : undefined}
+                        >
+                          Reject Transaction
+                        </Button>
+
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          leftIcon={<CheckCircle size={15} />}
+                          onClick={() => handleApprove(tx)}
+                          isLoading={isProcessing}
+                          disabled={isProcessing || (timerStatus?.isWithin24h ?? false)}
+                          style={{
+                            opacity: timerStatus?.isWithin24h ? 0.5 : 1,
+                            cursor: timerStatus?.isWithin24h ? 'not-allowed' : 'pointer',
+                          }}
+                          title={timerStatus?.isWithin24h ? 'Locked during member 24-hour edit window' : undefined}
+                        >
+                          Approve Transaction
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div
