@@ -244,3 +244,42 @@ export async function POST(request: NextRequest) {
     return handleError(error);
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const profile = await requireRole('admin', 'pen_manager');
+    const supabase = await createClient();
+    const body = await request.json();
+    const { animal_ids, status } = body;
+
+    if (!Array.isArray(animal_ids) || animal_ids.length === 0) {
+      throw new ValidationError('animal_ids must be a non-empty array of IDs');
+    }
+    optionalEnum(status, ANIMAL_STATUSES, 'status');
+
+    const updateData: Record<string, unknown> = { status };
+    if (status === 'sold') {
+      updateData.sale_date = new Date().toISOString().split('T')[0];
+    }
+
+    const { data, error } = await supabase
+      .from('animals')
+      .update(updateData)
+      .in('id', animal_ids)
+      .select();
+
+    if (error) throw error;
+
+    await supabase.from('activity_logs').insert({
+      user_id: profile.id,
+      action: `bulk_status_update_${status}`,
+      table_name: 'animals',
+      new_values: { animal_ids, status },
+    } as Record<string, unknown>);
+
+    return successResponse(data);
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
