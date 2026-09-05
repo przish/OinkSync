@@ -59,13 +59,17 @@ export function ScalingRecommendation({ data }: ScalingRecommendationProps) {
                 <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--secondary-green)' }}>{data.target_pig_count}</p>
               </div>
               <div>
+                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4B5563' }}>Available Capital</p>
+                <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--income-green)' }}>{formatCurrency(data.current_capital)}</p>
+              </div>
+              <div>
                 <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4B5563' }}>Required Capital</p>
                 <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--neutral-dark)' }}>{formatCurrency(data.required_capital)}</p>
               </div>
               {!isReady && (
                 <div>
                   <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#4B5563' }}>Gap Amount</p>
-                  <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--error)' }}>{formatCurrency(data.gap_amount)}</p>
+                  <p style={{ fontWeight: 800, fontSize: 20, color: 'var(--expense-red)' }}>{formatCurrency(data.gap_amount)}</p>
                 </div>
               )}
               {data.projected_scale_date && (

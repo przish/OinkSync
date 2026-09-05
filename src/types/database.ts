@@ -250,6 +250,7 @@ export interface DashboardKpiResult {
   mortality_rate: number;
   pending_transactions: number;
   total_capital: number;
+  active_members_count?: number;
 }
 
 export interface ScalingReadinessResult {

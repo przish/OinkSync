@@ -257,7 +257,7 @@ export function InviteMemberModal({ onClose, onSuccess }: InviteMemberModalProps
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--card-border)',
               }}>
-                <strong>Tip:</strong> An invitation email with the official website link will be sent. Please prompt the member to check their email (including <strong>Spam / Junk</strong> folder). <em>If they did not request this account creation, they can safely ignore it.</em>
+                <strong>Tip:</strong> An invitation email containing the workspace access link will be delivered directly to this address.
               </div>
             </div>
 

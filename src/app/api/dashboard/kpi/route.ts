@@ -82,9 +82,18 @@ export async function GET(request: NextRequest) {
         else if (t.transaction_type === 'expense') exp += amt;
       });
 
-      // Capital from business profile
+      // Capital from business profile + all approved member investments
       const { data: bp } = await supabase.from('business_profile').select('total_capital').maybeSingle();
-      const cap = Number(bp?.total_capital) || 0;
+      const baseCap = Number(bp?.total_capital) || 0;
+
+      const { data: investTx } = await supabase
+        .from('transactions')
+        .select('amount')
+        .eq('status', 'approved')
+        .or('category.eq.investment,description.ilike.%investment%');
+
+      const memberInvestments = (investTx || []).reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+      const cap = baseCap + memberInvestments;
       const profit = rev - exp;
       const roi = cap > 0 ? Number(((profit / cap) * 100).toFixed(2)) : 0;
 
@@ -105,6 +114,12 @@ export async function GET(request: NextRequest) {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'pending');
 
+      // Count active members for dynamic dividend distribution
+      const { count: memberCount } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+
       const totalAnimals = (activeCount ?? 0) + (deadCount ?? 0);
       const mortRate = totalAnimals > 0 ? Number((((deadCount ?? 0) / totalAnimals) * 100).toFixed(2)) : 0;
 
@@ -118,6 +133,7 @@ export async function GET(request: NextRequest) {
         mortality_rate: mortRate,
         pending_transactions: pendingCount ?? 0,
         total_capital: cap,
+        active_members_count: memberCount && memberCount > 0 ? memberCount : 1,
       };
     }
 
@@ -139,7 +155,7 @@ export async function GET(request: NextRequest) {
         litterMortRate = Number((((deadPiglets ?? 0) / (totalPiglets ?? 1)) * 100).toFixed(2));
       }
     } catch {
-      // Fallback cleanly if query fails
+      // Non-critical fallback
     }
 
     const calcChange = (current: number, previous: number | undefined): number | null => {
@@ -158,6 +174,7 @@ export async function GET(request: NextRequest) {
       litter_mortality_rate: litterMortRate,
       pending_transactions: Number(currentKpi?.pending_transactions) || 0,
       total_capital: Number(currentKpi?.total_capital) || 0,
+      active_members_count: currentKpi?.active_members_count,
       revenue_change_percent: calcChange(Number(currentKpi?.total_revenue) || 0, undefined),
       expense_change_percent: calcChange(Number(currentKpi?.total_expenses) || 0, undefined),
       profit_change_percent: calcChange(Number(currentKpi?.net_profit) || 0, undefined),
