@@ -60,7 +60,7 @@ export function KPICard({
       ? 'var(--palette-cream)'
       : isGreen
         ? 'rgba(255, 253, 236, 0.25)'
-        : 'var(--palette-blush)';
+        : 'var(--palette-cream)';
 
   const iconBorder = isIncome
     ? '1px solid var(--palette-sage)'
@@ -68,7 +68,7 @@ export function KPICard({
       ? '1px solid var(--palette-blush)'
       : isGreen
         ? '1px solid rgba(255, 253, 236, 0.4)'
-        : '1px solid var(--palette-rose)';
+        : '1px solid var(--palette-sage)';
 
   const iconColor = isIncome
     ? 'var(--income-green)'
@@ -76,13 +76,15 @@ export function KPICard({
       ? 'var(--expense-red)'
       : isGreen
         ? 'var(--palette-cream)'
-        : 'var(--palette-sage)';
+        : 'var(--secondary-green)';
 
   const cardStyle: React.CSSProperties = isIncome
     ? { border: '1.5px solid var(--palette-sage)', background: 'var(--palette-cream)' }
     : isExpense
       ? { border: '1.5px solid var(--palette-blush)', background: 'var(--palette-cream)' }
-      : {};
+      : isGreen
+        ? {}
+        : { border: '1.5px solid var(--palette-sage)', background: 'var(--palette-cream)' };
 
   return (
     <Card variant={cardVariant} style={cardStyle}>
