@@ -34,6 +34,24 @@ export function EditAnimalModal({
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Structured Sow Notes / Stage state
+  const isSow = animal?.animal_type === 'breeding_sow' || status === 'became_breeding_sow';
+  const [sowStageCategory, setSowStageCategory] = useState<'breeding' | 'labor'>('breeding');
+  const [breedingSubStatus, setBreedingSubStatus] = useState<'Ready' | 'Breeding'>('Ready');
+  const [laborDate, setLaborDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+
+  const nextCycleDate = React.useMemo(() => {
+    if (!laborDate) return null;
+    const d = new Date(laborDate);
+    if (isNaN(d.getTime())) return null;
+    d.setDate(d.getDate() + 30);
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }, [laborDate]);
+
   useEffect(() => {
     if (animal) {
       setHealthStatus(animal.health_status || 'healthy');
@@ -41,7 +59,18 @@ export function EditAnimalModal({
       setPenId(animal.pen_id || '');
       setBreedingPenId(animal.pen_id || (pens.length > 0 ? pens[0].id : ''));
       setWeight(animal.current_weight !== null && animal.current_weight !== undefined ? String(animal.current_weight) : '');
-      setNotes(animal.notes || '');
+      
+      const rawNotes = animal.notes || '';
+      if (rawNotes.includes('Labor Date:')) {
+        setSowStageCategory('labor');
+        const match = rawNotes.match(/Labor Date:\s*([^\s|]+)/);
+        if (match && match[1]) setLaborDate(match[1]);
+      } else if (rawNotes.includes('Breeding:')) {
+        setSowStageCategory('breeding');
+        if (rawNotes.includes('Breeding: Breeding')) setBreedingSubStatus('Breeding');
+        else setBreedingSubStatus('Ready');
+      }
+      setNotes(rawNotes.replace(/^(Breeding:\s*[^|]+\s*\|?\s*|Labor Date:\s*[^|]+\s*(\|\s*Next Cycle[^|]+)?\s*\|?\s*)/i, '').trim());
     }
   }, [animal, pens]);
 
@@ -53,9 +82,18 @@ export function EditAnimalModal({
     const toastId = toast.loading('Updating animal details...');
 
     try {
+      let finalNotes = notes.trim();
+      if (isSow) {
+        if (sowStageCategory === 'breeding') {
+          finalNotes = `Breeding: ${breedingSubStatus}${finalNotes ? ` | ${finalNotes}` : ''}`;
+        } else if (sowStageCategory === 'labor') {
+          finalNotes = `Labor Date: ${laborDate}${nextCycleDate ? ` | Next Cycle Starts: ${nextCycleDate}` : ''}${finalNotes ? ` | ${finalNotes}` : ''}`;
+        }
+      }
+
       const payload: Record<string, any> = {
         health_status: healthStatus,
-        notes: notes.trim(),
+        notes: finalNotes,
       };
 
       if (status === 'became_breeding_sow') {
@@ -210,16 +248,104 @@ export function EditAnimalModal({
           </FormField>
         </div>
 
-        <FormField label="Notes & Observations" htmlFor="edit-animal-notes">
-          <input
-            id="edit-animal-notes"
-            type="text"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="form-input"
-            placeholder="Medical history, feed notes, observations"
-          />
-        </FormField>
+        {isSow ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '12px 14px', background: 'rgba(134, 167, 136, 0.08)', borderRadius: 'var(--radius-md)', border: '1px solid #86A788' }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--neutral-dark)' }}>
+              Sow Status & Observations
+            </label>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setSowStageCategory('breeding')}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  border: sowStageCategory === 'breeding' ? '2px solid #86A788' : '1px solid #D1D5DB',
+                  background: sowStageCategory === 'breeding' ? '#FFFDEC' : '#FFFFFF',
+                  color: '#14532D',
+                }}
+              >
+                🧬 Breeding
+              </button>
+              <button
+                type="button"
+                onClick={() => setSowStageCategory('labor')}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  border: sowStageCategory === 'labor' ? '2px solid #86A788' : '1px solid #D1D5DB',
+                  background: sowStageCategory === 'labor' ? '#FFFDEC' : '#FFFFFF',
+                  color: '#14532D',
+                }}
+              >
+                👶 Labor / Farrowing
+              </button>
+            </div>
+
+            {sowStageCategory === 'breeding' && (
+              <FormField label="Breeding Stage" htmlFor="sow-breeding-sub" required>
+                <FormSelect
+                  id="sow-breeding-sub"
+                  value={breedingSubStatus}
+                  onChange={(e) => setBreedingSubStatus(e.target.value as 'Ready' | 'Breeding')}
+                  options={[
+                    { value: 'Ready', label: 'Ready' },
+                    { value: 'Breeding', label: 'Breeding' },
+                  ]}
+                />
+              </FormField>
+            )}
+
+            {sowStageCategory === 'labor' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <FormField label="Labor / Farrowing Date" htmlFor="sow-labor-date" required>
+                  <input
+                    id="sow-labor-date"
+                    type="date"
+                    value={laborDate}
+                    onChange={(e) => setLaborDate(e.target.value)}
+                    className="form-input"
+                    required
+                  />
+                </FormField>
+                {nextCycleDate && (
+                  <div style={{ padding: '8px 12px', background: '#FFFDEC', border: '1px solid #86A788', borderRadius: 6, color: '#14532D', fontSize: 12, fontWeight: 600 }}>
+                    📅 Predicted Next Cycle Start Date: {nextCycleDate} (~30 days post-farrowing)
+                  </div>
+                )}
+              </div>
+            )}
+
+            <FormField label="Additional Observations (Optional)" htmlFor="edit-animal-notes">
+              <input
+                id="edit-animal-notes"
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="form-input"
+                placeholder="Optional remarks or health notes"
+              />
+            </FormField>
+          </div>
+        ) : (
+          <FormField label="Notes & Observations" htmlFor="edit-animal-notes">
+            <input
+              id="edit-animal-notes"
+              type="text"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="form-input"
+              placeholder="Medical history, feed notes, observations"
+            />
+          </FormField>
+        )}
       </form>
     </Modal>
   );
